@@ -1,0 +1,95 @@
+prof00:
+  teaching_load: 3
+  can_teach_night: true
+  can_teach_off_campus: true
+  preferred_class_length: single
+  qualified_for: [ADM1000, ADM1002, ADM1004, ADM1108, ADM1112, ADM1115]
+  availability:
+    Winter: {Afternoon: 1}
+  course_ranks:
+    ADM1112: 5
+prof01:
+  teaching_load: 3
+  can_teach_night: true
+  can_teach_off_campus: true
+  qualified_for: [ADM1000, ADM1004, ADM1108, ADM1110, ADM1112]
+  course_ranks:
+    ADM1110: 1
+prof02:
+  teaching_load: 3
+  can_teach_off_campus: true
+  prefers_packed_days: true
+  qualified_for: [ADM1000, ADM1003, ADM1004, ADM1108, ADM1109, ADM1112]
+  availability:
+    Fall: {Afternoon: 3}
+  course_ranks:
+    ADM1000: 1
+    ADM1108: 5
+prof03:
+  teaching_load: 3
+  can_teach_night: true
+  preferred_class_length: single
+  qualified_for: [ADM1001, ADM1002, ADM1005, ADM1109, ADM1113]
+  availability:
+    Fall: {Morning: 3}
+  course_ranks:
+    ADM1002: 5
+prof04:
+  teaching_load: 3
+  can_teach_night: true
+  can_teach_off_campus: true
+  prefers_packed_days: true
+  qualified_for: [ADM1001, ADM1005, ADM1108, ADM1109, ADM1110, ADM1113, ADM1115]
+prof05:
+  teaching_load: 3
+  can_teach_off_campus: true
+  preferred_class_length: double
+  qualified_for: [ADM1001, ADM1003, ADM1005, ADM1109, ADM1113]
+prof06:
+  teaching_load: 3
+  can_teach_night: true
+  can_teach_off_campus: true
+  preferred_class_length: double
+  qualified_for: [ADM1002, ADM1006, ADM1108, ADM1109, ADM1110, ADM1114]
+prof07:
+  teaching_load: 3
+  can_teach_night: true
+  prefers_packed_days: true
+  qualified_for: [ADM1000, ADM1002, ADM1005, ADM1006, ADM1110, ADM1114]
+  availability:
+    Winter: {Afternoon: 1, Night: 1}
+  course_ranks:
+    ADM1002: 5
+prof08:
+  teaching_load: 3
+  can_teach_off_campus: true
+  prefers_packed_days: true
+  preferred_class_length: single
+  qualified_for: [ADM1002, ADM1003, ADM1006, ADM1110, ADM1114]
+  availability:
+    Fall: {Night: 1}
+    Winter: {Night: 1}
+prof09:
+  teaching_load: 3
+  can_teach_night: true
+  can_teach_off_campus: true
+  qualified_for: [ADM1002, ADM1003, ADM1005, ADM1007, ADM1111, ADM1115]
+prof10:
+  teaching_load: 3
+  can_teach_night: true
+  can_teach_off_campus: true
+  qualified_for: [ADM1003, ADM1005, ADM1007, ADM1109, ADM1111, ADM1114, ADM1115]
+  availability:
+    Fall: {Night: 1}
+    Winter: {Afternoon: 1}
+  course_ranks:
+    ADM1003: 1
+    ADM1007: 5
+    ADM1111: 5
+prof11:
+  teaching_load: 3
+  qualified_for: [ADM1002, ADM1003, ADM1004, ADM1007, ADM1111, ADM1113, ADM1115]
+  course_ranks:
+    ADM1002: 5
+    ADM1113: 1
+

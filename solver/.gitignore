@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+*.swp
+gurobi.log
+instance.json
+result.json
+
+# latex build artifacts
+model/*.aux
+model/*.fls
+model/*.log
+model/*.fdb_latexmk
+model/*.synctex.gz

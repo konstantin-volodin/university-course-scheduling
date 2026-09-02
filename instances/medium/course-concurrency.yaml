@@ -1,0 +1,4 @@
+- {courses: [ADM1000, ADM1001], semester: Fall, must_run: apart}
+- {courses: [ADM1002, ADM1003], semester: Fall, must_run: apart}
+- {courses: [ADM1004, ADM1005], semester: Fall, must_run: apart}
+- {courses: [ADM1006, ADM1007], semester: Fall, must_run: apart}

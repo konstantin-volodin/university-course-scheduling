@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "workload-scheduler"
+version = "1.0.0"
+description = "Course workload allocation solver: a YAML config in, a packaged schedule out."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "MIT" }
+dependencies = ["highspy>=1.15", "pyyaml>=6.0.3"]
+
+[project.optional-dependencies]
+gurobi = ["gurobipy>=13"]
+dev = ["pytest>=9", "ruff>=0.16", "mypy>=2.3", "gurobipy>=13", "types-PyYAML>=6.0.12"]
+
+[project.scripts]
+scheduler = "scheduler.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scheduler"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = ["slow: takes more than a second"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RET", "ARG", "PTH", "RUF"]
+ignore = ["N818"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG"]
+
+[tool.mypy]
+python_version = "3.13"
+files = ["src"]
+strict = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["gurobipy.*", "highspy.*"]
+ignore_missing_imports = true

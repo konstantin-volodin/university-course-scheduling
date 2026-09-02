@@ -1,0 +1,33 @@
+# Source: data_inputs/Permanent Data.xlsx
+- {id: A01, days: {Mon: "08:30", Thu: "10:00"}, duration_minutes: 90, time_of_day: Morning}
+- {id: A02, days: {Mon: "10:00", Wed: "08:30"}, duration_minutes: 90, time_of_day: Morning}
+- {id: A03, days: {Wed: "10:00", Fri: "08:30"}, duration_minutes: 90, time_of_day: Morning}
+- {id: A04, days: {Tue: "08:30", Fri: "10:00"}, duration_minutes: 90, time_of_day: Morning}
+- {id: A05, days: {Tue: "10:00", Thu: "08:30"}, duration_minutes: 90, time_of_day: Morning}
+- {id: B01, days: {Mon: "11:30", Thu: "13:00"}, duration_minutes: 90, time_of_day: Afternoon}
+- {id: B02, days: {Mon: "13:00", Wed: "11:30"}, duration_minutes: 90, time_of_day: Afternoon}
+- {id: B03, days: {Wed: "13:00", Fri: "11:30"}, duration_minutes: 90, time_of_day: Afternoon}
+- {id: B04, days: {Tue: "11:30", Fri: "13:00"}, duration_minutes: 90, time_of_day: Afternoon}
+- {id: B05, days: {Tue: "13:00", Thu: "11:30"}, duration_minutes: 90, time_of_day: Afternoon}
+- {id: C01, days: {Mon: "14:30", Thu: "16:00"}, duration_minutes: 90, time_of_day: Evening}
+- {id: C02, days: {Mon: "16:00", Wed: "14:30"}, duration_minutes: 90, time_of_day: Evening}
+- {id: C03, days: {Wed: "16:00", Fri: "14:30"}, duration_minutes: 90, time_of_day: Evening}
+- {id: C04, days: {Tue: "14:30", Fri: "16:00"}, duration_minutes: 90, time_of_day: Evening}
+- {id: C05, days: {Tue: "16:00", Thu: "14:30"}, duration_minutes: 90, time_of_day: Evening}
+- {id: D01, days: {Mon: "08:30"}, duration_minutes: 180, time_of_day: Morning}
+- {id: D02, days: {Tue: "08:30"}, duration_minutes: 180, time_of_day: Morning}
+- {id: D03, days: {Wed: "08:30"}, duration_minutes: 180, time_of_day: Morning}
+- {id: D04, days: {Thu: "08:30"}, duration_minutes: 180, time_of_day: Morning}
+- {id: D05, days: {Fri: "08:30"}, duration_minutes: 180, time_of_day: Morning}
+- {id: E01, days: {Mon: "14:30"}, duration_minutes: 180, time_of_day: Evening}
+- {id: E02, days: {Tue: "14:30"}, duration_minutes: 180, time_of_day: Evening}
+- {id: E03, days: {Wed: "14:30"}, duration_minutes: 180, time_of_day: Evening}
+- {id: E04, days: {Thu: "14:30"}, duration_minutes: 180, time_of_day: Evening}
+- {id: E05, days: {Fri: "14:30"}, duration_minutes: 180, time_of_day: Evening}
+- {id: F01, days: {Mon: "17:30", Wed: "17:30"}, duration_minutes: 90, time_of_day: Night}
+- {id: F02, days: {Tue: "17:30", Thu: "17:30"}, duration_minutes: 90, time_of_day: Night}
+- {id: F03, days: {Fri: "17:30"}, duration_minutes: 180, time_of_day: Night}
+- {id: G01, days: {Mon: "19:00"}, duration_minutes: 180, time_of_day: Night}
+- {id: G02, days: {Tue: "19:00"}, duration_minutes: 180, time_of_day: Night}
+- {id: G03, days: {Wed: "19:00"}, duration_minutes: 180, time_of_day: Night}
+- {id: G04, days: {Thu: "19:00"}, duration_minutes: 180, time_of_day: Night}

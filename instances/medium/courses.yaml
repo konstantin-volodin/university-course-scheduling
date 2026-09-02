@@ -1,0 +1,80 @@
+ADM1000:
+  preferred_class_length: single
+  penalise_friday_night: true
+  sections:
+    - {id: '1', semester: Winter, time_of_day: Morning, students: 35}
+    - {id: '2', semester: Fall, time_of_day: Afternoon, students: 30}
+    - {id: '3', semester: Winter, time_of_day: Evening, students: 35}
+ADM1001:
+  penalise_friday_night: true
+  sections:
+    - {id: '4', semester: Fall, time_of_day: Night, students: 30}
+    - {id: '5', semester: Winter, time_of_day: Morning, students: 25}
+    - {id: '6', semester: Fall, time_of_day: Morning, students: 40}
+ADM1002:
+  preferred_class_length: single
+  penalise_friday_night: true
+  sections:
+    - {id: '7', semester: Winter, time_of_day: Afternoon, students: 40}
+    - {id: '8', semester: Fall, time_of_day: Evening, students: 35}
+    - {id: '9', semester: Winter, time_of_day: Night, students: 25}
+ADM1003:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '10', semester: Fall, time_of_day: Morning, students: 25}
+    - {id: '11', semester: Winter, time_of_day: Morning, students: 30}
+    - {id: '12', semester: Fall, time_of_day: Afternoon, students: 25}
+    - {id: '13', semester: Winter, time_of_day: Evening, students: 40}
+ADM1004:
+  penalise_friday_night: true
+  sections:
+    - {id: '14', semester: Fall, time_of_day: Night, students: 30}
+    - {id: '15', semester: Winter, time_of_day: Morning, students: 35}
+    - {id: '16', semester: Fall, time_of_day: Morning, students: 35}
+ADM1005:
+  penalise_friday_night: true
+  sections:
+    - {id: '17', semester: Winter, time_of_day: Afternoon, students: 25}
+    - {id: '18', semester: Fall, time_of_day: Evening, students: 25}
+ADM1006:
+  sections:
+    - {id: '19', semester: Winter, time_of_day: Night, students: 35}
+    - {id: '20', semester: Fall, time_of_day: Morning, students: 35}
+    - {id: '21', semester: Winter, time_of_day: Morning, students: 25}
+ADM1007:
+  preferred_class_length: single
+  sections:
+    - {id: '22', semester: Fall, time_of_day: Afternoon, students: 30}
+    - {id: '23', semester: Winter, time_of_day: Evening, students: 25}
+ADM1108:
+  preferred_class_length: single
+  sections:
+    - {id: '24', semester: Fall, time_of_day: Night, students: 25}
+    - {id: '25', semester: Winter, time_of_day: Morning, students: 25}
+ADM1109:
+  sections:
+    - {id: '26', semester: Fall, time_of_day: Morning, students: 30}
+    - {id: '27', semester: Winter, time_of_day: Afternoon, students: 40}
+    - {id: '28', semester: Fall, time_of_day: Evening, students: 35}
+    - {id: '29', semester: Winter, time_of_day: Night, students: 35}
+ADM1110:
+  sections:
+    - {id: '30', semester: Fall, time_of_day: Morning, students: 35}
+    - {id: '31', semester: Winter, time_of_day: Morning, students: 40}
+ADM1111:
+  sections:
+    - {id: '32', semester: Fall, time_of_day: Afternoon, students: 25}
+    - {id: '33', semester: Winter, time_of_day: Evening, students: 25}
+    - {id: '34', semester: Fall, time_of_day: Night, students: 40}
+ADM1112:
+  sections:
+    - {id: '35', semester: Winter, time_of_day: Morning, students: 40}
+    - {id: '36', semester: Fall, time_of_day: Morning, students: 35}
+ADM1113:
+  sections: []
+ADM1114:
+  sections: []
+ADM1115:
+  preferred_class_length: double
+  sections: []

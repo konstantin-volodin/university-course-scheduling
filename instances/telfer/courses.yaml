@@ -1,0 +1,959 @@
+1:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '1-1', semester: Summer, time_of_day: Night, students: 200}
+    - {id: '1-2', semester: Fall, time_of_day: Night, students: 350}
+    - {id: '1-3', semester: Fall, time_of_day: Night, students: 350}
+    - {id: '1-4', semester: Winter, time_of_day: Night, students: 350}
+2:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '2-1', semester: Fall, time_of_day: Night, students: 244}
+    - {id: '2-2', semester: Winter, time_of_day: Night, students: 200}
+3:
+  penalise_friday_night: true
+  sections:
+    - {id: '3-1', semester: Fall, time_of_day: Morning, students: 200}
+    - {id: '3-2', semester: Fall, time_of_day: Morning, students: 200}
+    - {id: '3-3', semester: Fall, time_of_day: Evening, students: 200}
+    - {id: '3-4', semester: Fall, time_of_day: Night, students: 200}
+4:
+  penalise_friday_night: true
+  sections:
+    - {id: '4-1', semester: Fall, time_of_day: Afternoon, students: 200}
+    - {id: '4-2', semester: Fall, time_of_day: Evening, students: 200}
+    - {id: '4-3', semester: Fall, time_of_day: Night, students: 200}
+    - {id: '4-4', semester: Fall, time_of_day: Night, students: 200}
+5:
+  penalise_friday_night: true
+  sections:
+    - {id: '5-1', semester: Fall, time_of_day: Morning, students: 118}
+    - {id: '5-2', semester: Winter, time_of_day: Morning, students: 89}
+    - {id: '5-3', semester: Winter, time_of_day: Afternoon, students: 118}
+    - {id: '5-4', semester: Winter, time_of_day: Afternoon, students: 118}
+    - {id: '5-5', semester: Summer, time_of_day: Evening, students: 89}
+    - {id: '5-6', semester: Fall, time_of_day: Evening, students: 118}
+    - {id: '5-7', semester: Winter, time_of_day: Evening, students: 118}
+    - {id: '5-8', semester: Winter, time_of_day: Evening, students: 118}
+    - {id: '5-9', semester: Winter, time_of_day: Evening, students: 118}
+    - {id: '5-10', semester: Summer, time_of_day: Night, students: 89}
+    - {id: '5-11', semester: Fall, time_of_day: Night, students: 118}
+    - {id: '5-12', semester: Winter, time_of_day: Night, students: 118}
+    - {id: '5-13', semester: Winter, time_of_day: Night, students: 89}
+6:
+  penalise_friday_night: true
+  sections:
+    - {id: '6-1', semester: Winter, time_of_day: Afternoon, students: 200}
+    - {id: '6-2', semester: Winter, time_of_day: Afternoon, students: 200}
+    - {id: '6-3', semester: Winter, time_of_day: Afternoon, students: 200}
+    - {id: '6-4', semester: Fall, time_of_day: Night, students: 142}
+    - {id: '6-5', semester: Winter, time_of_day: Night, students: 200}
+7:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '7-1', semester: Summer, time_of_day: Night, students: 90}
+    - {id: '7-2', semester: Fall, time_of_day: Night, students: 350}
+    - {id: '7-3', semester: Winter, time_of_day: Night, students: 200}
+8:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '8-1', semester: Fall, time_of_day: Night, students: 119}
+    - {id: '8-2', semester: Winter, time_of_day: Night, students: 102}
+9:
+  penalise_friday_night: true
+  sections:
+    - {id: '9-1', semester: Fall, time_of_day: Evening, students: 200}
+    - {id: '9-2', semester: Fall, time_of_day: Night, students: 200}
+10:
+  penalise_friday_night: true
+  sections:
+    - {id: '10-1', semester: Fall, time_of_day: Morning, students: 200}
+    - {id: '10-2', semester: Fall, time_of_day: Night, students: 244}
+11:
+  penalise_friday_night: true
+  sections:
+    - {id: '11-1', semester: Winter, time_of_day: Morning, students: 118}
+    - {id: '11-2', semester: Winter, time_of_day: Afternoon, students: 119}
+    - {id: '11-3', semester: Fall, time_of_day: Evening, students: 119}
+    - {id: '11-4', semester: Winter, time_of_day: Evening, students: 89}
+    - {id: '11-5', semester: Winter, time_of_day: Night, students: 102}
+12:
+  penalise_friday_night: true
+  sections:
+    - {id: '12-1', semester: Winter, time_of_day: Morning, students: 118}
+    - {id: '12-2', semester: Fall, time_of_day: Afternoon, students: 75}
+    - {id: '12-3', semester: Winter, time_of_day: Afternoon, students: 118}
+    - {id: '12-4', semester: Winter, time_of_day: Night, students: 119}
+13:
+  penalise_friday_night: true
+  sections:
+    - {id: '13-1', semester: Fall, time_of_day: Morning, students: 89}
+    - {id: '13-2', semester: Winter, time_of_day: Morning, students: 89}
+    - {id: '13-3', semester: Fall, time_of_day: Afternoon, students: 118}
+    - {id: '13-4', semester: Winter, time_of_day: Afternoon, students: 89}
+    - {id: '13-5', semester: Fall, time_of_day: Evening, students: 89}
+    - {id: '13-6', semester: Winter, time_of_day: Evening, students: 89}
+    - {id: '13-7', semester: Summer, time_of_day: Night, students: 118}
+    - {id: '13-8', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '13-9', semester: Fall, time_of_day: Night, students: 102}
+    - {id: '13-10', semester: Winter, time_of_day: Night, students: 89}
+14:
+  penalise_friday_night: true
+  sections:
+    - {id: '14-1', semester: Fall, time_of_day: Morning, students: 102}
+    - {id: '14-2', semester: Fall, time_of_day: Afternoon, students: 102}
+    - {id: '14-3', semester: Summer, time_of_day: Evening, students: 118}
+    - {id: '14-4', semester: Fall, time_of_day: Evening, students: 102}
+    - {id: '14-5', semester: Fall, time_of_day: Evening, students: 118}
+    - {id: '14-6', semester: Winter, time_of_day: Evening, students: 102}
+    - {id: '14-7', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '14-8', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '14-9', semester: Winter, time_of_day: Night, students: 89}
+15:
+  penalise_friday_night: true
+  sections:
+    - {id: '15-1', semester: Winter, time_of_day: Morning, students: 89}
+    - {id: '15-2', semester: Winter, time_of_day: Morning, students: 89}
+    - {id: '15-3', semester: Winter, time_of_day: Afternoon, students: 102}
+    - {id: '15-4', semester: Winter, time_of_day: Evening, students: 102}
+    - {id: '15-5', semester: Summer, time_of_day: Night, students: 89}
+    - {id: '15-6', semester: Fall, time_of_day: Night, students: 118}
+    - {id: '15-7', semester: Fall, time_of_day: Night, students: 102}
+    - {id: '15-8', semester: Winter, time_of_day: Night, students: 118}
+    - {id: '15-9', semester: Winter, time_of_day: Night, students: 78}
+16:
+  penalise_friday_night: true
+  sections:
+    - {id: '16-1', semester: Fall, time_of_day: Afternoon, students: 118}
+    - {id: '16-2', semester: Winter, time_of_day: Afternoon, students: 119}
+17:
+  penalise_friday_night: true
+  sections:
+    - {id: '17-1', semester: Winter, time_of_day: Morning, students: 89}
+    - {id: '17-2', semester: Fall, time_of_day: Afternoon, students: 118}
+    - {id: '17-3', semester: Winter, time_of_day: Afternoon, students: 89}
+    - {id: '17-4', semester: Fall, time_of_day: Evening, students: 118}
+    - {id: '17-5', semester: Fall, time_of_day: Evening, students: 118}
+    - {id: '17-6', semester: Winter, time_of_day: Evening, students: 89}
+    - {id: '17-7', semester: Summer, time_of_day: Night, students: 75}
+    - {id: '17-8', semester: Summer, time_of_day: Night, students: 75}
+    - {id: '17-9', semester: Fall, time_of_day: Night, students: 118}
+    - {id: '17-10', semester: Winter, time_of_day: Night, students: 102}
+    - {id: '17-11', semester: Winter, time_of_day: Night, students: 89}
+18:
+  penalise_friday_night: true
+  sections:
+    - {id: '18-1', semester: Fall, time_of_day: Morning, students: 89}
+    - {id: '18-2', semester: Fall, time_of_day: Morning, students: 89}
+    - {id: '18-3', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '18-4', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '18-5', semester: Fall, time_of_day: Evening, students: 89}
+    - {id: '18-6', semester: Fall, time_of_day: Evening, students: 102}
+    - {id: '18-7', semester: Winter, time_of_day: Evening, students: 89}
+    - {id: '18-8', semester: Summer, time_of_day: Night, students: 75}
+    - {id: '18-9', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '18-10', semester: Winter, time_of_day: Night, students: 89}
+    - {id: '18-11', semester: Winter, time_of_day: Night, students: 89}
+19:
+  penalise_friday_night: true
+  sections:
+    - {id: '19-1', semester: Fall, time_of_day: Morning, students: 89}
+    - {id: '19-2', semester: Winter, time_of_day: Morning, students: 89}
+    - {id: '19-3', semester: Winter, time_of_day: Morning, students: 102}
+    - {id: '19-4', semester: Fall, time_of_day: Afternoon, students: 102}
+    - {id: '19-5', semester: Winter, time_of_day: Afternoon, students: 89}
+    - {id: '19-6', semester: Summer, time_of_day: Evening, students: 89}
+    - {id: '19-7', semester: Winter, time_of_day: Evening, students: 89}
+    - {id: '19-8', semester: Summer, time_of_day: Night, students: 89}
+    - {id: '19-9', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '19-10', semester: Winter, time_of_day: Night, students: 89}
+    - {id: '19-11', semester: Winter, time_of_day: Night, students: 75}
+20:
+  penalise_friday_night: true
+  sections:
+    - {id: '20-1', semester: Fall, time_of_day: Morning, students: 118}
+    - {id: '20-2', semester: Fall, time_of_day: Morning, students: 118}
+    - {id: '20-3', semester: Winter, time_of_day: Morning, students: 89}
+    - {id: '20-4', semester: Fall, time_of_day: Afternoon, students: 119}
+    - {id: '20-5', semester: Winter, time_of_day: Afternoon, students: 89}
+    - {id: '20-6', semester: Fall, time_of_day: Evening, students: 89}
+    - {id: '20-7', semester: Winter, time_of_day: Evening, students: 102}
+    - {id: '20-8', semester: Summer, time_of_day: Night, students: 89}
+    - {id: '20-9', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '20-10', semester: Winter, time_of_day: Night, students: 74}
+21:
+  penalise_friday_night: true
+  sections:
+    - {id: '21-1', semester: Fall, time_of_day: Morning, students: 89}
+    - {id: '21-2', semester: Winter, time_of_day: Morning, students: 89}
+    - {id: '21-3', semester: Winter, time_of_day: Afternoon, students: 89}
+    - {id: '21-4', semester: Summer, time_of_day: Evening, students: 75}
+22:
+  penalise_friday_night: true
+  sections:
+    - {id: '22-1', semester: Winter, time_of_day: Morning, students: 102}
+    - {id: '22-2', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '22-3', semester: Winter, time_of_day: Afternoon, students: 102}
+    - {id: '22-4', semester: Winter, time_of_day: Afternoon, students: 118}
+    - {id: '22-5', semester: Summer, time_of_day: Evening, students: 80}
+    - {id: '22-6', semester: Fall, time_of_day: Evening, students: 118}
+    - {id: '22-7', semester: Winter, time_of_day: Evening, students: 118}
+    - {id: '22-8', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '22-9', semester: Winter, time_of_day: Night, students: 118}
+23:
+  penalise_friday_night: true
+  sections:
+    - {id: '23-1', semester: Fall, time_of_day: Morning, students: 119}
+    - {id: '23-2', semester: Summer, time_of_day: Night, students: 60}
+    - {id: '23-3', semester: Fall, time_of_day: Night, students: 118}
+    - {id: '23-4', semester: Winter, time_of_day: Night, students: 102}
+24:
+  penalise_friday_night: true
+  sections:
+    - {id: '24-1', semester: Fall, time_of_day: Morning, students: 89}
+    - {id: '24-2', semester: Fall, time_of_day: Afternoon, students: 102}
+    - {id: '24-3', semester: Winter, time_of_day: Afternoon, students: 89}
+    - {id: '24-4', semester: Winter, time_of_day: Afternoon, students: 89}
+    - {id: '24-5', semester: Summer, time_of_day: Evening, students: 118}
+    - {id: '24-6', semester: Fall, time_of_day: Night, students: 102}
+    - {id: '24-7', semester: Fall, time_of_day: Night, students: 118}
+    - {id: '24-8', semester: Winter, time_of_day: Night, students: 118}
+25:
+  penalise_friday_night: true
+  sections: []
+26:
+  penalise_friday_night: true
+  sections:
+    - {id: '26-1', semester: Fall, time_of_day: Morning, students: 118}
+    - {id: '26-2', semester: Winter, time_of_day: Evening, students: 80}
+    - {id: '26-3', semester: Fall, time_of_day: Night, students: 118}
+    - {id: '26-4', semester: Winter, time_of_day: Night, students: 80}
+27:
+  penalise_friday_night: true
+  sections:
+    - {id: '27-1', semester: Fall, time_of_day: Morning, students: 89}
+    - {id: '27-2', semester: Fall, time_of_day: Afternoon, students: 118}
+    - {id: '27-3', semester: Fall, time_of_day: Night, students: 119}
+    - {id: '27-4', semester: Winter, time_of_day: Night, students: 89}
+28:
+  penalise_friday_night: true
+  sections:
+    - {id: '28-1', semester: Fall, time_of_day: Night, students: 102}
+    - {id: '28-2', semester: Winter, time_of_day: Night, students: 89}
+    - {id: '28-3', semester: Winter, time_of_day: Night, students: 119}
+    - {id: '28-4', semester: Winter, time_of_day: Night, students: 118}
+29:
+  penalise_friday_night: true
+  sections:
+    - {id: '29-1', semester: Fall, time_of_day: Evening, students: 102}
+30:
+  penalise_friday_night: true
+  sections:
+    - {id: '30-1', semester: Winter, time_of_day: Morning, students: 102}
+    - {id: '30-2', semester: Fall, time_of_day: Evening, students: 89}
+    - {id: '30-3', semester: Winter, time_of_day: Evening, students: 89}
+    - {id: '30-4', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '30-5', semester: Winter, time_of_day: Night, students: 89}
+31:
+  penalise_friday_night: true
+  sections:
+    - {id: '31-1', semester: Fall, time_of_day: Morning, students: 89}
+    - {id: '31-2', semester: Fall, time_of_day: Afternoon, students: 118}
+    - {id: '31-3', semester: Fall, time_of_day: Evening, students: 89}
+    - {id: '31-4', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '31-5', semester: Winter, time_of_day: Night, students: 89}
+32:
+  penalise_friday_night: true
+  sections:
+    - {id: '32-1', semester: Winter, time_of_day: Afternoon, students: 119}
+    - {id: '32-2', semester: Summer, time_of_day: Night, students: 60}
+    - {id: '32-3', semester: Fall, time_of_day: Night, students: 102}
+    - {id: '32-4', semester: Winter, time_of_day: Night, students: 118}
+33:
+  penalise_friday_night: true
+  sections:
+    - {id: '33-1', semester: Fall, time_of_day: Afternoon, students: 118}
+    - {id: '33-2', semester: Winter, time_of_day: Afternoon, students: 102}
+    - {id: '33-3', semester: Fall, time_of_day: Night, students: 119}
+    - {id: '33-4', semester: Winter, time_of_day: Night, students: 89}
+34:
+  penalise_friday_night: true
+  sections:
+    - {id: '34-1', semester: Winter, time_of_day: Morning, students: 89}
+35:
+  penalise_friday_night: true
+  sections:
+    - {id: '35-1', semester: Fall, time_of_day: Morning, students: 119}
+    - {id: '35-2', semester: Winter, time_of_day: Morning, students: 118}
+    - {id: '35-3', semester: Winter, time_of_day: Morning, students: 118}
+36:
+  penalise_friday_night: true
+  sections:
+    - {id: '36-1', semester: Fall, time_of_day: Afternoon, students: 65}
+    - {id: '36-2', semester: Winter, time_of_day: Night, students: 45}
+37:
+  penalise_friday_night: true
+  sections:
+    - {id: '37-1', semester: Winter, time_of_day: Afternoon, students: 102}
+    - {id: '37-2', semester: Winter, time_of_day: Evening, students: 102}
+    - {id: '37-3', semester: Fall, time_of_day: Night, students: 118}
+38:
+  penalise_friday_night: true
+  sections:
+    - {id: '38-1', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '38-2', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '38-3', semester: Summer, time_of_day: Evening, students: 89}
+    - {id: '38-4', semester: Fall, time_of_day: Evening, students: 89}
+    - {id: '38-5', semester: Winter, time_of_day: Evening, students: 89}
+    - {id: '38-6', semester: Winter, time_of_day: Evening, students: 89}
+    - {id: '38-7', semester: Summer, time_of_day: Night, students: 89}
+    - {id: '38-8', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '38-9', semester: Winter, time_of_day: Night, students: 74}
+39:
+  penalise_friday_night: true
+  sections:
+    - {id: '39-1', semester: Winter, time_of_day: Night, students: 89}
+40:
+  penalise_friday_night: true
+  sections:
+    - {id: '40-1', semester: Fall, time_of_day: Night, students: 89}
+41:
+  penalise_friday_night: true
+  sections:
+    - {id: '41-1', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '41-2', semester: Winter, time_of_day: Afternoon, students: 69}
+42:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '42-1', semester: Fall, time_of_day: Morning, students: 72}
+    - {id: '42-2', semester: Winter, time_of_day: Morning, students: 72}
+    - {id: '42-3', semester: Fall, time_of_day: Afternoon, students: 72}
+    - {id: '42-4', semester: Summer, time_of_day: Evening, students: 89}
+    - {id: '42-5', semester: Winter, time_of_day: Evening, students: 72}
+    - {id: '42-6', semester: Fall, time_of_day: Night, students: 72}
+43:
+  penalise_friday_night: true
+  sections:
+    - {id: '43-1', semester: Fall, time_of_day: Morning, students: 89}
+    - {id: '43-2', semester: Winter, time_of_day: Morning, students: 89}
+    - {id: '43-3', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '43-4', semester: Winter, time_of_day: Afternoon, students: 89}
+    - {id: '43-5', semester: Summer, time_of_day: Evening, students: 89}
+    - {id: '43-6', semester: Fall, time_of_day: Evening, students: 89}
+    - {id: '43-7', semester: Fall, time_of_day: Evening, students: 89}
+    - {id: '43-8', semester: Summer, time_of_day: Night, students: 75}
+    - {id: '43-9', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '43-10', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '43-11', semester: Winter, time_of_day: Night, students: 89}
+44:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '44-1', semester: Fall, time_of_day: Evening, students: 89}
+    - {id: '44-2', semester: Winter, time_of_day: Evening, students: 89}
+    - {id: '44-3', semester: Winter, time_of_day: Evening, students: 89}
+    - {id: '44-4', semester: Summer, time_of_day: Night, students: 89}
+    - {id: '44-5', semester: Fall, time_of_day: Night, students: 89}
+45:
+  penalise_friday_night: true
+  sections:
+    - {id: '45-1', semester: Winter, time_of_day: Morning, students: 75}
+    - {id: '45-2', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '45-3', semester: Fall, time_of_day: Evening, students: 89}
+    - {id: '45-4', semester: Summer, time_of_day: Night, students: 89}
+    - {id: '45-5', semester: Fall, time_of_day: Night, students: 58}
+    - {id: '45-6', semester: Winter, time_of_day: Night, students: 75}
+46:
+  penalise_friday_night: true
+  sections:
+    - {id: '46-1', semester: Winter, time_of_day: Morning, students: 78}
+    - {id: '46-2', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '46-3', semester: Winter, time_of_day: Afternoon, students: 78}
+47:
+  penalise_friday_night: true
+  sections:
+    - {id: '47-1', semester: Fall, time_of_day: Afternoon, students: 75}
+    - {id: '47-2', semester: Winter, time_of_day: Afternoon, students: 60}
+48:
+  penalise_friday_night: true
+  sections:
+    - {id: '48-1', semester: Fall, time_of_day: Morning, students: 74}
+    - {id: '48-2', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '48-3', semester: Winter, time_of_day: Afternoon, students: 89}
+49:
+  penalise_friday_night: true
+  sections:
+    - {id: '49-1', semester: Fall, time_of_day: Afternoon, students: 74}
+    - {id: '49-2', semester: Fall, time_of_day: Night, students: 74}
+50:
+  penalise_friday_night: true
+  sections:
+    - {id: '50-1', semester: Fall, time_of_day: Night, students: 74}
+51:
+  sections:
+    - {id: '51-1', semester: Fall, time_of_day: Night, students: 89}
+52:
+  penalise_friday_night: true
+  sections:
+    - {id: '52-1', semester: Fall, time_of_day: Morning, students: 88}
+    - {id: '52-2', semester: Fall, time_of_day: Night, students: 75}
+    - {id: '52-3', semester: Winter, time_of_day: Night, students: 89}
+53:
+  penalise_friday_night: true
+  sections:
+    - {id: '53-1', semester: Fall, time_of_day: Night, students: 75}
+    - {id: '53-2', semester: Fall, time_of_day: Night, students: 75}
+    - {id: '53-3', semester: Winter, time_of_day: Night, students: 89}
+54:
+  penalise_friday_night: true
+  sections:
+    - {id: '54-1', semester: Summer, time_of_day: Evening, students: 89}
+    - {id: '54-2', semester: Fall, time_of_day: Night, students: 74}
+    - {id: '54-3', semester: Winter, time_of_day: Night, students: 89}
+55:
+  penalise_friday_night: true
+  sections:
+    - {id: '55-1', semester: Fall, time_of_day: Night, students: 75}
+    - {id: '55-2', semester: Fall, time_of_day: Night, students: 70}
+    - {id: '55-3', semester: Winter, time_of_day: Night, students: 89}
+56:
+  penalise_friday_night: true
+  sections:
+    - {id: '56-1', semester: Fall, time_of_day: Morning, students: 74}
+    - {id: '56-2', semester: Winter, time_of_day: Morning, students: 75}
+    - {id: '56-3', semester: Fall, time_of_day: Afternoon, students: 74}
+    - {id: '56-4', semester: Winter, time_of_day: Afternoon, students: 89}
+    - {id: '56-5', semester: Summer, time_of_day: Evening, students: 80}
+    - {id: '56-6', semester: Summer, time_of_day: Evening, students: 40}
+    - {id: '56-7', semester: Fall, time_of_day: Night, students: 89}
+    - {id: '56-8', semester: Winter, time_of_day: Night, students: 75}
+57:
+  penalise_friday_night: true
+  sections:
+    - {id: '57-1', semester: Fall, time_of_day: Morning, students: 74}
+    - {id: '57-2', semester: Winter, time_of_day: Afternoon, students: 74}
+    - {id: '57-3', semester: Winter, time_of_day: Night, students: 74}
+58:
+  penalise_friday_night: true
+  sections:
+    - {id: '58-1', semester: Winter, time_of_day: Morning, students: 80}
+    - {id: '58-2', semester: Fall, time_of_day: Evening, students: 80}
+    - {id: '58-3', semester: Winter, time_of_day: Evening, students: 80}
+59:
+  penalise_friday_night: true
+  sections:
+    - {id: '59-1', semester: Fall, time_of_day: Morning, students: 68}
+60:
+  penalise_friday_night: true
+  sections:
+    - {id: '60-1', semester: Summer, time_of_day: Evening, students: 75}
+    - {id: '60-2', semester: Fall, time_of_day: Evening, students: 89}
+    - {id: '60-3', semester: Summer, time_of_day: Night, students: 75}
+    - {id: '60-4', semester: Winter, time_of_day: Night, students: 89}
+61:
+  penalise_friday_night: true
+  sections:
+    - {id: '61-1', semester: Fall, time_of_day: Evening, students: 89}
+62:
+  penalise_friday_night: true
+  sections:
+    - {id: '62-1', semester: Winter, time_of_day: Night, students: 60}
+63:
+  penalise_friday_night: true
+  sections: []
+64:
+  penalise_friday_night: true
+  sections:
+    - {id: '64-1', semester: Fall, time_of_day: Morning, students: 89}
+    - {id: '64-2', semester: Winter, time_of_day: Afternoon, students: 68}
+    - {id: '64-3', semester: Winter, time_of_day: Afternoon, students: 68}
+    - {id: '64-4', semester: Summer, time_of_day: Night, students: 68}
+65:
+  penalise_friday_night: true
+  sections:
+    - {id: '65-1', semester: Fall, time_of_day: Night, students: 60}
+66:
+  penalise_friday_night: true
+  sections:
+    - {id: '66-1', semester: Winter, time_of_day: Night, students: 89}
+67:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '67-1', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '67-2', semester: Winter, time_of_day: Afternoon, students: 89}
+    - {id: '67-3', semester: Summer, time_of_day: Evening, students: 55}
+    - {id: '67-4', semester: Fall, time_of_day: Night, students: 1}
+    - {id: '67-5', semester: Winter, time_of_day: Night, students: 89}
+68:
+  penalise_friday_night: true
+  sections:
+    - {id: '68-1', semester: Fall, time_of_day: Night, students: 78}
+69:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '69-1', semester: Fall, time_of_day: Afternoon, students: 88}
+70:
+  penalise_friday_night: true
+  sections:
+    - {id: '70-1', semester: Winter, time_of_day: Morning, students: 68}
+71:
+  penalise_friday_night: true
+  sections:
+    - {id: '71-1', semester: Fall, time_of_day: Afternoon, students: 40}
+72:
+  penalise_friday_night: true
+  sections:
+    - {id: '72-1', semester: Fall, time_of_day: Morning, students: 68}
+73:
+  penalise_friday_night: true
+  sections:
+    - {id: '73-1', semester: Fall, time_of_day: Evening, students: 40}
+74:
+  penalise_friday_night: true
+  sections:
+    - {id: '74-1', semester: Fall, time_of_day: Night, students: 40}
+75:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '75-1', semester: Fall, time_of_day: Night, students: 45}
+76:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '76-1', semester: Fall, time_of_day: Morning, students: 89}
+77:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '77-1', semester: Fall, time_of_day: Evening, students: 80}
+78:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '78-1', semester: Summer, time_of_day: Evening, students: 35}
+    - {id: '78-2', semester: Winter, time_of_day: Night, students: 80}
+79:
+  penalise_friday_night: true
+  sections:
+    - {id: '79-1', semester: Fall, time_of_day: Night, students: 80}
+80:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '80-1', semester: Fall, time_of_day: Afternoon, students: 89}
+    - {id: '80-2', semester: Winter, time_of_day: Afternoon, students: 75}
+    - {id: '80-3', semester: Summer, time_of_day: Night, students: 75}
+81:
+  penalise_friday_night: true
+  sections:
+    - {id: '81-1', semester: Winter, time_of_day: Evening, students: 65}
+82:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '82-1', semester: Winter, time_of_day: Night, students: 74}
+83:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '83-1', semester: Summer, time_of_day: Night, students: 45}
+    - {id: '83-2', semester: Winter, time_of_day: Night, students: 89}
+84:
+  penalise_friday_night: true
+  sections: []
+85:
+  penalise_friday_night: true
+  sections: []
+86:
+  sections: []
+87:
+  penalise_friday_night: true
+  sections:
+    - {id: '87-1', semester: Fall, time_of_day: Night, students: 35}
+88:
+  preferred_class_length: double
+  sections:
+    - {id: '88-1', semester: Fall, time_of_day: Evening, students: 60}
+89:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '89-1', semester: Fall, time_of_day: Night, students: 60}
+90:
+  penalise_friday_night: true
+  sections:
+    - {id: '90-1', semester: Fall, time_of_day: Morning, students: 60}
+    - {id: '90-2', semester: Fall, time_of_day: Morning, students: 60}
+    - {id: '90-3', semester: Fall, time_of_day: Morning, students: 60}
+    - {id: '90-4', semester: Winter, time_of_day: Morning, students: 60}
+    - {id: '90-5', semester: Winter, time_of_day: Morning, students: 60}
+    - {id: '90-6', semester: Summer, time_of_day: Evening, students: 60}
+    - {id: '90-7', semester: Summer, time_of_day: Evening, students: 60}
+    - {id: '90-8', semester: Winter, time_of_day: Evening, students: 60}
+    - {id: '90-9', semester: Fall, time_of_day: Night, students: 60}
+    - {id: '90-10', semester: Fall, time_of_day: Night, students: 60}
+    - {id: '90-11', semester: Winter, time_of_day: Night, students: 60}
+    - {id: '90-12', semester: Winter, time_of_day: Night, students: 60}
+91:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '91-1', semester: Winter, time_of_day: Night, students: 60}
+92:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '92-1', semester: Fall, time_of_day: Morning, students: 35}
+93:
+  penalise_friday_night: true
+  sections:
+    - {id: '93-1', semester: Fall, time_of_day: Afternoon, students: 60}
+    - {id: '93-2', semester: Fall, time_of_day: Night, students: 60}
+94:
+  penalise_friday_night: true
+  sections:
+    - {id: '94-1', semester: Winter, time_of_day: Morning, students: 40}
+    - {id: '94-2', semester: Fall, time_of_day: Afternoon, students: 60}
+95:
+  penalise_friday_night: true
+  sections:
+    - {id: '95-1', semester: Fall, time_of_day: Afternoon, students: 60}
+    - {id: '95-2', semester: Winter, time_of_day: Afternoon, students: 60}
+96:
+  penalise_friday_night: true
+  sections:
+    - {id: '96-1', semester: Fall, time_of_day: Evening, students: 50}
+    - {id: '96-2', semester: Winter, time_of_day: Evening, students: 60}
+97:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '97-1', semester: Winter, time_of_day: Afternoon, students: 60}
+    - {id: '97-2', semester: Fall, time_of_day: Evening, students: 60}
+98:
+  penalise_friday_night: true
+  sections:
+    - {id: '98-1', semester: Fall, time_of_day: Morning, students: 60}
+    - {id: '98-2', semester: Winter, time_of_day: Morning, students: 60}
+99:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections: []
+100:
+  penalise_friday_night: true
+  sections:
+    - {id: '100-1', semester: Winter, time_of_day: Night, students: 60}
+101:
+  penalise_friday_night: true
+  sections:
+    - {id: '101-1', semester: Winter, time_of_day: Evening, students: 60}
+102:
+  penalise_friday_night: true
+  sections:
+    - {id: '102-1', semester: Fall, time_of_day: Afternoon, students: 60}
+    - {id: '102-2', semester: Winter, time_of_day: Evening, students: 60}
+103:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '103-1', semester: Winter, time_of_day: Night, students: 60}
+104:
+  penalise_friday_night: true
+  sections:
+    - {id: '104-1', semester: Fall, time_of_day: Morning, students: 60}
+    - {id: '104-2', semester: Winter, time_of_day: Morning, students: 60}
+    - {id: '104-3', semester: Winter, time_of_day: Night, students: 60}
+105:
+  penalise_friday_night: true
+  sections:
+    - {id: '105-1', semester: Fall, time_of_day: Night, students: 69}
+    - {id: '105-2', semester: Winter, time_of_day: Night, students: 60}
+    - {id: '105-3', semester: Winter, time_of_day: Night, students: 60}
+106:
+  penalise_friday_night: true
+  sections:
+    - {id: '106-1', semester: Fall, time_of_day: Morning, students: 60}
+    - {id: '106-2', semester: Fall, time_of_day: Afternoon, students: 60}
+    - {id: '106-3', semester: Winter, time_of_day: Evening, students: 60}
+107:
+  penalise_friday_night: true
+  sections:
+    - {id: '107-1', semester: Fall, time_of_day: Morning, students: 60}
+    - {id: '107-2', semester: Winter, time_of_day: Afternoon, students: 60}
+    - {id: '107-3', semester: Fall, time_of_day: Evening, students: 60}
+108:
+  penalise_friday_night: true
+  sections:
+    - {id: '108-1', semester: Winter, time_of_day: Afternoon, students: 60}
+    - {id: '108-2', semester: Fall, time_of_day: Evening, students: 65}
+    - {id: '108-3', semester: Winter, time_of_day: Evening, students: 60}
+109:
+  penalise_friday_night: true
+  sections:
+    - {id: '109-1', semester: Fall, time_of_day: Night, students: 70}
+    - {id: '109-2', semester: Winter, time_of_day: Night, students: 60}
+    - {id: '109-3', semester: Winter, time_of_day: Night, students: 60}
+110:
+  preferred_class_length: double
+  sections:
+    - {id: '110-1', semester: Winter, time_of_day: Morning, students: 60}
+    - {id: '110-2', semester: Fall, time_of_day: Night, students: 60}
+    - {id: '110-3', semester: Fall, time_of_day: Night, students: 60}
+111:
+  penalise_friday_night: true
+  sections:
+    - {id: '111-1', semester: Fall, time_of_day: Evening, students: 60}
+    - {id: '111-2', semester: Fall, time_of_day: Night, students: 60}
+    - {id: '111-3', semester: Winter, time_of_day: Night, students: 60}
+112:
+  penalise_friday_night: true
+  sections:
+    - {id: '112-1', semester: Fall, time_of_day: Evening, students: 60}
+    - {id: '112-2', semester: Winter, time_of_day: Evening, students: 60}
+    - {id: '112-3', semester: Fall, time_of_day: Night, students: 60}
+    - {id: '112-4', semester: Fall, time_of_day: Night, students: 60}
+    - {id: '112-5', semester: Winter, time_of_day: Night, students: 60}
+113:
+  penalise_friday_night: true
+  sections:
+    - {id: '113-1', semester: Winter, time_of_day: Morning, students: 60}
+    - {id: '113-2', semester: Fall, time_of_day: Evening, students: 60}
+    - {id: '113-3', semester: Winter, time_of_day: Night, students: 60}
+114:
+  penalise_friday_night: true
+  sections:
+    - {id: '114-1', semester: Fall, time_of_day: Afternoon, students: 60}
+    - {id: '114-2', semester: Winter, time_of_day: Night, students: 60}
+115:
+  penalise_friday_night: true
+  sections:
+    - {id: '115-1', semester: Fall, time_of_day: Morning, students: 60}
+    - {id: '115-2', semester: Winter, time_of_day: Morning, students: 60}
+116:
+  penalise_friday_night: true
+  sections:
+    - {id: '116-1', semester: Fall, time_of_day: Afternoon, students: 60}
+    - {id: '116-2', semester: Fall, time_of_day: Night, students: 60}
+    - {id: '116-3', semester: Winter, time_of_day: Night, students: 60}
+    - {id: '116-4', semester: Winter, time_of_day: Night, students: 60}
+117:
+  penalise_friday_night: true
+  sections:
+    - {id: '117-1', semester: Winter, time_of_day: Evening, students: 60}
+118:
+  penalise_friday_night: true
+  sections:
+    - {id: '118-1', semester: Fall, time_of_day: Afternoon, students: 60}
+119:
+  penalise_friday_night: true
+  sections:
+    - {id: '119-1', semester: Winter, time_of_day: Night, students: 60}
+120:
+  penalise_friday_night: true
+  sections: []
+121:
+  penalise_friday_night: true
+  sections:
+    - {id: '121-1', semester: Fall, time_of_day: Evening, students: 35}
+122:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '122-1', semester: Fall, time_of_day: Night, students: 40}
+123:
+  penalise_friday_night: true
+  sections:
+    - {id: '123-1', semester: Fall, time_of_day: Morning, students: 60}
+    - {id: '123-2', semester: Winter, time_of_day: Morning, students: 60}
+    - {id: '123-3', semester: Summer, time_of_day: Evening, students: 40}
+    - {id: '123-4', semester: Winter, time_of_day: Evening, students: 60}
+124:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections: []
+125:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '125-1', semester: Fall, time_of_day: Evening, students: 30}
+126:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '126-1', semester: Fall, time_of_day: Evening, students: 55}
+127:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '127-1', semester: Winter, time_of_day: Afternoon, students: 60}
+128:
+  penalise_friday_night: true
+  sections:
+    - {id: '128-1', semester: Winter, time_of_day: Morning, students: 60}
+129:
+  penalise_friday_night: true
+  sections:
+    - {id: '129-1', semester: Winter, time_of_day: Evening, students: 60}
+130:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '130-1', semester: Fall, time_of_day: Evening, students: 40}
+131:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '131-1', semester: Fall, time_of_day: Afternoon, students: 45}
+132:
+  penalise_friday_night: true
+  sections: []
+133:
+  penalise_friday_night: true
+  sections:
+    - {id: '133-1', semester: Winter, time_of_day: Night, students: 40}
+134:
+  penalise_friday_night: true
+  sections: []
+135:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '135-1', semester: Fall, time_of_day: Night, students: 30}
+136:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections: []
+137:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '137-1', semester: Fall, time_of_day: Evening, students: 55}
+138:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '138-1', semester: Fall, time_of_day: Night, students: 55}
+139:
+  penalise_friday_night: true
+  sections:
+    - {id: '139-1', semester: Fall, time_of_day: Evening, students: 55}
+140:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '140-1', semester: Winter, time_of_day: Night, students: 60}
+141:
+  penalise_friday_night: true
+  sections:
+    - {id: '141-1', semester: Fall, time_of_day: Night, students: 25}
+    - {id: '141-2', semester: Winter, time_of_day: Night, students: 45}
+142:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '142-1', semester: Fall, time_of_day: Night, students: 55}
+143:
+  penalise_friday_night: true
+  sections:
+    - {id: '143-1', semester: Fall, time_of_day: Morning, students: 55}
+144:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '144-1', semester: Winter, time_of_day: Night, students: 50}
+145:
+  penalise_friday_night: true
+  sections:
+    - {id: '145-1', semester: Fall, time_of_day: Night, students: 60}
+146:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '146-1', semester: Fall, time_of_day: Night, students: 55}
+147:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '147-1', semester: Winter, time_of_day: Night, students: 60}
+148:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '148-1', semester: Fall, time_of_day: Afternoon, students: 40}
+149:
+  penalise_friday_night: true
+  sections: []
+150:
+  penalise_friday_night: true
+  sections: []
+151:
+  penalise_friday_night: true
+  sections:
+    - {id: '151-1', semester: Fall, time_of_day: Night, students: 60}
+    - {id: '151-2', semester: Winter, time_of_day: Night, students: 60}
+152:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '152-1', semester: Fall, time_of_day: Night, students: 35}
+153:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '153-1', semester: Fall, time_of_day: Afternoon, students: 35}
+154:
+  penalise_friday_night: true
+  sections:
+    - {id: '154-1', semester: Fall, time_of_day: Morning, students: 60}
+155:
+  penalise_friday_night: true
+  sections:
+    - {id: '155-1', semester: Winter, time_of_day: Evening, students: 68}
+156:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '156-1', semester: Fall, time_of_day: Morning, students: 45}
+    - {id: '156-2', semester: Winter, time_of_day: Morning, students: 45}
+157:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '157-1', semester: Winter, time_of_day: Evening, students: 60}
+158:
+  penalise_friday_night: true
+  sections:
+    - {id: '158-1', semester: Winter, time_of_day: Night, students: 60}
+159:
+  penalise_friday_night: true
+  sections:
+    - {id: '159-1', semester: Winter, time_of_day: Night, students: 45}
+160:
+  preferred_class_length: double
+  penalise_friday_night: true
+  sections:
+    - {id: '160-1', semester: Winter, time_of_day: Afternoon, students: 60}
+161:
+  penalise_friday_night: true
+  sections:
+    - {id: '161-1', semester: Fall, time_of_day: Afternoon, students: 60}
+162:
+  penalise_friday_night: true
+  sections:
+    - {id: '162-1', semester: Winter, time_of_day: Morning, students: 89}
+163:
+  penalise_friday_night: true
+  sections:
+    - {id: '163-1', semester: Winter, time_of_day: Morning, students: 74}
+164:
+  penalise_friday_night: true
+  sections:
+    - {id: '164-1', semester: Winter, time_of_day: Night, students: 45}

@@ -1,0 +1,7 @@
+semesters: [Summer, Fall, Winter]
+files:
+  meeting_times: meeting-times.yaml
+  classrooms: classrooms.yaml
+  professors: professors.yaml
+  courses: courses.yaml
+  course_concurrency: course-concurrency.yaml
