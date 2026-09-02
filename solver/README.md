@@ -30,7 +30,7 @@ cat ../instances/tiny/instance.yaml | scheduler solve -
 ```
 
 A file-backed solve writes three files to the instance folder's `results/`
-directory: `<name>.json`, `<name>-schedule.html`, and `<name>-instance.html`.
+directory: `result.json`, `schedule.html`, and `instance.html`.
 A split instance directory is itself the instance folder. Use `-o` to
 override the JSON path; the two HTML pages are written beside it. A solve read
 from stdin continues to write JSON to stdout. Progress goes to stderr.

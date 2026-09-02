@@ -279,7 +279,7 @@ class Instance:
         return ", ".join((
             count(len(self.real_professors), "professor"),
             count(len(self.courses), "course"),
-            count(len(self.sections), "section"),
+            count(len(self.section_keys), "section"),
             count(len(self.real_classrooms), "room"),
             count(len(self.real_timeslots), "timeslot"),
             count(len(self.semesters), "semester"),
