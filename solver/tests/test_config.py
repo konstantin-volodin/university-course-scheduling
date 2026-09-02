@@ -194,3 +194,139 @@ courses:
         {"key": ["traore-namatie", "Fall", "Morning"], "value": 3}
     ]
     assert payload["classroom_set"] == ["1110"]
+
+
+BASE = """
+semesters: [Fall]
+meeting_times:
+  - {id: A, days: {Mon: '09:00'}, duration_minutes: 90, time_of_day: Morning}
+  - {id: N, days: {Mon: '19:00'}, duration_minutes: 90, time_of_day: Night}
+classrooms: {R1: 30}
+"""
+
+
+def test_professor_defaults_apply_when_flags_are_omitted() -> None:
+    payload = config.loads(
+        BASE
+        + """
+professor_defaults: {can_teach_night: true, prefers_packed_days: true}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+  p2: {teaching_load: 1, qualified_for: all, can_teach_night: false}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["professor_can_teach_night"] == [["p1", True], ["p2", False]]
+    assert payload["professor_pack_day_pref"] == [["p1", 1], ["p2", 1]]
+
+
+def test_course_defaults_apply_when_flags_are_omitted() -> None:
+    payload = config.loads(
+        BASE
+        + """
+course_defaults: {penalise_friday_night: true}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+  C2:
+    penalise_friday_night: false
+    sections:
+      - {id: C2-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["course_friday_penalty"] == ["C1"]
+
+
+def test_defaults_without_a_block_keep_the_old_behavior() -> None:
+    payload = config.loads(
+        BASE
+        + """
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["professor_can_teach_night"] == [["p1", False]]
+    assert payload["professor_pack_day_pref"] == [["p1", 0]]
+    assert payload["course_friday_penalty"] == []
+
+
+def test_non_boolean_default_is_reported() -> None:
+    with pytest.raises(
+        InvalidInstanceError,
+        match=r"professor_defaults.can_teach_night: expected true or false",
+    ):
+        config.loads(
+            BASE
+            + """
+professor_defaults: {can_teach_night: maybe}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+        )
+
+
+def test_unknown_default_key_is_reported_with_suggestion() -> None:
+    with pytest.raises(
+        InvalidInstanceError,
+        match="professor_defaults: unknown field 'can_teach_knight'; "
+        "did you mean 'can_teach_night'",
+    ):
+        config.loads(
+            BASE
+            + """
+professor_defaults: {can_teach_knight: true}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+        )
+
+
+def test_manifest_carries_defaults(tmp_path: Path) -> None:
+    (tmp_path / "instance.yaml").write_text(
+        """
+semesters: [Fall]
+professor_defaults: {can_teach_night: true}
+course_defaults: {penalise_friday_night: true}
+files:
+  meeting_times: meetings.yaml
+  classrooms: rooms.yaml
+  professors: professors.yaml
+  courses: courses.yaml
+"""
+    )
+    (tmp_path / "meetings.yaml").write_text(
+        "- {id: A, days: {Mon: '09:00'}, duration_minutes: 90, time_of_day: Morning}\n"
+    )
+    (tmp_path / "rooms.yaml").write_text("R1: 30\n")
+    (tmp_path / "professors.yaml").write_text(
+        "p1: {teaching_load: 1, qualified_for: all}\n"
+    )
+    (tmp_path / "courses.yaml").write_text(
+        """
+C1:
+  sections:
+    - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+
+    payload = config.load(tmp_path)
+    assert payload["professor_can_teach_night"] == [["p1", True]]
+    assert payload["course_friday_penalty"] == ["C1"]

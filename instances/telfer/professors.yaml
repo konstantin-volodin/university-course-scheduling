@@ -1,7 +1,5 @@
 bonaccio-silvia:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   preferred_class_length: single
   qualified_for: all
   availability:
@@ -13,8 +11,6 @@ bonaccio-silvia:
     ADM2750: 1
 chen-qiu:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Winter: {Evening: 3, Night: 3}
@@ -26,8 +22,6 @@ chen-qiu:
     ADM4307: 2
 delcorde-david:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Evening: 1, Night: 3}
@@ -46,8 +40,6 @@ delcorde-david:
     ADM4728: 1
 grudniewicz-agnes:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 2, Evening: 3, Night: 1}
@@ -60,8 +52,6 @@ grudniewicz-agnes:
     ADM2304: 1
 khoroshilov-yuri:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 1, Night: 3}
@@ -83,8 +73,6 @@ khoroshilov-yuri:
     ADM4712: 1
 lessard-lysanne:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 3, Evening: 1, Night: 1}
@@ -96,8 +84,6 @@ lessard-lysanne:
     ADM2736: 1
 mcwatters-cheryl:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 2, Evening: 1, Night: 1}
@@ -109,8 +95,6 @@ mcwatters-cheryl:
     ADM4342: 1
 osullivan-sharon-l:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 1, Evening: 3, Night: 3}
@@ -120,8 +104,6 @@ osullivan-sharon-l:
     ADM2303: 2
 rentz-william:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 3, Evening: 1, Night: 2}
@@ -130,8 +112,6 @@ rentz-william:
     ADM3378: 1
 tasse-marc:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 3, Evening: 2}
@@ -141,8 +121,6 @@ tasse-marc:
     ADM2337: 1
 boulerice-donat:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Night: 1}
@@ -153,8 +131,6 @@ boulerice-donat:
     ADM4711: 2
 bozec-richard:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 1, Night: 3}
@@ -166,8 +142,6 @@ bozec-richard:
     ADM1500: 1
 brand-kevin:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 1, Night: 3}
@@ -179,8 +153,6 @@ brand-kevin:
     ADM1740: 1
 calof-jonathan:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Evening: 2, Night: 2}
@@ -189,8 +161,6 @@ calof-jonathan:
     ADM2303: 3
 carriere-jules:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Night: 2}
@@ -200,8 +170,6 @@ carriere-jules:
     ADM3316: 1
 cedzynski-marzena:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 3, Evening: 2, Night: 2}
@@ -212,8 +180,6 @@ cedzynski-marzena:
     ADM2336: 1
 chamberlin-tyler:
   teaching_load: 5
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 3, Evening: 1, Night: 1}
@@ -226,8 +192,6 @@ chamberlin-tyler:
     ADM4328: 1
 chelli-mohamed:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 3, Evening: 2, Night: 1}
@@ -238,8 +202,6 @@ chelli-mohamed:
     ADM3319: 1
 akhigbe-okhaide:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Winter: {Morning: 2, Night: 3}
@@ -248,8 +210,6 @@ akhigbe-okhaide:
     ADM1740: 3
 chiocchio-francois:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Night: 2}
@@ -260,8 +220,6 @@ chiocchio-francois:
     ADM2341: 1
 chkir-imed:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Evening: 3, Night: 1}
@@ -272,8 +230,6 @@ chkir-imed:
     ADM3333: 1
 chourou-lamia:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 2, Night: 2}
@@ -284,8 +240,6 @@ chourou-lamia:
     ADM3752: 1
 coderre-david:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Evening: 1}
@@ -295,8 +249,6 @@ coderre-david:
     ADM2341: 1
 collier-robert:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Evening: 3, Night: 3}
@@ -306,8 +258,6 @@ collier-robert:
     ADM3396: 1
 conheady-brian:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 2, Evening: 2, Night: 3}
@@ -322,8 +272,6 @@ conheady-brian:
     ADM3340: 1
 couillard-jean:
   teaching_load: 5
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 1, Evening: 2, Night: 3}
@@ -336,8 +284,6 @@ couillard-jean:
     ADM1340: 1
 crick-david:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 1, Evening: 3, Night: 2}
@@ -349,8 +295,6 @@ crick-david:
     ADM4503: 1
 daze-stephen:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 2}
@@ -360,8 +304,6 @@ daze-stephen:
     ADM3313: 3
 apedome-seli:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 3, Evening: 1, Night: 3}
@@ -371,8 +313,6 @@ apedome-seli:
     ADM3396: 1
 ding-shujun:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 1, Night: 3}
@@ -388,8 +328,6 @@ ding-shujun:
     ADM3319: 1
 dodonova-anna:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Night: 1}
@@ -401,8 +339,6 @@ dodonova-anna:
     ADM1340: 3
 doloreux-david:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 1, Evening: 2, Night: 1}
@@ -414,8 +350,6 @@ doloreux-david:
     ADM4351: 1
 donia-magda:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Evening: 1, Night: 1}
@@ -427,8 +361,6 @@ donia-magda:
     ADM4716: 1
 durocher-sylvain:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 3, Evening: 1, Night: 2}
@@ -437,8 +369,6 @@ durocher-sylvain:
     ADM2336: 2
 dutta-shantanu:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 2, Evening: 3, Night: 2}
@@ -450,8 +380,6 @@ dutta-shantanu:
     ADM3740: 1
 elliott-catherine:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Winter: {Morning: 1, Afternoon: 3, Night: 2}
@@ -459,8 +387,6 @@ elliott-catherine:
     ADM3350: 3
 freel-mark:
   teaching_load: 5
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 1, Evening: 3, Night: 1}
@@ -472,8 +398,6 @@ freel-mark:
     ADM3319: 1
 gandhi-devinder:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 3, Evening: 2, Night: 1}
@@ -485,8 +409,6 @@ gandhi-devinder:
     ADM4316: 1
 astaraky-davood:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 1, Evening: 1, Night: 1}
@@ -506,8 +428,6 @@ astaraky-davood:
     ADM4354: 1
 guo-chen:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Winter: {Evening: 3}
@@ -515,8 +435,6 @@ guo-chen:
     ADM2350: 3
 guolla-michael:
   teaching_load: 5
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 2, Evening: 3, Night: 1}
@@ -528,8 +446,6 @@ guolla-michael:
     ADM4351: 1
 hamzaoui-essoussi-leila:
   teaching_load: 6
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 3, Evening: 2}
@@ -543,8 +459,6 @@ hamzaoui-essoussi-leila:
     ADM2320: 1
 himick-darlene:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 3, Evening: 1}
@@ -557,8 +471,6 @@ himick-darlene:
     ADM3321: 2
 hebert-marjolaine:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Winter: {Morning: 2, Evening: 3}
@@ -567,8 +479,6 @@ hebert-marjolaine:
     ADM3345: 2
 ika-lavagnon:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Night: 3}
@@ -586,8 +496,6 @@ ika-lavagnon:
     ADM4715: 1
 jaana-mirou:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Evening: 2, Night: 3}
@@ -596,8 +504,6 @@ jaana-mirou:
     ADM4103: 1
 jaber-rim:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Evening: 2}
@@ -607,8 +513,6 @@ jaber-rim:
     ADM2772: 1
 kerr-james:
   teaching_load: 7
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 3, Evening: 3, Night: 2}
@@ -621,8 +525,6 @@ kerr-james:
     ADM2702: 1
 aubert-jean-francois:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Night: 3}
@@ -638,8 +540,6 @@ aubert-jean-francois:
     ADM3346: 1
 kindra-gurprit:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 1, Evening: 3}
@@ -655,8 +555,6 @@ kindra-gurprit:
     ADM4352: 1
 kuziemsky-craig:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 1, Evening: 1, Night: 2}
@@ -668,8 +566,6 @@ kuziemsky-craig:
     ADM4329: 1
 lajili-kaouthar:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1}
@@ -681,8 +577,6 @@ lajili-kaouthar:
     ADM3363: 1
 lane-daniel:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 2, Night: 2}
@@ -692,8 +586,6 @@ lane-daniel:
     ADM4352: 2
 lapierre-laurent:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 2, Evening: 3, Night: 2}
@@ -703,8 +595,6 @@ lapierre-laurent:
     ADM3305: 3
 large-david:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 2}
@@ -716,8 +606,6 @@ large-david:
     ADM2337: 2
 larochelle-bruce:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 3}
@@ -728,8 +616,6 @@ larochelle-bruce:
     ADM4329: 1
 leck-joanne:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Summer: {Night: 3}
@@ -738,8 +624,6 @@ leck-joanne:
     ADM4342: 3
 lee-ysabella-hwa:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 2, Evening: 1}
@@ -749,8 +633,6 @@ lee-ysabella-hwa:
     ADM2336: 2
 beauchamp-julie:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Night: 3}
@@ -760,8 +642,6 @@ beauchamp-julie:
     ADM3321: 1
 li-jonathan:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Night: 1}
@@ -770,8 +650,6 @@ li-jonathan:
     ADM2772: 3
 li-tiemei-sarah:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 3, Evening: 3, Night: 2}
@@ -782,8 +660,6 @@ li-tiemei-sarah:
     ADM3305: 1
 linton-jonathan:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 3, Night: 1}
@@ -794,8 +670,6 @@ linton-jonathan:
     ADM4342: 1
 madill-judith:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 1, Night: 1}
@@ -805,8 +679,6 @@ madill-judith:
     ADM3301: 2
 manga-pranlal:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Evening: 3, Night: 1}
@@ -817,8 +689,6 @@ manga-pranlal:
     ADM2320: 1
 manseau-jasmin:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 3, Evening: 3, Night: 2}
@@ -827,8 +697,6 @@ manseau-jasmin:
     ADM3318: 3
 marques-jose-carlos:
   teaching_load: 5
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Night: 3}
@@ -844,8 +712,6 @@ marques-jose-carlos:
     ADM2772: 1
 mazutis-daina:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Winter: {Morning: 3, Night: 3}
@@ -854,8 +720,6 @@ mazutis-daina:
     ADM4311: 2
 mcilkenny-philip:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 3, Evening: 3}
@@ -864,8 +728,6 @@ mcilkenny-philip:
     ADM1301: 3
 ben-amar-walid:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 2, Evening: 3, Night: 3}
@@ -878,8 +740,6 @@ ben-amar-walid:
     ADM4342: 1
 mekonnen-gebre:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Evening: 3}
@@ -889,8 +749,6 @@ mekonnen-gebre:
     ADM4503: 1
 michalowski-wojtek:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Evening: 1}
@@ -901,8 +759,6 @@ michalowski-wojtek:
     ADM1300: 1
 mignerat-muriel:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 2, Night: 2}
@@ -913,8 +769,6 @@ mignerat-muriel:
     ADM2703: 1
 mirabeau-laurent:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 2}
@@ -926,8 +780,6 @@ mirabeau-laurent:
     ADM3378: 1
 mulvey-michael:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Winter: {Morning: 3, Evening: 1, Night: 3}
@@ -938,8 +790,6 @@ mulvey-michael:
     ADM4711: 3
 musselman-richard:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 3, Evening: 2, Night: 1}
@@ -951,8 +801,6 @@ musselman-richard:
     ADM3323: 1
 nitani-miwako:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 1, Evening: 1}
@@ -964,8 +812,6 @@ nitani-miwako:
     ADM3345: 1
 oreilly-jane:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Evening: 3, Night: 1}
@@ -977,8 +823,6 @@ oreilly-jane:
     ADM3358: 1
 osullivan-alan:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 1, Night: 2}
@@ -988,8 +832,6 @@ osullivan-alan:
     ADM4336: 2
 ben-amor-sarah:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3}
@@ -999,8 +841,6 @@ ben-amor-sarah:
     ADM1100: 1
 orser-barbara:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 2, Evening: 2, Night: 3}
@@ -1010,8 +850,6 @@ orser-barbara:
     ADM3319: 2
 parent-michael:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 1, Evening: 2, Night: 3}
@@ -1021,8 +859,6 @@ parent-michael:
     ADM3322: 2
 patrick-jonathan:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Winter: {Afternoon: 3, Evening: 3}
@@ -1031,8 +867,6 @@ patrick-jonathan:
     ADM4326: 3
 pedwell-kathryn:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Evening: 1}
@@ -1043,8 +877,6 @@ pedwell-kathryn:
     ADM3305: 1
 persaud-ajax:
   teaching_load: 5
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 3, Evening: 3, Night: 1}
@@ -1055,8 +887,6 @@ persaud-ajax:
     ADM4342: 2
 quon-tony:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 2, Evening: 3, Night: 1}
@@ -1067,8 +897,6 @@ quon-tony:
     ADM4328: 1
 raahemi-bijan:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Evening: 3, Night: 3}
@@ -1078,8 +906,6 @@ raahemi-bijan:
     ADM4307: 1
 racicot-francois-eric:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 1, Evening: 1}
@@ -1092,8 +918,6 @@ racicot-francois-eric:
     ADM2372: 1
 reinhardt-gilles:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 2, Night: 3}
@@ -1106,8 +930,6 @@ reinhardt-gilles:
     ADM4752: 1
 benyoucef-morad:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Night: 1}
@@ -1117,8 +939,6 @@ benyoucef-morad:
     ADM2702: 3
 riding-allan:
   teaching_load: 5
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 2, Evening: 1, Night: 2}
@@ -1128,8 +948,6 @@ riding-allan:
     ADM3352: 2
 ruhi-umar:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 2, Evening: 1}
@@ -1139,8 +957,6 @@ ruhi-umar:
     ADM4352: 1
 saadi-samir:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 1, Night: 1}
@@ -1152,8 +968,6 @@ saadi-samir:
     ADM2372: 1
 safi-pouya:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 3, Night: 2}
@@ -1162,8 +976,6 @@ safi-pouya:
     ADM2752: 2
 saure-antoine:
   teaching_load: 3
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Afternoon: 3, Night: 3}
@@ -1173,8 +985,6 @@ saure-antoine:
     ADM1301: 1
 schillo-sandra:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Winter: {Morning: 3, Evening: 3}
@@ -1183,8 +993,6 @@ schillo-sandra:
     ADM3305: 1
 shaukat-rumaisa:
   teaching_load: 2
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 2, Evening: 2}
@@ -1194,8 +1002,6 @@ shaukat-rumaisa:
     ADM3313: 1
 slaouti-abdenour:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 1, Evening: 1, Night: 3}
@@ -1211,8 +1017,6 @@ slaouti-abdenour:
     ADM4338: 1
 spence-martine:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Afternoon: 1, Night: 3}
@@ -1231,8 +1035,6 @@ spence-martine:
     ADM3713: 1
 adjaoud-fodil:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Night: 1}
@@ -1242,8 +1044,6 @@ adjaoud-fodil:
     ADM4328: 2
 traore-namatie:
   teaching_load: 5
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 1, Evening: 1, Night: 3}
@@ -1262,8 +1062,6 @@ traore-namatie:
     ADM3746: 1
 weatherstone-sheldon:
   teaching_load: 5
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 3, Evening: 1, Night: 2}
@@ -1277,8 +1075,6 @@ weatherstone-sheldon:
     ADM3323: 1
 woodcock-patrick:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 1, Evening: 1, Night: 2}
@@ -1290,8 +1086,6 @@ woodcock-patrick:
     ADM2341: 1
 wright-david:
   teaching_load: 4
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 1, Afternoon: 1, Night: 3}
@@ -1304,8 +1098,6 @@ wright-david:
     ADM1300: 1
 boujenoui-ameur:
   teaching_load: 1
-  can_teach_night: true
-  can_teach_off_campus: true
   qualified_for: all
   availability:
     Fall: {Morning: 2, Afternoon: 3, Evening: 3}

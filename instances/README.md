@@ -100,6 +100,20 @@ Optional:
 Preference scores: `0` or omitted = none; higher values = stronger. `part-timer`
 is reserved.
 
+## Flag defaults
+
+When most entries share one flag value, declare it once in `instance.yaml` and
+list only the exceptions:
+
+```yaml
+professor_defaults: {can_teach_night: true, can_teach_off_campus: true}
+course_defaults: {penalise_friday_night: true}
+```
+
+`professor_defaults` accepts `can_teach_night`, `can_teach_off_campus`, and
+`prefers_packed_days`; `course_defaults` accepts `penalise_friday_night`. A
+flag on an individual professor or course overrides the declared default.
+
 ## Courses
 
 ```yaml
