@@ -64,7 +64,6 @@ header{background:var(--surface);border-top:5px solid var(--garnet);
   margin:var(--s5) 0 0;padding:var(--s8) var(--s6) var(--s7)}
 h1{font-family:__DISPLAY__;font-weight:700;font-size:clamp(2.4rem,5.2vw,3.75rem);
   line-height:1.02;margin:0 0 var(--s5);letter-spacing:-.015em;text-wrap:balance;max-width:16ch}
-.sub{font-size:1.1875rem;color:var(--muted);max-width:62ch;line-height:1.55;margin:0}
 .eyebrow{font-size:.6875rem;font-weight:600;letter-spacing:.14em;
   text-transform:uppercase;color:var(--faint);margin:0 0 var(--s5)}
 /* summary band */
@@ -134,7 +133,7 @@ td.cell.empty{background:repeating-linear-gradient(135deg,transparent 0 7px,#EDE
 /* a chip carries staffing on its left edge and fill, never on the text colour */
 .chip{font-family:__MONO__;font-size:.75rem;font-weight:400;padding:3px 8px;
   cursor:pointer;border:0;display:flex;align-items:center;
-  justify-content:space-between;gap:6px;line-height:1.35;white-space:nowrap;overflow:hidden;
+  gap:6px;line-height:1.35;white-space:nowrap;overflow:hidden;
   background:var(--white);color:var(--ink);border-left:3px solid var(--grey-light)}
 /* the flag is the edge, not a fill: whichever way the filter tips, the grid
    stays mostly white with flags in it -- the same logic as the room footnote */
@@ -327,44 +326,31 @@ _SCHEDULE_BODY = """<div class="wrap">
 </div>
 <div class="detail" id="detail" hidden></div>
 <div class="legend">
-  <span class="key"><span class="sw f"></span> Named professor</span>
-  <span class="key"><span class="sw p"></span> Part-timer (<code>professor_id: null</code>)</span>
-  <span class="key">A chip shows the section id, and the room when the class is on
-  campus.</span>
+  <span class="key"><span class="sw f"></span> Named faculty</span>
+  <span class="key"><span class="sw p"></span> Part-time</span>
+  <span class="key">Room shown after section</span>
 </div>
-<div class="notes">
-  <div class="note"><h3>Why sections repeat across days</h3>
-    <p>A timeslot carries its own meeting pattern. <code>{example_slot}</code> means
-    {example_days}, so that section appears in each of those columns. {n_sections} sections
-    make {n_cells} cell placements.</p></div>
-  <div class="note"><h3>Rooms</h3>
-    <p>{n_offcampus} of {n_sections} assignments are taught off campus. A chip shows a room
-    number only when the class has one.</p></div>
-  <div class="note"><h3>Identifiers</h3>
-    <p>Professors, courses and rooms are opaque ids, as the solver received them. Join a name
-    table back on to read this as anyone's schedule.</p></div>
-  <div class="note"><h3>How the solve ended</h3>
-    <table class="stages" id="stagetable"></table>
-    <p style="margin-top:8px">A stage marked <em>stopped early</em> hit the per-stage time limit
-    with a usable answer it could not prove optimal.</p></div>
+<div class="sect">
+  <h2>Solve stages</h2>
+  <div class="panel"><table class="stages" id="stagetable"></table></div>
 </div>
 </div>"""
 
 _SCHEDULE_JS = """
 (function(){
   var R=DATA.r, DAYS=DATA.days, TODS=DATA.tods, SEMS=DATA.sems, ROOMS=DATA.rooms;
-  var P=0,C=1,SEC=2,SEM=3,SLOT=4,ROOM=5,TOD=6,DYS=7,LEN=8,STU=9;
+  var P=0,C=1,SEC=2,SEM=3,SLOT=4,ROOM=5,TOD=6,DYS=7,LEN=8,STU=9,LABEL=10;
   var state={sem:SEMS[0],staff:"all",room:"all",pick:null};
   var CAP=6;  // chips shown per slot group before it has to be opened
 
   var totalPT=R.filter(function(r){return r[P]===null}).length;
   var profs={}; R.forEach(function(r){ if(r[P]!==null) profs[r[P]]=1; });
-  [["",R.length,"sections placed"],
-   ["",R.length-totalPT,"taught by named faculty"],
-   ["pt",totalPT,"imply a part-time hire"],
-   ["",Object.keys(profs).length,"professors carrying load"],
-   ["",R.filter(function(r){return r[ROOM]!==null}).length,"in a physical room"],
-   ["",DATA.summary.unscheduled,"left unscheduled"]
+  [["",R.length,"sections"],
+   ["",R.length-totalPT,"named-faculty sections"],
+   ["pt",totalPT,"part-time sections"],
+   ["",Object.keys(profs).length,"professors"],
+   ["",R.filter(function(r){return r[ROOM]!==null}).length,"on campus"],
+   ["",DATA.summary.unscheduled,"unscheduled"]
   ].forEach(function(s){
     var d=document.createElement("div"); d.className="stat "+s[0];
     d.innerHTML='<div class="n"></div><div class="l"></div>';
@@ -421,7 +407,7 @@ _SCHEDULE_JS = """
                   return '<button class="chip'+(pt?' pt':'')+(gi>=CAP?' over':'')+
                     '" data-sec="'+r[SEC]+'" title="'+
                     (pt?'Part-timer':'Prof '+r[P])+' \\u00b7 course '+r[C]+' \\u00b7 '+r[SLOT]+'">'+
-                    '<span>'+r[SEC]+'</span>'+
+                    '<span>'+r[LABEL]+'</span>'+
                     (r[ROOM]?'<span class="room">'+r[ROOM]+'</span>':'')+'</button>';
                 }).join("")+'</div>'+
                 (g.length>CAP
@@ -518,11 +504,9 @@ def schedule_page(payload: Any, result: Any, *, title: str = "Solved Schedule") 
             days_of.get(slot, []),
             len_of.get(slot, "single"),
             students.get(str(a.get("section_id"))),
+            _section_label(a.get("course_id"), a.get("section_id")),
         ])
 
-    placements = sum(len(r[7]) or 1 for r in rows)
-    seen = [r for r in rows if r[7]]
-    example = max(seen, key=lambda r: len(r[7]), default=None)
     summary = result.get("summary") or {}
     data = {
         "r": rows,
@@ -539,13 +523,17 @@ def schedule_page(payload: Any, result: Any, *, title: str = "Solved Schedule") 
             f"· status: {result.get('status', 'n/a')}"
         ),
         heading=html.escape(title),
-        example_slot=html.escape(str(example[4]) if example else "A01"),
-        example_days=html.escape(" and ".join(example[7]) if example else "two days"),
-        n_sections=len(rows),
-        n_cells=placements,
-        n_offcampus=sum(1 for r in rows if r[5] is None),
     )
     return _doc(title, body, data, _SCHEDULE_JS)
+
+
+def _section_label(course: Any, section: Any) -> str:
+    """Return a section label without repeating a course already in its id."""
+    course_id = str(course)
+    section_id = str(section)
+    if section_id == course_id or section_id.startswith(f"{course_id}-"):
+        return section_id
+    return f"{course_id}-{section_id}"
 
 
 # --------------------------------------------------------------------------- #
@@ -556,21 +544,16 @@ _INSTANCE_BODY = """<div class="wrap">
 <header>
   <p class="eyebrow">{eyebrow}</p>
   <h1>{heading}</h1>
-  <p class="sub">The inputs: the week, the faculty, the sections to cover, and the rooms.</p>
 </header>
 <div class="stats" id="stats"></div>
 
 <div class="sect">
-  <h2>Supply against demand</h2>
-  <p class="lead">Total faculty teaching load against the sections needing cover. The gap is
-  bought in as part-time teaching.</p>
+  <h2>Capacity</h2>
   <div class="panel"><div class="bars" id="supply"></div></div>
 </div>
 
 <div class="sect">
-  <h2>The week</h2>
-  <p class="lead">Each timeslot names the days it meets on and its block length; a dashed
-  garnet border marks a double. A two-day slot meets on both days.</p>
+  <h2>Timeslots</h2>
   <div class="gridwrap" tabindex="0" role="region" aria-label="Available timeslots">
     <table class="slotgrid"><thead><tr id="slothead"></tr></thead>
       <tbody id="slotbody"></tbody></table>
@@ -579,8 +562,6 @@ _INSTANCE_BODY = """<div class="wrap">
 
 <div class="sect">
   <h2>Demand</h2>
-  <p class="lead">Sections to cover, by semester and by time of day. Night sections need a
-  professor who has agreed to night teaching.</p>
   <div class="two">
     <div class="panel"><div class="bars" id="bysem"></div></div>
     <div class="panel"><div class="bars" id="bytod"></div></div>
@@ -589,7 +570,6 @@ _INSTANCE_BODY = """<div class="wrap">
 
 <div class="sect">
   <h2>Faculty</h2>
-  <p class="lead">Teaching loads, and the permissions that narrow who can take a section.</p>
   <div class="two">
     <div class="panel">
       <div class="ctl-label" style="margin-bottom:12px">Teaching load, professors per value</div>
@@ -601,8 +581,6 @@ _INSTANCE_BODY = """<div class="wrap">
 
 <div class="sect">
   <h2>Rooms</h2>
-  <p class="lead">Rooms and their seats. Anything that does not fit, or that a part-timer
-  teaches, goes off campus.</p>
   <div class="two">
     <div class="panel"><table class="cap" id="roomtable"></table></div>
     <div class="panel">
@@ -612,19 +590,6 @@ _INSTANCE_BODY = """<div class="wrap">
   </div>
 </div>
 
-<div class="notes">
-  <div class="note"><h3>Part-timers</h3>
-    <p>The model injects one reserved professor id, <code>part-timer</code>, exempt from the
-    no-overlap rules, so any number of sections can pile onto it. A penalty keeps the count down,
-    nothing forbids it. A shortfall in supply shows up here rather than as an infeasible
-    model.</p></div>
-  <div class="note"><h3>Qualification</h3>
-    <p>{qual_pct}% of all professor&ndash;course pairs are marked qualified. An unqualified
-    pair cannot be assigned at all. {qual_note}</p></div>
-  <div class="note"><h3>Preferences</h3>
-    <p>Course, time and block preferences carry no weight until teaching load, concurrency and
-    off-campus have each been settled in turn. They only break ties.</p></div>
-</div>
 </div>"""
 
 _INSTANCE_JS = """
@@ -662,7 +627,7 @@ _INSTANCE_JS = """
   bars("supply", [
     ["Faculty capacity", DATA.supply.capacity, false, " teachings"],
     ["Sections to cover", DATA.supply.demand, false, " sections"],
-    ["Shortfall", DATA.supply.gap, true, " to buy in"]
+    ["Part-time gap", DATA.supply.gap, true, " sections"]
   ], {max: Math.max(DATA.supply.capacity, DATA.supply.demand)});
 
   bars("bysem", DATA.bysem.map(function(x){return [x[0], x[1], false, " sections"]}));
@@ -712,7 +677,6 @@ def instance_page(payload: Any, *, title: str = "Scheduling Instance") -> str:
     night = sum(1 for _, v in _pairs(payload.get("professor_can_teach_night")) if v)
     offc = sum(1 for _, v in _pairs(payload.get("professor_can_teach_out_DMS")) if v)
     packed = sum(1 for _, v in _pairs(payload.get("professor_pack_day_pref")) if v)
-    quals = len(_pairs(payload.get("professor_qualification")))
     courses = [str(c) for c in payload.get("course_set") or []]
 
     by_sem = Counter(s[2] for s in sections)
@@ -734,7 +698,7 @@ def instance_page(payload: Any, *, title: str = "Scheduling Instance") -> str:
             [demand, "sections to cover", ""],
             [len(days_of), "timeslots", ""],
             [len(rooms), "rooms", ""],
-            [max(0, demand - capacity), "sections beyond capacity", "pt"],
+            [max(0, demand - capacity), "part-time gap", "pt"],
         ],
         "supply": {"capacity": capacity, "demand": demand, "gap": max(0, demand - capacity)},
         "bysem": (
@@ -759,19 +723,11 @@ def instance_page(payload: Any, *, title: str = "Scheduling Instance") -> str:
         ),
         "rooms": [[r, cap, sum(1 for s in sizes if s <= cap)] for r, cap in rooms],
     }
-    qual_pct = round(100 * quals / max(1, n_prof * len(courses)))
     body = _INSTANCE_BODY.format(
         eyebrow=html.escape(
             f"{n_prof} professors · {len(courses)} courses · {demand} sections "
             f"· {len(rooms)} rooms"
         ),
         heading=html.escape(title),
-        qual_pct=qual_pct,
-        qual_note=(
-            "Here it filters nothing at all: every professor is marked qualified for every "
-            "course, so the constraint is inert on this instance."
-            if qual_pct >= 100
-            else "So it narrows the field before any preference is considered."
-        ),
     )
     return _doc(title, body, data, _INSTANCE_JS)

@@ -56,12 +56,12 @@ def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path] | N
     else:
         source = Path(args.instance)
         folder = source if source.is_dir() else source.parent
-        name = source.name if source.is_dir() else source.stem
-        result = folder / "results" / f"{name}.json"
+        result = folder / "results" / "result.json"
 
-    stem = result.with_suffix("")
-    schedule = Path(args.html) if args.html else stem.with_name(f"{stem.name}-schedule.html")
-    instance = stem.with_name(f"{stem.name}-instance.html")
+    # The pages already sit in the instance's own results/, so a name prefix
+    # would only repeat the folder: instance/results/instance-instance.html.
+    schedule = Path(args.html) if args.html else result.with_name("schedule.html")
+    instance = result.with_name("instance.html")
     try:
         result.parent.mkdir(parents=True, exist_ok=True)
         schedule.parent.mkdir(parents=True, exist_ok=True)
