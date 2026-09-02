@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -52,17 +53,24 @@ def test_schedule_page_is_a_self_contained_document(payload, result) -> None:
 
 
 @pytest.mark.parametrize("kind", ["schedule", "instance"])
-def test_pages_reach_out_for_the_webfont_and_nothing_else(payload, result, kind: str) -> None:
-    """A page about real staffing fetches the brand faces, and nothing else."""
+def test_pages_do_not_require_external_assets(payload, result, kind: str) -> None:
     html = (
         report.schedule_page(payload, result)
         if kind == "schedule"
         else report.instance_page(payload)
     )
-    for forbidden in ("http://", "src=", "@import", "url("):
+    for forbidden in ("http://", "https://", "src=", "@import", "url("):
         assert forbidden not in html, f"{kind} page reaches out via {forbidden!r}"
-    hosts = {u.split('"')[0].split("/")[0] for u in html.split('href="https://')[1:]}
-    assert hosts == {"fonts.googleapis.com", "fonts.gstatic.com"}
+
+
+def test_embedded_data_cannot_close_its_script(payload, result) -> None:
+    malicious = deepcopy(result)
+    malicious["assignments"][0]["course_id"] = "</script><script>alert(1)</script>"
+
+    page = report.schedule_page(payload, malicious)
+
+    assert "</script><script>alert(1)</script>" not in page
+    assert _embedded(page)["assignments"][0]["course"] == "</script><script>alert(1)</script>"
 
 
 @pytest.mark.parametrize("kind", ["schedule", "instance"])
@@ -77,27 +85,27 @@ def test_pages_are_byte_identical_across_runs(payload, result, kind: str) -> Non
 
 
 def test_schedule_page_carries_every_assignment(payload, result) -> None:
-    rows = _embedded(report.schedule_page(payload, result))["r"]
+    rows = _embedded(report.schedule_page(payload, result))["assignments"]
     assert len(rows) == len(result["assignments"])
     # the part-timer fallback surfaces as null, never as the reserved id
-    assert all(r[0] != "part-timer" for r in rows)
-    nulls = sum(1 for r in rows if r[0] is None)
+    assert all(row["professor"] != "part-timer" for row in rows)
+    nulls = sum(1 for row in rows if row["professor"] is None)
     assert nulls == result["summary"]["unstaffed"]
 
 
 def test_schedule_rows_carry_the_meeting_pattern(payload, result) -> None:
-    rows = _embedded(report.schedule_page(payload, result))["r"]
+    rows = _embedded(report.schedule_page(payload, result))["assignments"]
     days_by_slot = report._slot_days(payload)
     assert rows, "no assignments to check"
     for row in rows:
-        assert row[7] == days_by_slot[row[4]]
+        assert row["days"] == days_by_slot[row["slot"]]
 
 
 def test_schedule_labels_do_not_repeat_the_course(payload, result) -> None:
-    rows = _embedded(report.schedule_page(payload, result))["r"]
+    rows = _embedded(report.schedule_page(payload, result))["assignments"]
     assert rows
     for row in rows:
-        course, section, label = str(row[1]), str(row[2]), str(row[10])
+        course, section, label = row["course"], row["section"], row["label"]
         expected = section if section.startswith(f"{course}-") else f"{course}-{section}"
         assert label == expected
         assert not label.startswith(f"{course}-{course}-")
@@ -130,9 +138,9 @@ def test_a_two_day_slot_carries_both_days(payload, result) -> None:
         *payload["timeslot_dow_subset"],
         [slot, "Thu" if [slot, "Thu"] not in payload["timeslot_dow_subset"] else "Wed"],
     ]
-    rows = _embedded(report.schedule_page(doubled, result))["r"]
-    moved = [r for r in rows if r[4] == slot]
-    assert moved and all(len(r[7]) == 2 for r in moved)
+    rows = _embedded(report.schedule_page(doubled, result))["assignments"]
+    moved = [row for row in rows if row["slot"] == slot]
+    assert moved and all(len(row["days"]) == 2 for row in moved)
 
 
 def test_instance_page_counts_supply_against_demand(payload) -> None:
@@ -174,4 +182,4 @@ def test_solve_html_flag_writes_the_same_page(tmp_path: Path) -> None:
     assert main(["solve", str(TINY), "-q", "-o", str(res),
                  "--time-limit", "20", "--html", str(page)]) == 0
     _is_a_document(page.read_text())
-    assert _embedded(page.read_text())["r"]
+    assert _embedded(page.read_text())["assignments"]

@@ -32,7 +32,7 @@ class InvalidInstanceError(SchedulerError, ValueError):
 
 
 class SolverError(SchedulerError, RuntimeError):
-    """Gurobi itself refused to do the work.
+    """The selected solver backend refused to do the work.
 
     Distinct from :class:`SolveError`, which means the solver ran and found
     nothing. This means it never got that far: no licence, a licence too small
