@@ -107,8 +107,8 @@ def test_course_block_penalty_only_marks_non_preferred_slots(payload: dict[str, 
     }
 
     assert penalised
-    assert all(key[1] == "ADM1000" for key in penalised)
-    assert all(key[5].startswith("placeholder_") for key in penalised)
+    assert all(key.course == "ADM1000" for key in penalised)
+    assert all(key.timeslot.startswith("placeholder_") for key in penalised)
 
 
 def test_balance_rows_cover_every_calendar_day(program: Program) -> None:
@@ -133,8 +133,8 @@ def test_overlap_rows_cover_different_sections(payload: dict[str, Any]) -> None:
         key for key, variable in built.assign.items() if variable in row.terms
     }
 
-    assert {key[2] for key in assignments if key[1] == "ADM1000"} == {"1", "2"}
-    assert {key[5] for key in assignments} == {"Mon0900", "Wed0900"}
+    assert {key.section for key in assignments if key.course == "ADM1000"} == {"1", "2"}
+    assert {key.timeslot for key in assignments} == {"Mon0900", "Wed0900"}
 
     room_row = next(
         row
@@ -144,7 +144,7 @@ def test_overlap_rows_cover_different_sections(payload: dict[str, Any]) -> None:
     room_assignments = {
         key for key, variable in built.assign.items() if variable in room_row.terms
     }
-    assert {key[2] for key in room_assignments if key[1] == "ADM1000"} == {"1", "2"}
+    assert {key.section for key in room_assignments if key.course == "ADM1000"} == {"1", "2"}
 
 
 def test_teaching_load_rows_carry_the_right_hand_side(
