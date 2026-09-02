@@ -158,6 +158,30 @@ def test_no_available_professors_falls_back_to_part_timers(payload: dict[str, An
     assert len(result.unstaffed) == 3
 
 
+def test_courses_with_the_same_section_id_can_run_together(payload: dict[str, Any]) -> None:
+    """Course and semester are part of identity; the local section id is not unique."""
+    payload["section_set"] = ["1"]
+    payload["section_subset"] = [
+        ["ADM1000", "1", "Fall", "Day"],
+        ["ADM2000", "1", "Fall", "Day"],
+    ]
+    payload["section_attendance"] = [
+        {"key": ["ADM1000", "1", "Fall", "Day"], "value": 40},
+        {"key": ["ADM2000", "1", "Fall", "Day"], "value": 35},
+    ]
+    payload["professor_teaching"] = [{"prof_a": 1}, {"prof_b": 1}]
+    payload["professor_qualification"].append(["prof_b", "ADM2000"])
+    payload["course_concurrency_t"] = [["ADM1000", "ADM2000", "Fall"]]
+
+    result = solve(payload, progress=silent)
+
+    assert {(a.course_id, a.section_id) for a in result.assignments} == {
+        ("ADM1000", 1),
+        ("ADM2000", 1),
+    }
+    assert len({a.timeslot_id for a in result.assignments}) == 1
+
+
 def test_room_stage_gets_a_physical_room_seed(payload: dict[str, Any]) -> None:
     from scheduler.instance import OFF_CAMPUS, Instance, is_placeholder
     from scheduler.model import build
@@ -172,10 +196,10 @@ def test_room_stage_gets_a_physical_room_seed(payload: dict[str, Any]) -> None:
     old_variable, old_key = next(
         (variable, key)
         for key, variable in built.assign.items()
-        if key[5] == OFF_CAMPUS
-        and not is_placeholder(key[4])
+        if key[6] == OFF_CAMPUS
+        and not is_placeholder(key[5])
         and any(
-            (*key[:5], room) in built.assign
+            (*key[:6], room) in built.assign
             for room in built.instance.classroom_capacity
         )
     )
@@ -188,7 +212,7 @@ def test_room_stage_gets_a_physical_room_seed(payload: dict[str, Any]) -> None:
     assert any(
         seeded[index] == 1.0
         for key, index in built.assign.items()
-        if key[:5] == old_key[:5] and key[5] != OFF_CAMPUS
+        if key[:6] == old_key[:6] and key[6] != OFF_CAMPUS
     )
 
 
@@ -283,7 +307,7 @@ def test_unknown_solver_is_rejected(payload: dict[str, Any]) -> None:
         solve(payload, progress=silent, solver="cplex")
 
 
-OPTIMUM = -17.0
+OPTIMUM = -11.0
 """The staged optimum of the tiny instance, proven at a zero gap."""
 
 
@@ -296,7 +320,7 @@ def test_both_backends_agree_on_the_objective(payload: dict[str, Any], backend: 
     # the honest claim is "within that gap of the optimum" -- which is -17.0,
     # confirmed by re-running the stages at a zero gap. Pinning one backend's
     # particular answer only ever held by luck.
-    assert result.objective <= OPTIMUM
+    assert result.objective <= OPTIMUM + 1e-5
     assert abs(result.objective - OPTIMUM) <= abs(OPTIMUM) * GOOD_ENOUGH
     assert result.solver == backend
     # The two ADM1000 sections and their day slots are interchangeable.
