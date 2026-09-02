@@ -39,7 +39,6 @@ LIMIT ?= 900
 TITLE ?= Telfer
 # Outputs live in the instance folder's results/ -- the same place solve writes.
 DIR   := $(if $(wildcard $(YAML)/.),$(YAML),$(patsubst %/,%,$(dir $(YAML))))
-NAME  := $(if $(wildcard $(YAML)/.),$(notdir $(YAML)),$(basename $(notdir $(YAML))))
 OUT   ?= $(DIR)/results
 
 # Solve, then write the schedule page and the inputs page beside the result.
@@ -51,10 +50,10 @@ solve:
 # hour, because it does not re-solve.
 report:
 	@mkdir -p $(OUT)
-	$(PY) -m scheduler report $(YAML) -o $(OUT)/$(NAME)-instance.html \
+	$(PY) -m scheduler report $(YAML) -o $(OUT)/instance.html \
 		--title '$(TITLE) Instance'
-	$(PY) -m scheduler report $(YAML) --result $(OUT)/$(NAME).json \
-		-o $(OUT)/$(NAME)-schedule.html --title '$(TITLE) Schedule'
+	$(PY) -m scheduler report $(YAML) --result $(OUT)/result.json \
+		-o $(OUT)/schedule.html --title '$(TITLE) Schedule'
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache

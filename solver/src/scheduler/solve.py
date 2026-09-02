@@ -14,6 +14,7 @@ don't ask them to.
 from __future__ import annotations
 
 import math
+from collections import defaultdict
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass, field
 from typing import Any
@@ -42,6 +43,64 @@ SEED = 0
 
 #: Solver values are floating point; anything below this is a zero that drifted.
 TOLERANCE = 0.01
+
+
+def _seed_physical_rooms(
+    built: model_module.BuiltModel, values: list[float]
+) -> list[float]:
+    """Move the current incumbent into available physical rooms.
+
+    Room choice does not affect the staffing, timeslot, or preference terms. A
+    large solve can nevertheless spend its whole room stage proving its way out
+    of the all-off-campus incumbent produced by the preceding stage. This
+    deterministic greedy pass gives that stage a useful feasible start.
+    """
+    seeded = list(values)
+    overlaps: dict[str, set[str]] = defaultdict(set)
+    for first, second in built.instance.overlapping_timeslots:
+        overlaps[first].add(second)
+        overlaps[second].add(first)
+
+    occupied: dict[tuple[str, str], set[str]] = defaultdict(set)
+    off_campus: list[tuple[int, model_module.AssignmentKey, list[tuple[str, int]]]] = []
+    for key, variable in built.assign.items():
+        if seeded[variable] < 0.5:
+            continue
+        professor, course, section, semester, slot, room = key
+        if room != OFF_CAMPUS:
+            if not is_placeholder(slot):
+                occupied[(room, semester)].add(slot)
+            continue
+        if is_placeholder(slot):
+            continue
+
+        candidates = [
+            (candidate, candidate_variable)
+            for candidate in sorted(built.instance.classroom_capacity)
+            if (
+                candidate_variable := built.assign.get(
+                    (professor, course, section, semester, slot, candidate)
+                )
+            )
+            is not None
+        ]
+        off_campus.append((variable, key, candidates))
+
+    # Place sections with the fewest options first. The remaining fields make
+    # the start byte-identical across runs.
+    off_campus.sort(key=lambda item: (len(item[2]), item[1]))
+    for old_variable, key, candidates in off_campus:
+        _, _, _, semester, slot, _ = key
+        for room, new_variable in candidates:
+            used = occupied[(room, semester)]
+            if slot in used or overlaps[slot].intersection(used):
+                continue
+            seeded[new_variable] = seeded[old_variable]
+            seeded[old_variable] = 0.0
+            used.add(slot)
+            break
+
+    return seeded
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,7 +212,11 @@ class _StagedSolve:
             math.ceil(value - 1e-6),
         )
 
-    def run(self, objectives: model_module.Objectives) -> float:
+    def run(
+        self,
+        objectives: model_module.Objectives,
+        room_seed: Callable[[list[float]], list[float]] | None = None,
+    ) -> float:
         self._minimise_then_cap(
             "minimise teaching load violations", objectives.teaching_load, EXACT
         )
@@ -162,6 +225,8 @@ class _StagedSolve:
             objectives.concurrency + objectives.placeholder_use,
             EXACT,
         )
+        if room_seed is not None:
+            self.values = room_seed(self.values)
         self._minimise_then_cap(
             "minimise off-campus teaching", objectives.off_campus_use, GOOD_ENOUGH
         )
@@ -231,7 +296,10 @@ def solve_instance(
             backend.load(built.program)
 
         staged = _StagedSolve(backend, reporter, time_limit)
-        objective = staged.run(built.objectives)
+        objective = staged.run(
+            built.objectives,
+            room_seed=lambda values: _seed_physical_rooms(built, values),
+        )
 
         with reporter.step("exporting", "reading solution") as done:
             assignments = _extract(built, staged.values)

@@ -41,9 +41,9 @@ def test_solve_writes_three_default_outputs(
     assert main(["solve", str(source), "-q"]) == 0
 
     results = tmp_path / "results"
-    assert json.loads((results / "tiny.json").read_text())["status"] == "optimal"
-    assert (results / "tiny-schedule.html").read_text().startswith("<!doctype html>")
-    assert (results / "tiny-instance.html").read_text().startswith("<!doctype html>")
+    assert json.loads((results / "result.json").read_text())["status"] == "optimal"
+    assert (results / "schedule.html").read_text().startswith("<!doctype html>")
+    assert (results / "instance.html").read_text().startswith("<!doctype html>")
     assert capsys.readouterr().out == ""
 
 
