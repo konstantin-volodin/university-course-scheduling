@@ -8,9 +8,9 @@ bonaccio-silvia:
     Fall: {Morning: 1, Afternoon: 2, Night: 1}
     Winter: {Morning: 2, Afternoon: 3, Night: 1}
   course_ranks:
-    20: 3
-    33: 3
-    35: 1
+    ADM2341: 3
+    ADM2741: 3
+    ADM2750: 1
 chen-qiu:
   teaching_load: 2
   can_teach_night: true
@@ -19,11 +19,11 @@ chen-qiu:
   availability:
     Winter: {Evening: 3, Night: 3}
   course_ranks:
-    61: 3
-    62: 3
-    6: 2
-    24: 2
-    89: 2
+    ADM3378: 3
+    ADM3379: 3
+    ADM1370: 2
+    ADM2372: 2
+    ADM4307: 2
 delcorde-david:
   teaching_load: 4
   can_teach_night: true
@@ -33,17 +33,17 @@ delcorde-david:
     Fall: {Morning: 1, Evening: 1, Night: 3}
     Winter: {Afternoon: 2, Night: 2}
   course_ranks:
-    9: 3
-    64: 2
-    37: 2
-    7: 1
-    71: 1
-    26: 1
-    30: 1
-    35: 1
-    164: 1
-    73: 1
-    131: 1
+    ADM1700: 3
+    ADM3701: 2
+    ADM2772: 2
+    ADM1500: 1
+    ADM3723: 1
+    ADM2702: 1
+    ADM2720: 1
+    ADM2750: 1
+    ADM3702: 1
+    ADM3733: 1
+    ADM4728: 1
 grudniewicz-agnes:
   teaching_load: 4
   can_teach_night: true
@@ -54,10 +54,10 @@ grudniewicz-agnes:
     Winter: {Morning: 2, Afternoon: 1, Night: 1}
     Summer: {Night: 3}
   course_ranks:
-    13: 3
-    38: 3
-    14: 3
-    15: 1
+    ADM2302: 3
+    ADM3301: 3
+    ADM2303: 3
+    ADM2304: 1
 khoroshilov-yuri:
   teaching_load: 4
   can_teach_night: true
@@ -68,19 +68,19 @@ khoroshilov-yuri:
     Winter: {Morning: 1, Afternoon: 1, Night: 3}
     Summer: {Night: 1}
   course_ranks:
-    30: 3
-    7: 2
-    9: 2
-    8: 1
-    3: 1
-    31: 1
-    10: 1
-    17: 1
-    1: 1
-    32: 1
-    67: 1
-    70: 1
-    124: 1
+    ADM2720: 3
+    ADM1500: 2
+    ADM1700: 2
+    ADM1501: 1
+    ADM1300: 1
+    ADM2736: 1
+    ADM1701: 1
+    ADM2320: 1
+    ADM1100: 1
+    ADM2737: 1
+    ADM3718: 1
+    ADM3722: 1
+    ADM4712: 1
 lessard-lysanne:
   teaching_load: 3
   can_teach_night: true
@@ -91,9 +91,9 @@ lessard-lysanne:
     Winter: {Afternoon: 2, Evening: 3, Night: 1}
     Summer: {Night: 2}
   course_ranks:
-    25: 2
-    32: 1
-    31: 1
+    ADM2381: 2
+    ADM2737: 1
+    ADM2736: 1
 mcwatters-cheryl:
   teaching_load: 3
   can_teach_night: true
@@ -103,10 +103,10 @@ mcwatters-cheryl:
     Fall: {Morning: 2, Afternoon: 2, Evening: 1, Night: 1}
     Winter: {Morning: 3, Afternoon: 1, Evening: 1}
   course_ranks:
-    11: 3
-    34: 3
-    139: 1
-    106: 1
+    ADM1740: 3
+    ADM2742: 3
+    ADM4742: 1
+    ADM4342: 1
 osullivan-sharon-l:
   teaching_load: 3
   can_teach_night: true
@@ -116,8 +116,8 @@ osullivan-sharon-l:
     Fall: {Morning: 3, Afternoon: 1, Evening: 3, Night: 3}
     Winter: {Evening: 1, Night: 3}
   course_ranks:
-    27: 3
-    14: 2
+    ADM2703: 3
+    ADM2303: 2
 rentz-william:
   teaching_load: 2
   can_teach_night: true
@@ -126,8 +126,8 @@ rentz-william:
   availability:
     Fall: {Morning: 3, Afternoon: 3, Evening: 1, Night: 2}
   course_ranks:
-    24: 3
-    61: 1
+    ADM2372: 3
+    ADM3378: 1
 tasse-marc:
   teaching_load: 2
   can_teach_night: true
@@ -137,8 +137,8 @@ tasse-marc:
     Fall: {Morning: 3, Afternoon: 3, Evening: 2}
     Winter: {Afternoon: 1, Evening: 3, Night: 3}
   course_ranks:
-    18: 3
-    19: 1
+    ADM2336: 3
+    ADM2337: 1
 boulerice-donat:
   teaching_load: 2
   can_teach_night: true
@@ -148,9 +148,9 @@ boulerice-donat:
     Fall: {Morning: 3, Night: 1}
     Summer: {Night: 2}
   course_ranks:
-    9: 3
-    7: 3
-    123: 2
+    ADM1700: 3
+    ADM1500: 3
+    ADM4711: 2
 bozec-richard:
   teaching_load: 2
   can_teach_night: true
@@ -160,10 +160,10 @@ bozec-richard:
     Fall: {Morning: 1, Afternoon: 1, Night: 3}
     Winter: {Afternoon: 2, Night: 3}
   course_ranks:
-    31: 3
-    32: 2
-    9: 1
-    7: 1
+    ADM2736: 3
+    ADM2737: 2
+    ADM1700: 1
+    ADM1500: 1
 brand-kevin:
   teaching_load: 4
   can_teach_night: true
@@ -173,10 +173,10 @@ brand-kevin:
     Fall: {Morning: 2, Afternoon: 1, Night: 3}
     Winter: {Night: 3}
   course_ranks:
-    111: 3
-    76: 2
-    144: 2
-    11: 1
+    ADM4349: 3
+    ADM3740: 2
+    ADM4749: 2
+    ADM1740: 1
 calof-jonathan:
   teaching_load: 1
   can_teach_night: true
@@ -186,7 +186,7 @@ calof-jonathan:
     Fall: {Morning: 1, Evening: 2, Night: 2}
     Winter: {Morning: 2, Evening: 3, Night: 3}
   course_ranks:
-    14: 3
+    ADM2303: 3
 carriere-jules:
   teaching_load: 1
   can_teach_night: true
@@ -196,8 +196,8 @@ carriere-jules:
     Fall: {Morning: 3, Night: 2}
     Winter: {Morning: 1}
   course_ranks:
-    90: 3
-    156: 1
+    ADM4311: 3
+    ADM3316: 1
 cedzynski-marzena:
   teaching_load: 3
   can_teach_night: true
@@ -207,9 +207,9 @@ cedzynski-marzena:
     Fall: {Morning: 2, Afternoon: 3, Evening: 2, Night: 2}
     Winter: {Afternoon: 3, Evening: 3, Night: 1}
   course_ranks:
-    19: 3
-    31: 2
-    18: 1
+    ADM2337: 3
+    ADM2736: 2
+    ADM2336: 1
 chamberlin-tyler:
   teaching_load: 5
   can_teach_night: true
@@ -219,11 +219,11 @@ chamberlin-tyler:
     Fall: {Morning: 2, Afternoon: 3, Evening: 1, Night: 1}
     Winter: {Morning: 2, Afternoon: 3, Night: 3}
   course_ranks:
-    46: 3
-    17: 3
-    97: 1
-    15: 1
-    98: 1
+    ADM3322: 3
+    ADM2320: 3
+    ADM4326: 1
+    ADM2304: 1
+    ADM4328: 1
 chelli-mohamed:
   teaching_load: 3
   can_teach_night: true
@@ -233,9 +233,9 @@ chelli-mohamed:
     Fall: {Morning: 1, Afternoon: 3, Evening: 2, Night: 1}
     Winter: {Morning: 3, Afternoon: 1}
   course_ranks:
-    94: 3
-    43: 2
-    44: 1
+    ADM4318: 3
+    ADM3318: 2
+    ADM3319: 1
 akhigbe-okhaide:
   teaching_load: 3
   can_teach_night: true
@@ -244,8 +244,8 @@ akhigbe-okhaide:
   availability:
     Winter: {Morning: 2, Night: 3}
   course_ranks:
-    33: 3
-    11: 3
+    ADM2741: 3
+    ADM1740: 3
 chiocchio-francois:
   teaching_load: 3
   can_teach_night: true
@@ -255,9 +255,9 @@ chiocchio-francois:
     Fall: {Morning: 2, Night: 2}
     Winter: {Evening: 3, Night: 3}
   course_ranks:
-    5: 3
-    21: 2
-    20: 1
+    ADM1340: 3
+    ADM2342: 2
+    ADM2341: 1
 chkir-imed:
   teaching_load: 1
   can_teach_night: true
@@ -267,9 +267,9 @@ chkir-imed:
     Fall: {Evening: 3, Night: 1}
     Winter: {Afternoon: 3}
   course_ranks:
-    32: 3
-    73: 3
-    49: 1
+    ADM2737: 3
+    ADM3733: 3
+    ADM3333: 1
 chourou-lamia:
   teaching_load: 2
   can_teach_night: true
@@ -279,9 +279,9 @@ chourou-lamia:
     Fall: {Morning: 2, Afternoon: 2, Night: 2}
     Winter: {Morning: 3, Evening: 1, Night: 3}
   course_ranks:
-    35: 3
-    80: 2
-    82: 1
+    ADM2750: 3
+    ADM3750: 2
+    ADM3752: 1
 coderre-david:
   teaching_load: 3
   can_teach_night: true
@@ -291,8 +291,8 @@ coderre-david:
     Fall: {Evening: 1}
     Winter: {Afternoon: 3, Evening: 3}
   course_ranks:
-    5: 3
-    20: 1
+    ADM1340: 3
+    ADM2341: 1
 collier-robert:
   teaching_load: 2
   can_teach_night: true
@@ -302,8 +302,8 @@ collier-robert:
     Fall: {Evening: 3, Night: 3}
     Winter: {Night: 2}
   course_ranks:
-    109: 3
-    63: 1
+    ADM4346: 3
+    ADM3396: 1
 conheady-brian:
   teaching_load: 3
   can_teach_night: true
@@ -314,12 +314,12 @@ conheady-brian:
     Winter: {Afternoon: 1, Evening: 1, Night: 2}
     Summer: {Night: 2}
   course_ranks:
-    21: 3
-    20: 3
-    54: 2
-    110: 2
-    5: 1
-    52: 1
+    ADM2342: 3
+    ADM2341: 3
+    ADM3346: 2
+    ADM4348: 2
+    ADM1340: 1
+    ADM3340: 1
 couillard-jean:
   teaching_load: 5
   can_teach_night: true
@@ -329,11 +329,11 @@ couillard-jean:
     Fall: {Morning: 2, Afternoon: 1, Evening: 2, Night: 3}
     Winter: {Morning: 1, Afternoon: 2, Evening: 2, Night: 2}
   course_ranks:
-    52: 3
-    108: 2
-    21: 2
-    20: 1
-    5: 1
+    ADM3340: 3
+    ADM4345: 2
+    ADM2342: 2
+    ADM2341: 1
+    ADM1340: 1
 crick-david:
   teaching_load: 4
   can_teach_night: true
@@ -343,10 +343,10 @@ crick-david:
     Fall: {Morning: 2, Afternoon: 1, Evening: 3, Night: 2}
     Winter: {Morning: 3, Evening: 3, Night: 2}
   course_ranks:
-    26: 3
-    28: 3
-    27: 1
-    121: 1
+    ADM2702: 3
+    ADM2704: 3
+    ADM2703: 1
+    ADM4503: 1
 daze-stephen:
   teaching_load: 2
   can_teach_night: true
@@ -356,8 +356,8 @@ daze-stephen:
     Fall: {Morning: 2, Afternoon: 2}
     Winter: {Morning: 3, Afternoon: 2}
   course_ranks:
-    92: 3
-    42: 3
+    ADM4315: 3
+    ADM3313: 3
 apedome-seli:
   teaching_load: 2
   can_teach_night: true
@@ -367,8 +367,8 @@ apedome-seli:
     Fall: {Afternoon: 3, Evening: 1, Night: 3}
     Winter: {Morning: 1, Afternoon: 2}
   course_ranks:
-    42: 3
-    63: 1
+    ADM3313: 3
+    ADM3396: 1
 ding-shujun:
   teaching_load: 4
   can_teach_night: true
@@ -379,13 +379,13 @@ ding-shujun:
     Winter: {Morning: 1, Afternoon: 1, Evening: 1, Night: 3}
     Summer: {Night: 3}
   course_ranks:
-    2: 3
-    4: 3
-    17: 2
-    1: 2
-    3: 2
-    43: 1
-    44: 1
+    ADM1101: 3
+    ADM1301: 3
+    ADM2320: 2
+    ADM1100: 2
+    ADM1300: 2
+    ADM3318: 1
+    ADM3319: 1
 dodonova-anna:
   teaching_load: 3
   can_teach_night: true
@@ -396,9 +396,9 @@ dodonova-anna:
     Winter: {Afternoon: 2, Evening: 3, Night: 3}
     Summer: {Night: 1}
   course_ranks:
-    108: 3
-    20: 3
-    5: 3
+    ADM4345: 3
+    ADM2341: 3
+    ADM1340: 3
 doloreux-david:
   teaching_load: 3
   can_teach_night: true
@@ -408,10 +408,10 @@ doloreux-david:
     Fall: {Morning: 3, Afternoon: 1, Evening: 2, Night: 1}
     Winter: {Morning: 2, Afternoon: 1, Evening: 1, Night: 1}
   course_ranks:
-    115: 3
-    22: 2
-    59: 1
-    113: 1
+    ADM4354: 3
+    ADM2350: 2
+    ADM3358: 1
+    ADM4351: 1
 donia-magda:
   teaching_load: 1
   can_teach_night: true
@@ -421,10 +421,10 @@ donia-magda:
     Fall: {Evening: 1, Night: 1}
     Winter: {Morning: 1, Afternoon: 1, Evening: 1, Night: 3}
   course_ranks:
-    8: 3
-    67: 3
-    10: 2
-    126: 1
+    ADM1501: 3
+    ADM3718: 3
+    ADM1701: 2
+    ADM4716: 1
 durocher-sylvain:
   teaching_load: 3
   can_teach_night: true
@@ -433,8 +433,8 @@ durocher-sylvain:
   availability:
     Fall: {Morning: 3, Afternoon: 3, Evening: 1, Night: 2}
   course_ranks:
-    19: 3
-    18: 2
+    ADM2337: 3
+    ADM2336: 2
 dutta-shantanu:
   teaching_load: 2
   can_teach_night: true
@@ -444,10 +444,10 @@ dutta-shantanu:
     Fall: {Morning: 3, Afternoon: 2, Evening: 3, Night: 2}
     Winter: {Morning: 3, Night: 1}
   course_ranks:
-    137: 3
-    143: 3
-    110: 3
-    76: 1
+    ADM4740: 3
+    ADM4748: 3
+    ADM4348: 3
+    ADM3740: 1
 elliott-catherine:
   teaching_load: 2
   can_teach_night: true
@@ -456,7 +456,7 @@ elliott-catherine:
   availability:
     Winter: {Morning: 1, Afternoon: 3, Night: 2}
   course_ranks:
-    56: 3
+    ADM3350: 3
 freel-mark:
   teaching_load: 5
   can_teach_night: true
@@ -467,9 +467,9 @@ freel-mark:
     Winter: {Morning: 3, Afternoon: 1, Evening: 1, Night: 2}
     Summer: {Night: 1}
   course_ranks:
-    18: 3
-    19: 3
-    44: 1
+    ADM2336: 3
+    ADM2337: 3
+    ADM3319: 1
 gandhi-devinder:
   teaching_load: 2
   can_teach_night: true
@@ -479,10 +479,10 @@ gandhi-devinder:
     Fall: {Morning: 2, Afternoon: 3, Evening: 2, Night: 1}
     Winter: {Afternoon: 2, Evening: 1, Night: 1}
   course_ranks:
-    43: 3
-    42: 3
-    16: 2
-    93: 1
+    ADM3318: 3
+    ADM3313: 3
+    ADM2313: 2
+    ADM4316: 1
 astaraky-davood:
   teaching_load: 4
   can_teach_night: true
@@ -493,17 +493,17 @@ astaraky-davood:
     Winter: {Morning: 1, Afternoon: 1, Evening: 1, Night: 3}
     Summer: {Night: 1}
   course_ranks:
-    56: 3
-    22: 2
-    5: 2
-    59: 2
-    113: 1
-    23: 1
-    57: 1
-    43: 1
-    3: 1
-    112: 1
-    115: 1
+    ADM3350: 3
+    ADM2350: 2
+    ADM1340: 2
+    ADM3358: 2
+    ADM4351: 1
+    ADM2352: 1
+    ADM3351: 1
+    ADM3318: 1
+    ADM1300: 1
+    ADM4350: 1
+    ADM4354: 1
 guo-chen:
   teaching_load: 1
   can_teach_night: true
@@ -512,7 +512,7 @@ guo-chen:
   availability:
     Winter: {Evening: 3}
   course_ranks:
-    22: 3
+    ADM2350: 3
 guolla-michael:
   teaching_load: 5
   can_teach_night: true
@@ -522,10 +522,10 @@ guolla-michael:
     Fall: {Morning: 3, Afternoon: 2, Evening: 3, Night: 1}
     Winter: {Morning: 2, Afternoon: 3, Evening: 3, Night: 2}
   course_ranks:
-    57: 3
-    58: 2
-    22: 2
-    113: 1
+    ADM3351: 3
+    ADM3352: 2
+    ADM2350: 2
+    ADM4351: 1
 hamzaoui-essoussi-leila:
   teaching_load: 6
   can_teach_night: true
@@ -535,12 +535,12 @@ hamzaoui-essoussi-leila:
     Fall: {Morning: 2, Afternoon: 3, Evening: 2}
     Winter: {Morning: 2, Afternoon: 3, Evening: 1, Night: 1}
   course_ranks:
-    48: 3
-    47: 1
-    96: 1
-    46: 1
-    97: 1
-    17: 1
+    ADM3326: 3
+    ADM3323: 1
+    ADM4325: 1
+    ADM3322: 1
+    ADM4326: 1
+    ADM2320: 1
 himick-darlene:
   teaching_load: 3
   can_teach_night: true
@@ -550,11 +550,11 @@ himick-darlene:
     Fall: {Morning: 1, Afternoon: 3, Evening: 1}
     Winter: {Morning: 3, Afternoon: 1, Evening: 1}
   course_ranks:
-    129: 3
-    131: 3
-    30: 2
-    69: 2
-    45: 2
+    ADM4725: 3
+    ADM4728: 3
+    ADM2720: 2
+    ADM3721: 2
+    ADM3321: 2
 hebert-marjolaine:
   teaching_load: 1
   can_teach_night: true
@@ -563,8 +563,8 @@ hebert-marjolaine:
   availability:
     Winter: {Morning: 2, Evening: 3}
   course_ranks:
-    5: 3
-    53: 2
+    ADM1340: 3
+    ADM3345: 2
 ika-lavagnon:
   teaching_load: 3
   can_teach_night: true
@@ -575,15 +575,15 @@ ika-lavagnon:
     Winter: {Evening: 1, Night: 3}
     Summer: {Night: 1}
   course_ranks:
-    135: 3
-    133: 3
-    134: 3
-    32: 2
-    31: 2
-    68: 2
-    123: 1
-    7: 1
-    125: 1
+    ADM4738: 3
+    ADM4736: 3
+    ADM4737: 3
+    ADM2737: 2
+    ADM2736: 2
+    ADM3719: 2
+    ADM4711: 1
+    ADM1500: 1
+    ADM4715: 1
 jaana-mirou:
   teaching_load: 1
   can_teach_night: true
@@ -592,8 +592,8 @@ jaana-mirou:
   availability:
     Fall: {Evening: 2, Night: 3}
   course_ranks:
-    121: 3
-    88: 1
+    ADM4503: 3
+    ADM4103: 1
 jaber-rim:
   teaching_load: 2
   can_teach_night: true
@@ -603,8 +603,8 @@ jaber-rim:
     Fall: {Morning: 1, Evening: 2}
     Winter: {Morning: 2, Afternoon: 3, Evening: 3}
   course_ranks:
-    24: 3
-    37: 1
+    ADM2372: 3
+    ADM2772: 1
 kerr-james:
   teaching_load: 7
   can_teach_night: true
@@ -615,10 +615,10 @@ kerr-james:
     Winter: {Morning: 3, Afternoon: 3, Evening: 2, Night: 2}
     Summer: {Night: 1}
   course_ranks:
-    38: 3
-    13: 2
-    64: 1
-    26: 1
+    ADM3301: 3
+    ADM2302: 2
+    ADM3701: 1
+    ADM2702: 1
 aubert-jean-francois:
   teaching_load: 2
   can_teach_night: true
@@ -629,13 +629,13 @@ aubert-jean-francois:
     Winter: {Morning: 1, Evening: 1, Night: 3}
     Summer: {Night: 1}
   course_ranks:
-    53: 3
-    21: 2
-    5: 1
-    20: 1
-    4: 1
-    22: 1
-    54: 1
+    ADM3345: 3
+    ADM2342: 2
+    ADM1340: 1
+    ADM2341: 1
+    ADM1301: 1
+    ADM2350: 1
+    ADM3346: 1
 kindra-gurprit:
   teaching_load: 3
   can_teach_night: true
@@ -645,14 +645,14 @@ kindra-gurprit:
     Fall: {Morning: 1, Afternoon: 1, Evening: 3}
     Winter: {Morning: 2, Afternoon: 3, Evening: 2, Night: 3}
   course_ranks:
-    113: 3
-    22: 2
-    115: 2
-    56: 1
-    14: 1
-    15: 1
-    59: 1
-    114: 1
+    ADM4351: 3
+    ADM2350: 2
+    ADM4354: 2
+    ADM3350: 1
+    ADM2303: 1
+    ADM2304: 1
+    ADM3358: 1
+    ADM4352: 1
 kuziemsky-craig:
   teaching_load: 3
   can_teach_night: true
@@ -663,9 +663,9 @@ kuziemsky-craig:
     Winter: {Night: 1}
     Summer: {Night: 3}
   course_ranks:
-    17: 3
-    45: 1
-    99: 1
+    ADM2320: 3
+    ADM3321: 1
+    ADM4329: 1
 lajili-kaouthar:
   teaching_load: 2
   can_teach_night: true
@@ -675,10 +675,10 @@ lajili-kaouthar:
     Fall: {Morning: 1}
     Winter: {Morning: 3, Afternoon: 3, Evening: 1, Night: 1}
   course_ranks:
-    6: 3
-    24: 1
-    13: 1
-    154: 1
+    ADM1370: 3
+    ADM2372: 1
+    ADM2302: 1
+    ADM3363: 1
 lane-daniel:
   teaching_load: 3
   can_teach_night: true
@@ -688,8 +688,8 @@ lane-daniel:
     Fall: {Morning: 1, Afternoon: 2, Night: 2}
     Winter: {Afternoon: 3}
   course_ranks:
-    56: 3
-    114: 2
+    ADM3350: 3
+    ADM4352: 2
 lapierre-laurent:
   teaching_load: 1
   can_teach_night: true
@@ -699,8 +699,8 @@ lapierre-laurent:
     Fall: {Afternoon: 2, Evening: 3, Night: 2}
     Winter: {Morning: 2, Night: 1}
   course_ranks:
-    13: 3
-    40: 3
+    ADM2302: 3
+    ADM3305: 3
 large-david:
   teaching_load: 1
   can_teach_night: true
@@ -711,9 +711,9 @@ large-david:
     Winter: {Morning: 1, Evening: 3, Night: 1}
     Summer: {Night: 1}
   course_ranks:
-    31: 3
-    18: 2
-    19: 2
+    ADM2736: 3
+    ADM2336: 2
+    ADM2337: 2
 larochelle-bruce:
   teaching_load: 2
   can_teach_night: true
@@ -723,9 +723,9 @@ larochelle-bruce:
     Fall: {Afternoon: 3}
     Winter: {Morning: 2, Afternoon: 3, Night: 1}
   course_ranks:
-    95: 3
-    96: 1
-    99: 1
+    ADM4322: 3
+    ADM4325: 1
+    ADM4329: 1
 leck-joanne:
   teaching_load: 1
   can_teach_night: true
@@ -734,8 +734,8 @@ leck-joanne:
   availability:
     Summer: {Night: 3}
   course_ranks:
-    20: 3
-    106: 3
+    ADM2341: 3
+    ADM4342: 3
 lee-ysabella-hwa:
   teaching_load: 1
   can_teach_night: true
@@ -745,8 +745,8 @@ lee-ysabella-hwa:
     Fall: {Morning: 2, Afternoon: 2, Evening: 1}
     Winter: {Morning: 1, Afternoon: 3, Evening: 3}
   course_ranks:
-    19: 3
-    18: 2
+    ADM2337: 3
+    ADM2336: 2
 beauchamp-julie:
   teaching_load: 1
   can_teach_night: true
@@ -756,8 +756,8 @@ beauchamp-julie:
     Fall: {Night: 3}
     Winter: {Evening: 1}
   course_ranks:
-    17: 3
-    45: 1
+    ADM2320: 3
+    ADM3321: 1
 li-jonathan:
   teaching_load: 1
   can_teach_night: true
@@ -767,7 +767,7 @@ li-jonathan:
     Fall: {Night: 1}
     Winter: {Afternoon: 2, Evening: 3}
   course_ranks:
-    37: 3
+    ADM2772: 3
 li-tiemei-sarah:
   teaching_load: 2
   can_teach_night: true
@@ -777,9 +777,9 @@ li-tiemei-sarah:
     Fall: {Afternoon: 3, Evening: 3, Night: 2}
     Winter: {Morning: 2, Evening: 2, Night: 2}
   course_ranks:
-    13: 3
-    14: 1
-    40: 1
+    ADM2302: 3
+    ADM2303: 1
+    ADM3305: 1
 linton-jonathan:
   teaching_load: 2
   can_teach_night: true
@@ -789,9 +789,9 @@ linton-jonathan:
     Fall: {Morning: 2, Afternoon: 3, Night: 1}
     Winter: {Afternoon: 1, Night: 3}
   course_ranks:
-    54: 3
-    20: 2
-    106: 1
+    ADM3346: 3
+    ADM2341: 2
+    ADM4342: 1
 madill-judith:
   teaching_load: 1
   can_teach_night: true
@@ -801,8 +801,8 @@ madill-judith:
     Fall: {Afternoon: 1, Night: 1}
     Winter: {Morning: 3, Afternoon: 2, Night: 1}
   course_ranks:
-    39: 3
-    38: 2
+    ADM3302: 3
+    ADM3301: 2
 manga-pranlal:
   teaching_load: 2
   can_teach_night: true
@@ -812,9 +812,9 @@ manga-pranlal:
     Fall: {Evening: 3, Night: 1}
     Winter: {Afternoon: 2}
   course_ranks:
-    97: 3
-    47: 2
-    17: 1
+    ADM4326: 3
+    ADM3323: 2
+    ADM2320: 1
 manseau-jasmin:
   teaching_load: 4
   can_teach_night: true
@@ -824,7 +824,7 @@ manseau-jasmin:
     Fall: {Morning: 3, Afternoon: 3, Evening: 3, Night: 2}
     Winter: {Afternoon: 2, Night: 2}
   course_ranks:
-    43: 3
+    ADM3318: 3
 marques-jose-carlos:
   teaching_load: 5
   can_teach_night: true
@@ -834,14 +834,14 @@ marques-jose-carlos:
     Fall: {Morning: 3, Night: 3}
     Winter: {Evening: 2, Night: 2}
   course_ranks:
-    13: 3
-    26: 3
-    24: 2
-    66: 2
-    90: 2
-    14: 1
-    27: 1
-    37: 1
+    ADM2302: 3
+    ADM2702: 3
+    ADM2372: 2
+    ADM3713: 2
+    ADM4311: 2
+    ADM2303: 1
+    ADM2703: 1
+    ADM2772: 1
 mazutis-daina:
   teaching_load: 2
   can_teach_night: true
@@ -850,8 +850,8 @@ mazutis-daina:
   availability:
     Winter: {Morning: 3, Night: 3}
   course_ranks:
-    123: 3
-    90: 2
+    ADM4711: 3
+    ADM4311: 2
 mcilkenny-philip:
   teaching_load: 2
   can_teach_night: true
@@ -861,7 +861,7 @@ mcilkenny-philip:
     Fall: {Afternoon: 3, Evening: 3}
     Winter: {Night: 2}
   course_ranks:
-    4: 3
+    ADM1301: 3
 ben-amar-walid:
   teaching_load: 4
   can_teach_night: true
@@ -872,10 +872,10 @@ ben-amar-walid:
     Winter: {Morning: 2, Afternoon: 2, Evening: 3, Night: 2}
     Summer: {Night: 1}
   course_ranks:
-    5: 3
-    22: 1
-    20: 1
-    106: 1
+    ADM1340: 3
+    ADM2350: 1
+    ADM2341: 1
+    ADM4342: 1
 mekonnen-gebre:
   teaching_load: 1
   can_teach_night: true
@@ -885,8 +885,8 @@ mekonnen-gebre:
     Fall: {Evening: 3}
     Winter: {Evening: 3}
   course_ranks:
-    120: 3
-    121: 1
+    ADM4396: 3
+    ADM4503: 1
 michalowski-wojtek:
   teaching_load: 1
   can_teach_night: true
@@ -896,9 +896,9 @@ michalowski-wojtek:
     Fall: {Morning: 3, Evening: 1}
     Winter: {Evening: 1}
   course_ranks:
-    18: 3
-    19: 3
-    3: 1
+    ADM2336: 3
+    ADM2337: 3
+    ADM1300: 1
 mignerat-muriel:
   teaching_load: 1
   can_teach_night: true
@@ -909,8 +909,8 @@ mignerat-muriel:
     Winter: {Night: 1}
     Summer: {Night: 1}
   course_ranks:
-    13: 3
-    27: 1
+    ADM2302: 3
+    ADM2703: 1
 mirabeau-laurent:
   teaching_load: 2
   can_teach_night: true
@@ -920,10 +920,10 @@ mirabeau-laurent:
     Fall: {Morning: 2, Afternoon: 2}
     Winter: {Morning: 3, Afternoon: 2, Evening: 2, Night: 1}
   course_ranks:
-    12: 3
-    37: 1
-    24: 1
-    61: 1
+    ADM1770: 3
+    ADM2772: 1
+    ADM2372: 1
+    ADM3378: 1
 mulvey-michael:
   teaching_load: 2
   can_teach_night: true
@@ -933,9 +933,9 @@ mulvey-michael:
     Winter: {Morning: 3, Evening: 1, Night: 3}
     Summer: {Night: 1}
   course_ranks:
-    90: 3
-    124: 3
-    123: 3
+    ADM4311: 3
+    ADM4712: 3
+    ADM4711: 3
 musselman-richard:
   teaching_load: 3
   can_teach_night: true
@@ -946,9 +946,9 @@ musselman-richard:
     Winter: {Morning: 1, Evening: 3, Night: 1}
     Summer: {Night: 1}
   course_ranks:
-    45: 3
-    17: 1
-    47: 1
+    ADM3321: 3
+    ADM2320: 1
+    ADM3323: 1
 nitani-miwako:
   teaching_load: 4
   can_teach_night: true
@@ -958,10 +958,10 @@ nitani-miwako:
     Fall: {Morning: 3, Afternoon: 1, Evening: 1}
     Winter: {Afternoon: 2, Evening: 2, Night: 2}
   course_ranks:
-    107: 3
-    106: 2
-    5: 1
-    53: 1
+    ADM4344: 3
+    ADM4342: 2
+    ADM1340: 1
+    ADM3345: 1
 oreilly-jane:
   teaching_load: 3
   can_teach_night: true
@@ -971,10 +971,10 @@ oreilly-jane:
     Fall: {Morning: 2, Evening: 3, Night: 1}
     Winter: {Morning: 1, Afternoon: 1, Evening: 3, Night: 1}
   course_ranks:
-    112: 3
-    15: 1
-    115: 1
-    59: 1
+    ADM4350: 3
+    ADM2304: 1
+    ADM4354: 1
+    ADM3358: 1
 osullivan-alan:
   teaching_load: 2
   can_teach_night: true
@@ -984,8 +984,8 @@ osullivan-alan:
     Fall: {Morning: 2, Afternoon: 1, Night: 2}
     Winter: {Night: 3}
   course_ranks:
-    18: 3
-    100: 2
+    ADM2336: 3
+    ADM4336: 2
 ben-amor-sarah:
   teaching_load: 2
   can_teach_night: true
@@ -995,8 +995,8 @@ ben-amor-sarah:
     Fall: {Morning: 3}
     Winter: {Morning: 3, Evening: 1}
   course_ranks:
-    90: 3
-    1: 1
+    ADM4311: 3
+    ADM1100: 1
 orser-barbara:
   teaching_load: 2
   can_teach_night: true
@@ -1006,8 +1006,8 @@ orser-barbara:
     Fall: {Morning: 1, Afternoon: 2, Evening: 2, Night: 3}
     Winter: {Evening: 2, Night: 3}
   course_ranks:
-    102: 3
-    44: 2
+    ADM4338: 3
+    ADM3319: 2
 parent-michael:
   teaching_load: 1
   can_teach_night: true
@@ -1017,8 +1017,8 @@ parent-michael:
     Fall: {Afternoon: 1, Evening: 2, Night: 3}
     Winter: {Morning: 2, Evening: 2, Night: 2}
   course_ranks:
-    42: 3
-    46: 2
+    ADM3313: 3
+    ADM3322: 2
 patrick-jonathan:
   teaching_load: 2
   can_teach_night: true
@@ -1027,8 +1027,8 @@ patrick-jonathan:
   availability:
     Winter: {Afternoon: 3, Evening: 3}
   course_ranks:
-    47: 3
-    97: 3
+    ADM3323: 3
+    ADM4326: 3
 pedwell-kathryn:
   teaching_load: 2
   can_teach_night: true
@@ -1038,9 +1038,9 @@ pedwell-kathryn:
     Fall: {Morning: 1, Evening: 1}
     Winter: {Morning: 3, Afternoon: 2}
   course_ranks:
-    15: 3
-    13: 1
-    40: 1
+    ADM2304: 3
+    ADM2302: 1
+    ADM3305: 1
 persaud-ajax:
   teaching_load: 5
   can_teach_night: true
@@ -1050,9 +1050,9 @@ persaud-ajax:
     Fall: {Morning: 3, Afternoon: 3, Evening: 3, Night: 1}
     Winter: {Morning: 3, Afternoon: 3}
   course_ranks:
-    53: 3
-    107: 3
-    106: 2
+    ADM3345: 3
+    ADM4344: 3
+    ADM4342: 2
 quon-tony:
   teaching_load: 3
   can_teach_night: true
@@ -1062,9 +1062,9 @@ quon-tony:
     Fall: {Afternoon: 2, Evening: 3, Night: 1}
     Winter: {Night: 1}
   course_ranks:
-    17: 3
-    97: 1
-    98: 1
+    ADM2320: 3
+    ADM4326: 1
+    ADM4328: 1
 raahemi-bijan:
   teaching_load: 4
   can_teach_night: true
@@ -1074,8 +1074,8 @@ raahemi-bijan:
     Fall: {Morning: 2, Evening: 3, Night: 3}
     Winter: {Morning: 2, Afternoon: 3, Evening: 3}
   course_ranks:
-    15: 3
-    89: 1
+    ADM2304: 3
+    ADM4307: 1
 racicot-francois-eric:
   teaching_load: 4
   can_teach_night: true
@@ -1086,10 +1086,10 @@ racicot-francois-eric:
     Winter: {Morning: 3, Afternoon: 3, Evening: 1}
     Summer: {Night: 1}
   course_ranks:
-    6: 3
-    41: 2
-    118: 2
-    24: 1
+    ADM1370: 3
+    ADM3308: 2
+    ADM4378: 2
+    ADM2372: 1
 reinhardt-gilles:
   teaching_load: 3
   can_teach_night: true
@@ -1099,11 +1099,11 @@ reinhardt-gilles:
     Fall: {Afternoon: 2, Night: 3}
     Winter: {Night: 2}
   course_ranks:
-    145: 3
-    146: 3
-    148: 3
-    81: 3
-    147: 1
+    ADM4750: 3
+    ADM4751: 3
+    ADM4754: 3
+    ADM3751: 3
+    ADM4752: 1
 benyoucef-morad:
   teaching_load: 3
   can_teach_night: true
@@ -1113,8 +1113,8 @@ benyoucef-morad:
     Fall: {Morning: 1, Night: 1}
     Winter: {Afternoon: 2, Evening: 3}
   course_ranks:
-    64: 3
-    26: 3
+    ADM3701: 3
+    ADM2702: 3
 riding-allan:
   teaching_load: 5
   can_teach_night: true
@@ -1124,8 +1124,8 @@ riding-allan:
     Fall: {Morning: 1, Afternoon: 2, Evening: 1, Night: 2}
     Winter: {Morning: 3, Afternoon: 2, Evening: 1, Night: 1}
   course_ranks:
-    22: 3
-    58: 2
+    ADM2350: 3
+    ADM3352: 2
 ruhi-umar:
   teaching_load: 1
   can_teach_night: true
@@ -1135,8 +1135,8 @@ ruhi-umar:
     Fall: {Morning: 2, Afternoon: 2, Evening: 1}
     Winter: {Afternoon: 1, Evening: 3}
   course_ranks:
-    112: 3
-    114: 1
+    ADM4350: 3
+    ADM4352: 1
 saadi-samir:
   teaching_load: 3
   can_teach_night: true
@@ -1147,9 +1147,9 @@ saadi-samir:
     Winter: {Morning: 2, Afternoon: 3, Night: 2}
     Summer: {Night: 1}
   course_ranks:
-    6: 3
-    117: 1
-    24: 1
+    ADM1370: 3
+    ADM4377: 1
+    ADM2372: 1
 safi-pouya:
   teaching_load: 3
   can_teach_night: true
@@ -1158,8 +1158,8 @@ safi-pouya:
   availability:
     Fall: {Afternoon: 3, Night: 2}
   course_ranks:
-    23: 3
-    36: 2
+    ADM2352: 3
+    ADM2752: 2
 saure-antoine:
   teaching_load: 3
   can_teach_night: true
@@ -1169,8 +1169,8 @@ saure-antoine:
     Fall: {Afternoon: 3, Night: 3}
     Winter: {Night: 3}
   course_ranks:
-    116: 3
-    4: 1
+    ADM4355: 3
+    ADM1301: 1
 schillo-sandra:
   teaching_load: 2
   can_teach_night: true
@@ -1179,8 +1179,8 @@ schillo-sandra:
   availability:
     Winter: {Morning: 3, Evening: 3}
   course_ranks:
-    15: 3
-    40: 1
+    ADM2304: 3
+    ADM3305: 1
 shaukat-rumaisa:
   teaching_load: 2
   can_teach_night: true
@@ -1190,8 +1190,8 @@ shaukat-rumaisa:
     Fall: {Morning: 2, Afternoon: 2, Evening: 2}
     Winter: {Morning: 3, Afternoon: 2, Night: 1}
   course_ranks:
-    14: 3
-    42: 1
+    ADM2303: 3
+    ADM3313: 1
 slaouti-abdenour:
   teaching_load: 4
   can_teach_night: true
@@ -1202,13 +1202,13 @@ slaouti-abdenour:
     Winter: {Morning: 1, Afternoon: 1, Evening: 1, Night: 2}
     Summer: {Night: 3}
   course_ranks:
-    19: 3
-    18: 3
-    44: 3
-    51: 1
-    2: 1
-    4: 1
-    102: 1
+    ADM2337: 3
+    ADM2336: 3
+    ADM3319: 3
+    ADM3337: 1
+    ADM1101: 1
+    ADM1301: 1
+    ADM4338: 1
 spence-martine:
   teaching_load: 4
   can_teach_night: true
@@ -1218,17 +1218,17 @@ spence-martine:
     Fall: {Morning: 3, Afternoon: 1, Night: 3}
     Winter: {Morning: 1, Afternoon: 2, Evening: 1, Night: 3}
   course_ranks:
-    8: 3
-    127: 3
-    10: 3
-    67: 2
-    71: 2
-    30: 1
-    123: 1
-    4: 1
-    7: 1
-    32: 1
-    66: 1
+    ADM1501: 3
+    ADM4718: 3
+    ADM1701: 3
+    ADM3718: 2
+    ADM3723: 2
+    ADM2720: 1
+    ADM4711: 1
+    ADM1301: 1
+    ADM1500: 1
+    ADM2737: 1
+    ADM3713: 1
 adjaoud-fodil:
   teaching_load: 1
   can_teach_night: true
@@ -1238,8 +1238,8 @@ adjaoud-fodil:
     Fall: {Morning: 1, Night: 1}
     Winter: {Morning: 1, Night: 3}
   course_ranks:
-    66: 3
-    98: 2
+    ADM3713: 3
+    ADM4328: 2
 traore-namatie:
   teaching_load: 5
   can_teach_night: true
@@ -1250,16 +1250,16 @@ traore-namatie:
     Winter: {Morning: 1, Afternoon: 1, Evening: 1, Night: 3}
     Summer: {Night: 2}
   course_ranks:
-    141: 3
-    20: 3
-    35: 2
-    33: 1
-    5: 1
-    22: 1
-    11: 1
-    108: 1
-    137: 1
-    78: 1
+    ADM4745: 3
+    ADM2341: 3
+    ADM2750: 2
+    ADM2741: 1
+    ADM1340: 1
+    ADM2350: 1
+    ADM1740: 1
+    ADM4345: 1
+    ADM4740: 1
+    ADM3746: 1
 weatherstone-sheldon:
   teaching_load: 5
   can_teach_night: true
@@ -1269,12 +1269,12 @@ weatherstone-sheldon:
     Fall: {Morning: 3, Evening: 1, Night: 2}
     Winter: {Morning: 1, Evening: 1, Night: 2}
   course_ranks:
-    10: 3
-    15: 2
-    8: 1
-    28: 1
-    29: 1
-    47: 1
+    ADM1701: 3
+    ADM2304: 2
+    ADM1501: 1
+    ADM2704: 1
+    ADM2713: 1
+    ADM3323: 1
 woodcock-patrick:
   teaching_load: 4
   can_teach_night: true
@@ -1284,10 +1284,10 @@ woodcock-patrick:
     Fall: {Morning: 2, Afternoon: 1, Evening: 1, Night: 2}
     Winter: {Morning: 2, Afternoon: 1, Night: 3}
   course_ranks:
-    104: 3
-    110: 2
-    109: 1
-    20: 1
+    ADM4340: 3
+    ADM4348: 2
+    ADM4346: 1
+    ADM2341: 1
 wright-david:
   teaching_load: 4
   can_teach_night: true
@@ -1298,10 +1298,10 @@ wright-david:
     Winter: {Morning: 2, Night: 3}
     Summer: {Night: 3}
   course_ranks:
-    90: 3
-    1: 3
-    88: 1
-    3: 1
+    ADM4311: 3
+    ADM1100: 3
+    ADM4103: 1
+    ADM1300: 1
 boujenoui-ameur:
   teaching_load: 1
   can_teach_night: true
@@ -1311,8 +1311,8 @@ boujenoui-ameur:
     Fall: {Morning: 2, Afternoon: 3, Evening: 3}
     Winter: {Morning: 1, Afternoon: 1, Evening: 1, Night: 1}
   course_ranks:
-    14: 3
-    61: 2
-    63: 1
-    117: 1
+    ADM2303: 3
+    ADM3378: 2
+    ADM3396: 1
+    ADM4377: 1
 
