@@ -24,7 +24,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from itertools import product
-from typing import Any
+from typing import Any, NamedTuple
 
 from .instance import (
     BIG_M,
@@ -42,13 +42,16 @@ from .progress import Progress
 
 __all__ = ["AssignmentKey", "BuiltModel", "Objectives", "build"]
 
-#: A decision variable's identity: who teaches what, when, where.
-#: (professor, course, section, semester, time of day, timeslot, classroom)
-#:
-#: Time of day remains explicit even though a real timeslot normally implies it.
-#: Placeholder slots and malformed legacy payloads make that implication unsafe,
-#: while :class:`SectionKey` promises that time of day is part of section identity.
-AssignmentKey = tuple[str, str, str, str, str, str, str]
+class AssignmentKey(NamedTuple):
+    """The complete identity of an assignment decision variable."""
+
+    professor: str
+    course: str
+    section: str
+    semester: str
+    time_of_day: str
+    timeslot: str
+    classroom: str
 
 #: Coefficients being accumulated for one row, keyed by variable index.
 Terms = dict[int, float]
@@ -233,14 +236,16 @@ def _viable_assignments(inst: Instance, index: _Index) -> list[AssignmentKey]:
                 ):
                     continue
                 viable.append(
-                    (professor, course, section, semester, time_of_day, slot, room)
+                    AssignmentKey(
+                        professor, course, section, semester, time_of_day, slot, room
+                    )
                 )
 
             # The escape hatch: every combination can fall back to a placeholder
             # slot, so an over-subscribed instance degrades instead of coming
             # back infeasible.
             viable.append(
-                (
+                AssignmentKey(
                     professor,
                     course,
                     section,
@@ -294,7 +299,7 @@ class _Builder:
 
     def add_assignment_variables(self, viable: list[AssignmentKey]) -> None:
         for key in viable:
-            professor, _, _, _, _, slot, room = key
+            professor, slot, room = key.professor, key.timeslot, key.classroom
             # A named professor, in a real room, at a real time teaches a
             # section once or not at all. The fallbacks are counters, not
             # switches: many sections can pile onto "a part-timer", "off
@@ -317,7 +322,7 @@ class _Builder:
         teaches: dict[tuple[str, str, str], Terms] = defaultdict(dict)
 
         for key, variable in self.assign.items():
-            professor, _, _, semester, _, slot, _ = key
+            professor, semester, slot = key.professor, key.semester, key.timeslot
             if professor == PART_TIMER:
                 continue
             load[professor][variable] = 1.0
@@ -357,7 +362,9 @@ class _Builder:
             pack_penalty.add(indicator, float(inst.pack_day_preference[professor]))
         self._emit("professor_teaches_day", teaches, Sense.LE, 0.0)
 
-        self._add_overlap_rows("professor_no_overlap", owner=lambda key: key[0], skip=PART_TIMER)
+        self._add_overlap_rows(
+            "professor_no_overlap", owner=lambda key: key.professor, skip=PART_TIMER
+        )
         return load_violation, pack_penalty
 
     def _add_overlap_rows(
@@ -366,7 +373,7 @@ class _Builder:
         """Stop one professor, or one room, being claimed by two overlapping slots."""
         rows: dict[tuple[str, str, str, str], Terms] = defaultdict(dict)
         for key, variable in self.assign.items():
-            _, _, _, semester, _, slot, _ = key
+            semester, slot = key.semester, key.timeslot
             held_by = owner(key)
             if held_by == skip:
                 continue
@@ -395,7 +402,7 @@ class _Builder:
             lower: dict[tuple[str, str], Terms] = {key: {} for key in keys}
 
             for key, variable in self.assign.items():
-                _, _, _, semester, _, slot, _ = key
+                semester, slot = key.semester, key.timeslot
                 weight = 1.0 if weight_of is None else weight_of.get(slot, 0.0)
                 if not weight:
                     continue
@@ -421,11 +428,13 @@ class _Builder:
     def add_classroom_constraints(self) -> None:
         rows: dict[tuple[str, str, str], Terms] = defaultdict(dict)
         for key, variable in self.assign.items():
-            _, _, _, semester, _, slot, room = key
+            semester, slot, room = key.semester, key.timeslot, key.classroom
             if room != OFF_CAMPUS and not is_placeholder(slot):
                 rows[(room, semester, slot)][variable] = 1.0
         self._emit("classroom_once", rows, Sense.LE, 1.0)
-        self._add_overlap_rows("classroom_no_overlap", owner=lambda key: key[6], skip=OFF_CAMPUS)
+        self._add_overlap_rows(
+            "classroom_no_overlap", owner=lambda key: key.classroom, skip=OFF_CAMPUS
+        )
 
     def add_course_constraints(self) -> tuple[LinearExpr, LinearExpr]:
         """Returns the block-preference and Friday-night penalty expressions."""
@@ -441,15 +450,16 @@ class _Builder:
         block_penalty = LinearExpr()
 
         for key, variable in self.assign.items():
-            _, course, section, semester, time_of_day, slot, _ = key
-            taught[(course, section, semester, time_of_day)][variable] = 1.0
+            course = key.course
+            section_key = (course, key.section, key.semester, key.time_of_day)
+            taught[section_key][variable] = 1.0
             preferred = preferred_blocks.get(course)
-            if preferred and preferred.isdisjoint(ix.blocks_of.get(slot, ())):
+            if preferred and preferred.isdisjoint(ix.blocks_of.get(key.timeslot, ())):
                 block_penalty.add(variable)
             if (
                 course in inst.friday_night_penalty
-                and "Fri" in ix.days_of.get(slot, ())
-                and "Night" in ix.times_of.get(slot, ())
+                and "Fri" in ix.days_of.get(key.timeslot, ())
+                and "Night" in ix.times_of.get(key.timeslot, ())
             ):
                 fridays[course][variable] = 1.0
 
@@ -478,7 +488,8 @@ class _Builder:
         apart: dict[tuple[str, str, str, str], Terms] = defaultdict(dict)
 
         for key, variable in self.assign.items():
-            professor, course, _, semester, _, slot, _ = key
+            professor = key.professor
+            course, semester, slot = key.course, key.semester, key.timeslot
             if professor == PART_TIMER or is_placeholder(slot):
                 continue
             against_self[(course, semester, slot)][variable] = 1.0
@@ -523,7 +534,8 @@ class _Builder:
         course_reward, time_reward, block_reward = LinearExpr(), LinearExpr(), LinearExpr()
 
         for key, variable in self.assign.items():
-            professor, course, _, semester, _, slot, _ = key
+            professor = key.professor
+            course, semester, slot = key.course, key.semester, key.timeslot
 
             weight = inst.course_preference.get((professor, course))
             if weight:
@@ -543,9 +555,9 @@ class _Builder:
     def fallback_terms(self) -> tuple[LinearExpr, LinearExpr]:
         placeholder_use, off_campus_use = LinearExpr(), LinearExpr()
         for key, variable in self.assign.items():
-            if is_placeholder(key[5]):
+            if is_placeholder(key.timeslot):
                 placeholder_use.add(variable, 1.0)
-            if key[6] == OFF_CAMPUS:
+            if key.classroom == OFF_CAMPUS:
                 off_campus_use.add(variable, 1.0)
         return placeholder_use, off_campus_use
 
