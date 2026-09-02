@@ -130,7 +130,7 @@ class _Index:
     days_of: dict[str, list[str]]         # timeslot -> days of week
     times_of: dict[str, list[str]]        # timeslot -> times of day
     day_weight_of: dict[str, float]       # timeslot -> share of a day consumed
-    partners_of: dict[str, list[str]]     # timeslot -> overlapping timeslots
+    overlap_pairs_of: dict[str, list[tuple[str, str]]]
     blocks_of: dict[str, list[str]]       # timeslot -> block types
     pairs_touching: dict[tuple[str, str], list[tuple[str, str, str]]]
 
@@ -155,18 +155,20 @@ class _Index:
             # still contributes all of them.
             day_weight_of[slot] += BLOCK_WEIGHTS[block]
 
-        partners_of: dict[str, list[str]] = defaultdict(list)
-        for slot, other in sorted(inst.overlapping_timeslots):
-            partners_of[slot].append(other)
+        overlap_pairs_of: dict[str, list[tuple[str, str]]] = defaultdict(list)
+        for overlap_pair in sorted(inst.overlapping_timeslots):
+            first, second = overlap_pair
+            overlap_pairs_of[first].append(overlap_pair)
+            overlap_pairs_of[second].append(overlap_pair)
 
         # Which concurrency pairs a (course, semester) takes part in, either side.
         pairs_touching: dict[tuple[str, str], list[tuple[str, str, str]]] = defaultdict(list)
         for pairs in (inst.must_run_together, inst.must_not_overlap):
-            for pair in sorted(pairs):
-                first, second, semester = pair
-                pairs_touching[(first, semester)].append(pair)
+            for concurrency_pair in sorted(pairs):
+                first, second, semester = concurrency_pair
+                pairs_touching[(first, semester)].append(concurrency_pair)
                 if second != first:
-                    pairs_touching[(second, semester)].append(pair)
+                    pairs_touching[(second, semester)].append(concurrency_pair)
 
         return cls(
             professors=sorted(inst.professors),
@@ -182,7 +184,7 @@ class _Index:
             days_of=dict(days_of),
             times_of=dict(times_of),
             day_weight_of=dict(day_weight_of),
-            partners_of=dict(partners_of),
+            overlap_pairs_of=dict(overlap_pairs_of),
             blocks_of=dict(blocks_of),
             pairs_touching=dict(pairs_touching),
         )
@@ -364,25 +366,12 @@ class _Builder:
         """Stop one professor, or one room, being claimed by two overlapping slots."""
         rows: dict[tuple[str, str, str, str], Terms] = defaultdict(dict)
         for key, variable in self.assign.items():
-            professor, course, section, semester, time_of_day, slot, room = key
+            _, _, _, semester, _, slot, _ = key
             held_by = owner(key)
             if held_by == skip:
                 continue
-            for other in self.ix.partners_of.get(slot, ()):
-                twin = (
-                    professor,
-                    course,
-                    section,
-                    semester,
-                    time_of_day,
-                    other,
-                    room,
-                )
-                twin_variable = self.assign.get(twin)
-                if twin_variable is not None:
-                    row = rows[(held_by, semester, slot, other)]
-                    row[variable] = 1.0
-                    row[twin_variable] = 1.0
+            for first, second in self.ix.overlap_pairs_of.get(slot, ()):
+                rows[(held_by, semester, first, second)][variable] = 1.0
         self._emit(name, rows, Sense.LE, 1.0)
 
     def add_balance_constraints(self) -> tuple[LinearExpr, LinearExpr]:
