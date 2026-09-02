@@ -304,9 +304,6 @@ _SCHEDULE_BODY = """<div class="wrap">
 <header>
   <p class="eyebrow">{eyebrow}</p>
   <h1>{heading}</h1>
-  <p class="sub">Every section the solver placed, laid out as the week it produces. Days across,
-  time of day down, one grid per semester. A garnet chip is a section that implies a part-time
-  hire; the rest are covered by named faculty.</p>
 </header>
 <div class="stats" id="stats"></div>
 <div class="controls">
@@ -332,23 +329,20 @@ _SCHEDULE_BODY = """<div class="wrap">
 <div class="legend">
   <span class="key"><span class="sw f"></span> Named professor</span>
   <span class="key"><span class="sw p"></span> Part-timer (<code>professor_id: null</code>)</span>
-  <span class="key">A chip reads <b>course&middot;section</b>, with the room appended when the
-  class is on campus.</span>
+  <span class="key">A chip shows the section id, and the room when the class is on
+  campus.</span>
 </div>
 <div class="notes">
   <div class="note"><h3>Why sections repeat across days</h3>
     <p>A timeslot carries its own meeting pattern. <code>{example_slot}</code> means
-    {example_days}, so that section appears in every one of those columns &mdash; it is one section
-    meeting more than once, not several sections. {n_sections} sections make {n_cells} cell
-    placements.</p></div>
-  <div class="note"><h3>Rooms are the exception</h3>
-    <p>{n_offcampus} of {n_sections} assignments carry no room and are taught off campus, so the
-    grid marks the rarer case: a chip shows a room number only when the class has a physical
-    room.</p></div>
-  <div class="note"><h3>Every identifier is a code</h3>
-    <p>The instance carries no names &mdash; professors, courses and rooms are opaque ids, exactly
-    as the solver received them. Nothing here can be read as a real person's schedule until a
-    name table is joined back on.</p></div>
+    {example_days}, so that section appears in each of those columns. {n_sections} sections
+    make {n_cells} cell placements.</p></div>
+  <div class="note"><h3>Rooms</h3>
+    <p>{n_offcampus} of {n_sections} assignments are taught off campus. A chip shows a room
+    number only when the class has one.</p></div>
+  <div class="note"><h3>Identifiers</h3>
+    <p>Professors, courses and rooms are opaque ids, as the solver received them. Join a name
+    table back on to read this as anyone's schedule.</p></div>
   <div class="note"><h3>How the solve ended</h3>
     <table class="stages" id="stagetable"></table>
     <p style="margin-top:8px">A stage marked <em>stopped early</em> hit the per-stage time limit
@@ -427,7 +421,7 @@ _SCHEDULE_JS = """
                   return '<button class="chip'+(pt?' pt':'')+(gi>=CAP?' over':'')+
                     '" data-sec="'+r[SEC]+'" title="'+
                     (pt?'Part-timer':'Prof '+r[P])+' \\u00b7 course '+r[C]+' \\u00b7 '+r[SLOT]+'">'+
-                    '<span>'+r[C]+'\\u00b7'+r[SEC]+'</span>'+
+                    '<span>'+r[SEC]+'</span>'+
                     (r[ROOM]?'<span class="room">'+r[ROOM]+'</span>':'')+'</button>';
                 }).join("")+'</div>'+
                 (g.length>CAP
@@ -562,27 +556,21 @@ _INSTANCE_BODY = """<div class="wrap">
 <header>
   <p class="eyebrow">{eyebrow}</p>
   <h1>{heading}</h1>
-  <p class="sub">What the solver is given before it decides anything: the week it may schedule
-  into, the people available to teach, the sections that must be covered, and the rooms they can
-  sit in. Read together, these say what the answer can look like &mdash; and where it is forced.</p>
+  <p class="sub">The inputs: the week, the faculty, the sections to cover, and the rooms.</p>
 </header>
 <div class="stats" id="stats"></div>
 
 <div class="sect">
   <h2>Supply against demand</h2>
-  <p class="lead">Every named professor carries a teaching load. Add those up and compare with
-  the sections needing cover: the gap is what has to be bought in as part-time teaching, and it is
-  fixed by these inputs before the solver places a single class. No schedule, however good, can
-  close it.</p>
+  <p class="lead">Total faculty teaching load against the sections needing cover. The gap is
+  bought in as part-time teaching.</p>
   <div class="panel"><div class="bars" id="supply"></div></div>
 </div>
 
 <div class="sect">
-  <h2>The week on offer</h2>
-  <p class="lead">Timeslots are fixed patterns, not free hours. Each one names the days it meets on
-  and whether it is a single or a double block &mdash; a dashed garnet border marks a
-  double. A section
-  assigned to a two-day slot meets on both days.</p>
+  <h2>The week</h2>
+  <p class="lead">Each timeslot names the days it meets on and its block length; a dashed
+  garnet border marks a double. A two-day slot meets on both days.</p>
   <div class="gridwrap" tabindex="0" role="region" aria-label="Available timeslots">
     <table class="slotgrid"><thead><tr id="slothead"></tr></thead>
       <tbody id="slotbody"></tbody></table>
@@ -590,10 +578,9 @@ _INSTANCE_BODY = """<div class="wrap">
 </div>
 
 <div class="sect">
-  <h2>Where the demand sits</h2>
-  <p class="lead">Sections to cover, split by semester and by time of day. Night is the single
-  largest block of demand, which matters because night teaching needs a professor who has agreed
-  to it &mdash; see the permissions below for whether that binds in this instance.</p>
+  <h2>Demand</h2>
+  <p class="lead">Sections to cover, by semester and by time of day. Night sections need a
+  professor who has agreed to night teaching.</p>
   <div class="two">
     <div class="panel"><div class="bars" id="bysem"></div></div>
     <div class="panel"><div class="bars" id="bytod"></div></div>
@@ -601,9 +588,8 @@ _INSTANCE_BODY = """<div class="wrap">
 </div>
 
 <div class="sect">
-  <h2>Who can teach, and what they will accept</h2>
-  <p class="lead">Teaching loads across the faculty, and the permissions that narrow who can take
-  a given section.</p>
+  <h2>Faculty</h2>
+  <p class="lead">Teaching loads, and the permissions that narrow who can take a section.</p>
   <div class="two">
     <div class="panel">
       <div class="ctl-label" style="margin-bottom:12px">Teaching load, professors per value</div>
@@ -615,8 +601,8 @@ _INSTANCE_BODY = """<div class="wrap">
 
 <div class="sect">
   <h2>Rooms</h2>
-  <p class="lead">Six rooms, and the seats in each. Anything that does not fit &mdash; or that a
-  part-timer teaches &mdash; goes off campus, which the model always allows.</p>
+  <p class="lead">Rooms and their seats. Anything that does not fit, or that a part-timer
+  teaches, goes off campus.</p>
   <div class="two">
     <div class="panel"><table class="cap" id="roomtable"></table></div>
     <div class="panel">
@@ -627,18 +613,17 @@ _INSTANCE_BODY = """<div class="wrap">
 </div>
 
 <div class="notes">
-  <div class="note"><h3>Where the part-timers come from</h3>
-    <p>The model injects one reserved professor id, <code>part-timer</code>, that is exempt from
-    the no-overlap rules, so any number of sections can pile onto it. A penalty keeps that count
-    down, but nothing forbids it &mdash; which is why a shortfall in supply shows up as part-time
-    hiring rather than as an infeasible model.</p></div>
-  <div class="note"><h3>Qualification is a filter, not a preference</h3>
-    <p>{qual_pct}% of all professor&ndash;course pairs are marked qualified &mdash; a pair that is
-    not qualified is not a disliked assignment, it cannot be made at all. {qual_note}</p></div>
-  <div class="note"><h3>Preferences only decide the last stage</h3>
+  <div class="note"><h3>Part-timers</h3>
+    <p>The model injects one reserved professor id, <code>part-timer</code>, exempt from the
+    no-overlap rules, so any number of sections can pile onto it. A penalty keeps the count down,
+    nothing forbids it. A shortfall in supply shows up here rather than as an infeasible
+    model.</p></div>
+  <div class="note"><h3>Qualification</h3>
+    <p>{qual_pct}% of all professor&ndash;course pairs are marked qualified. An unqualified
+    pair cannot be assigned at all. {qual_note}</p></div>
+  <div class="note"><h3>Preferences</h3>
     <p>Course, time and block preferences carry no weight until teaching load, concurrency and
-    off-campus have each been settled in turn. They break ties inside an answer that is already
-    fixed on the things that matter more.</p></div>
+    off-campus have each been settled in turn. They only break ties.</p></div>
 </div>
 </div>"""
 
