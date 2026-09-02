@@ -183,10 +183,10 @@ def test_courses_with_the_same_section_id_can_run_together(payload: dict[str, An
 
 
 def test_room_stage_gets_a_physical_room_seed(payload: dict[str, Any]) -> None:
+    from scheduler._room_seed import seed_physical_rooms
     from scheduler.instance import OFF_CAMPUS, Instance, is_placeholder
     from scheduler.model import build
     from scheduler.progress import Progress
-    from scheduler.solve import _seed_physical_rooms
 
     # Make off-campus variables available for the named faculty, then imitate
     # the all-off-campus incumbent produced before room use is optimised.
@@ -205,7 +205,7 @@ def test_room_stage_gets_a_physical_room_seed(payload: dict[str, Any]) -> None:
     )
     values[old_variable] = 1.0
 
-    seeded = _seed_physical_rooms(built, values)
+    seeded = seed_physical_rooms(built, values)
 
     assert seeded[old_variable] == 0.0
     assert sum(seeded[index] for index in built.assign.values()) == 1.0
