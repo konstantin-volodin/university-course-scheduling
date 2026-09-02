@@ -43,8 +43,12 @@ from .progress import Progress
 __all__ = ["AssignmentKey", "BuiltModel", "Objectives", "build"]
 
 #: A decision variable's identity: who teaches what, when, where.
-#: (professor, course, section, semester, timeslot, classroom)
-AssignmentKey = tuple[str, str, str, str, str, str]
+#: (professor, course, section, semester, time of day, timeslot, classroom)
+#:
+#: Time of day remains explicit even though a real timeslot normally implies it.
+#: Placeholder slots and malformed legacy payloads make that implication unsafe,
+#: while :class:`SectionKey` promises that time of day is part of section identity.
+AssignmentKey = tuple[str, str, str, str, str, str, str]
 
 #: Coefficients being accumulated for one row, keyed by variable index.
 Terms = dict[int, float]
@@ -115,7 +119,6 @@ class _Index:
     professors: list[str]
     real_professors: list[str]
     courses: list[str]
-    sections: list[str]
     semesters: list[str]
     rooms: list[str]
     real_slots: list[str]
@@ -169,7 +172,6 @@ class _Index:
             professors=sorted(inst.professors),
             real_professors=sorted(inst.real_professors),
             courses=sorted(inst.courses),
-            sections=sorted(inst.sections),
             semesters=sorted(inst.semesters),
             rooms=sorted(inst.classrooms),
             real_slots=sorted(inst.real_timeslots),
@@ -228,13 +230,23 @@ def _viable_assignments(inst: Instance, index: _Index) -> list[AssignmentKey]:
                     and "Night" not in index.times_of.get(slot, ())
                 ):
                     continue
-                viable.append((professor, course, section, semester, slot, room))
+                viable.append(
+                    (professor, course, section, semester, time_of_day, slot, room)
+                )
 
             # The escape hatch: every combination can fall back to a placeholder
             # slot, so an over-subscribed instance degrades instead of coming
             # back infeasible.
             viable.append(
-                (professor, course, section, semester, placeholder_for(time_of_day), room)
+                (
+                    professor,
+                    course,
+                    section,
+                    semester,
+                    time_of_day,
+                    placeholder_for(time_of_day),
+                    room,
+                )
             )
 
     return sorted(viable)
@@ -280,7 +292,7 @@ class _Builder:
 
     def add_assignment_variables(self, viable: list[AssignmentKey]) -> None:
         for key in viable:
-            professor, _, _, _, slot, room = key
+            professor, _, _, _, _, slot, room = key
             # A named professor, in a real room, at a real time teaches a
             # section once or not at all. The fallbacks are counters, not
             # switches: many sections can pile onto "a part-timer", "off
@@ -303,7 +315,7 @@ class _Builder:
         teaches: dict[tuple[str, str, str], Terms] = defaultdict(dict)
 
         for key, variable in self.assign.items():
-            professor, _, _, semester, slot, _ = key
+            professor, _, _, semester, _, slot, _ = key
             if professor == PART_TIMER:
                 continue
             load[professor][variable] = 1.0
@@ -352,12 +364,20 @@ class _Builder:
         """Stop one professor, or one room, being claimed by two overlapping slots."""
         rows: dict[tuple[str, str, str, str], Terms] = defaultdict(dict)
         for key, variable in self.assign.items():
-            professor, course, section, semester, slot, room = key
+            professor, course, section, semester, time_of_day, slot, room = key
             held_by = owner(key)
             if held_by == skip:
                 continue
             for other in self.ix.partners_of.get(slot, ()):
-                twin = (professor, course, section, semester, other, room)
+                twin = (
+                    professor,
+                    course,
+                    section,
+                    semester,
+                    time_of_day,
+                    other,
+                    room,
+                )
                 twin_variable = self.assign.get(twin)
                 if twin_variable is not None:
                     row = rows[(held_by, semester, slot, other)]
@@ -386,7 +406,7 @@ class _Builder:
             lower: dict[tuple[str, str], Terms] = {key: {} for key in keys}
 
             for key, variable in self.assign.items():
-                _, _, _, semester, slot, _ = key
+                _, _, _, semester, _, slot, _ = key
                 weight = 1.0 if weight_of is None else weight_of.get(slot, 0.0)
                 if not weight:
                     continue
@@ -412,26 +432,31 @@ class _Builder:
     def add_classroom_constraints(self) -> None:
         rows: dict[tuple[str, str, str], Terms] = defaultdict(dict)
         for key, variable in self.assign.items():
-            _, _, _, semester, slot, room = key
+            _, _, _, semester, _, slot, room = key
             if room != OFF_CAMPUS and not is_placeholder(slot):
                 rows[(room, semester, slot)][variable] = 1.0
         self._emit("classroom_once", rows, Sense.LE, 1.0)
-        self._add_overlap_rows("classroom_no_overlap", owner=lambda key: key[5], skip=OFF_CAMPUS)
+        self._add_overlap_rows("classroom_no_overlap", owner=lambda key: key[6], skip=OFF_CAMPUS)
 
     def add_course_constraints(self) -> tuple[LinearExpr, LinearExpr]:
         """Returns the block-preference and Friday-night penalty expressions."""
         inst, ix = self.inst, self.ix
 
-        taught: dict[str, Terms] = defaultdict(dict)
-        blocks: dict[tuple[str, str], Terms] = defaultdict(dict)
+        taught: dict[tuple[str, str, str, str], Terms] = defaultdict(dict)
         fridays: dict[str, Terms] = defaultdict(dict)
 
+        preferred_blocks: dict[str, set[str]] = defaultdict(set)
+        for course, block in inst.course_block_preference:
+            preferred_blocks[course].add(block)
+
+        block_penalty = LinearExpr()
+
         for key, variable in self.assign.items():
-            _, course, section, _, slot, _ = key
-            taught[section][variable] = 1.0
-            for block in ix.blocks:
-                if (course, block) in inst.course_block_preference:
-                    blocks[(course, block)][variable] = 1.0
+            _, course, section, semester, time_of_day, slot, _ = key
+            taught[(course, section, semester, time_of_day)][variable] = 1.0
+            preferred = preferred_blocks.get(course)
+            if preferred and preferred.isdisjoint(ix.blocks_of.get(slot, ())):
+                block_penalty.add(variable)
             if (
                 course in inst.friday_night_penalty
                 and "Fri" in ix.days_of.get(slot, ())
@@ -442,14 +467,9 @@ class _Builder:
         # Every section is taught exactly once. The only row with no slack: the
         # fallbacks exist so it can always be satisfied. `always` matters here —
         # a section with no viable assignment has to fail loudly.
-        self._emit("section_taught_once", taught, Sense.EQ, 1.0, always=ix.sections)
-
-        block_penalty = LinearExpr()
-        for block_key in sorted(blocks, key=_label):
-            slack = self._slack("block_violation", block_key)
-            blocks[block_key][slack] = -1.0
-            block_penalty.add(slack, 1.0)
-        self._emit("course_block_preference", blocks, Sense.EQ, 0.0)
+        self._emit(
+            "section_taught_once", taught, Sense.EQ, 1.0, always=inst.section_keys
+        )
 
         friday_penalty = LinearExpr()
         for course in sorted(fridays, key=_label):
@@ -469,18 +489,20 @@ class _Builder:
         apart: dict[tuple[str, str, str, str], Terms] = defaultdict(dict)
 
         for key, variable in self.assign.items():
-            professor, course, _, semester, slot, _ = key
+            professor, course, _, semester, _, slot, _ = key
             if professor == PART_TIMER or is_placeholder(slot):
                 continue
             against_self[(course, semester, slot)][variable] = 1.0
             for pair in ix.pairs_touching.get((course, semester), ()):
-                target = together if pair in inst.must_run_together else apart
-                target[(*pair, slot)][variable] = 1.0
+                if pair in inst.must_run_together:
+                    first, _, _ = pair
+                    together[(*pair, slot)][variable] = 1.0 if course == first else -1.0
+                else:
+                    apart[(*pair, slot)][variable] = 1.0
 
         violation = LinearExpr()
         groups: tuple[tuple[str, dict[Any, Terms], Sense, float], ...] = (
             ("concurrency_self", against_self, Sense.LE, 1.0),
-            ("concurrency_together", together, Sense.EQ, 0.0),
             ("concurrency_apart", apart, Sense.LE, 1.0),
         )
         for name, rows, sense, rhs in groups:
@@ -489,6 +511,19 @@ class _Builder:
                 rows[row_key][slack] = -1.0
                 violation.add(slack, 1.0)
             self._emit(name, rows, sense, rhs)
+
+        together_upper: dict[tuple[str, str, str, str], Terms] = {}
+        together_lower: dict[tuple[str, str, str, str], Terms] = {}
+        for row_key, difference in sorted(together.items()):
+            slack = self._slack("concurrency_together_violation", row_key)
+            together_upper[row_key] = {**difference, slack: -1.0}
+            together_lower[row_key] = {
+                variable: -coefficient for variable, coefficient in difference.items()
+            }
+            together_lower[row_key][slack] = -1.0
+            violation.add(slack)
+        self._emit("concurrency_together_upper", together_upper, Sense.LE)
+        self._emit("concurrency_together_lower", together_lower, Sense.LE)
 
         return violation
 
@@ -499,7 +534,7 @@ class _Builder:
         course_reward, time_reward, block_reward = LinearExpr(), LinearExpr(), LinearExpr()
 
         for key, variable in self.assign.items():
-            professor, course, _, semester, slot, _ = key
+            professor, course, _, semester, _, slot, _ = key
 
             weight = inst.course_preference.get((professor, course))
             if weight:
@@ -519,9 +554,9 @@ class _Builder:
     def fallback_terms(self) -> tuple[LinearExpr, LinearExpr]:
         placeholder_use, off_campus_use = LinearExpr(), LinearExpr()
         for key, variable in self.assign.items():
-            if is_placeholder(key[4]):
+            if is_placeholder(key[5]):
                 placeholder_use.add(variable, 1.0)
-            if key[5] == OFF_CAMPUS:
+            if key[6] == OFF_CAMPUS:
                 off_campus_use.add(variable, 1.0)
         return placeholder_use, off_campus_use
 
