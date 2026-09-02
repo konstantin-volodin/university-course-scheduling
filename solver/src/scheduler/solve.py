@@ -66,7 +66,7 @@ def _seed_physical_rooms(
     for key, variable in built.assign.items():
         if seeded[variable] < 0.5:
             continue
-        professor, course, section, semester, slot, room = key
+        professor, course, section, semester, time_of_day, slot, room = key
         if room != OFF_CAMPUS:
             if not is_placeholder(slot):
                 occupied[(room, semester)].add(slot)
@@ -79,7 +79,15 @@ def _seed_physical_rooms(
             for candidate in sorted(built.instance.classroom_capacity)
             if (
                 candidate_variable := built.assign.get(
-                    (professor, course, section, semester, slot, candidate)
+                    (
+                        professor,
+                        course,
+                        section,
+                        semester,
+                        time_of_day,
+                        slot,
+                        candidate,
+                    )
                 )
             )
             is not None
@@ -90,7 +98,7 @@ def _seed_physical_rooms(
     # the start byte-identical across runs.
     off_campus.sort(key=lambda item: (len(item[2]), item[1]))
     for old_variable, key, candidates in off_campus:
-        _, _, _, semester, slot, _ = key
+        _, _, _, semester, _, slot, _ = key
         for room, new_variable in candidates:
             used = occupied[(room, semester)]
             if slot in used or overlaps[slot].intersection(used):
@@ -238,15 +246,12 @@ class _StagedSolve:
 
 
 def _extract(built: model_module.BuiltModel, values: list[float]) -> list[Assignment]:
-    inst = built.instance
-    time_of_day_of = dict(inst.timeslot_time_of_day)
-
     assignments: list[Assignment] = []
     for key, index in built.assign.items():
         value = values[index]
         if value < TOLERANCE:
             continue
-        professor, course, section, semester, slot, room = key
+        professor, course, section, semester, time_of_day, slot, room = key
         try:
             result_section: int | str = int(section)
         except ValueError:
@@ -259,7 +264,7 @@ def _extract(built: model_module.BuiltModel, values: list[float]) -> list[Assign
                 semester_id=semester,
                 timeslot_id=None if is_placeholder(slot) else slot,
                 classroom_id=None if room == OFF_CAMPUS else room,
-                time_of_day_id=time_of_day_of[slot],
+                time_of_day_id=time_of_day,
                 solution_value=float(round(value)),
             )
         )

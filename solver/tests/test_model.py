@@ -75,6 +75,42 @@ def test_every_section_gets_an_equality_row(program: Program) -> None:
     assert all(r.sense is Sense.EQ and r.rhs == 1.0 for r in rows)
 
 
+def test_section_identity_includes_its_course(payload: dict[str, Any]) -> None:
+    """Section ids are commonly reused as 1, 2, ... within each course."""
+    adm2000 = next(section for section in payload["section_subset"] if section[0] == "ADM2000")
+    adm2000[1] = "1"
+    attendance = next(
+        row for row in payload["section_attendance"] if row["key"][0] == "ADM2000"
+    )
+    attendance["key"][1] = "1"
+    payload["section_set"] = ["1", "2"]
+
+    built = build(Instance.from_payload(payload), Progress(silent))
+    rows = [
+        row for row in built.program.rows if row.name.startswith("section_taught_once[")
+    ]
+
+    assert len(rows) == 3
+    assert {row.name for row in rows} == {
+        "section_taught_once[ADM1000,1,Fall,Day]",
+        "section_taught_once[ADM1000,2,Fall,Day]",
+        "section_taught_once[ADM2000,1,Fall,Night]",
+    }
+
+
+def test_course_block_penalty_only_marks_non_preferred_slots(payload: dict[str, Any]) -> None:
+    built = build(Instance.from_payload(payload), Progress(silent))
+    penalised = {
+        key
+        for key, variable in built.assign.items()
+        if variable in built.objectives.block_violation.terms
+    }
+
+    assert penalised
+    assert all(key[1] == "ADM1000" for key in penalised)
+    assert all(key[5].startswith("placeholder_") for key in penalised)
+
+
 def test_balance_rows_cover_every_calendar_day(program: Program) -> None:
     minimums = [r for r in program.rows if r.name.startswith("day_of_week_min[")]
     assert len(minimums) == 2  # Mon and Wed; one semester
