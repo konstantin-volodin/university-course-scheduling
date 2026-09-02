@@ -120,6 +120,33 @@ def test_balance_rows_cover_every_calendar_day(program: Program) -> None:
     }
 
 
+def test_overlap_rows_cover_different_sections(payload: dict[str, Any]) -> None:
+    payload["timeslot_concurrency"] = [["Mon0900", "Wed0900"]]
+    built = build(Instance.from_payload(payload), Progress(silent))
+
+    row = next(
+        row
+        for row in built.program.rows
+        if row.name == "professor_no_overlap[prof_a,Fall,Mon0900,Wed0900]"
+    )
+    assignments = {
+        key for key, variable in built.assign.items() if variable in row.terms
+    }
+
+    assert {key[2] for key in assignments if key[1] == "ADM1000"} == {"1", "2"}
+    assert {key[5] for key in assignments} == {"Mon0900", "Wed0900"}
+
+    room_row = next(
+        row
+        for row in built.program.rows
+        if row.name == "classroom_no_overlap[DMS1150,Fall,Mon0900,Wed0900]"
+    )
+    room_assignments = {
+        key for key, variable in built.assign.items() if variable in room_row.terms
+    }
+    assert {key[2] for key in room_assignments if key[1] == "ADM1000"} == {"1", "2"}
+
+
 def test_teaching_load_rows_carry_the_right_hand_side(
     program: Program, payload: dict[str, Any]
 ) -> None:

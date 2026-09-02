@@ -239,6 +239,27 @@ def test_no_usable_room_pushes_sections_off_campus(payload: dict[str, Any]) -> N
     assert all(a.classroom_id is None for a in result.assignments)
 
 
+def test_overlapping_timeslots_cannot_hold_two_sections_for_one_professor(
+    payload: dict[str, Any],
+) -> None:
+    payload["timeslot_concurrency"] = [["Mon0900", "Wed0900"]]
+    payload["professor_qualification"] = [
+        ["prof_a", "ADM1000"],
+        ["prof_b", "ADM2000"],
+    ]
+    payload["professor_can_teach_night"] = [["prof_a", False], ["prof_b", True]]
+
+    result = solve(payload, progress=silent)
+
+    prof_a_day = [
+        assignment
+        for assignment in result.assignments
+        if assignment.professor_id == "prof_a" and assignment.time_of_day_id == "Day"
+    ]
+    assert len(prof_a_day) == 2
+    assert sum(assignment.timeslot_id is None for assignment in prof_a_day) == 1
+
+
 def test_progress_is_reported(payload: dict[str, Any]) -> None:
     """The callback is the only transcript there is, so it must carry the lot."""
     seen: list[tuple[str, str]] = []
