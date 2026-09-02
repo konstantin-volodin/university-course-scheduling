@@ -14,17 +14,17 @@ don't ask them to.
 from __future__ import annotations
 
 import math
-from collections import defaultdict
 from collections.abc import Callable, Mapping
-from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from . import model as model_module
+from ._room_seed import seed_physical_rooms
 from .backends import DEFAULT_BACKEND, Backend, SolutionStatus, open_backend
 from .errors import SolveError
 from .instance import OFF_CAMPUS, PART_TIMER, Instance, is_placeholder
 from .program import LinearExpr, Sense
 from .progress import Progress, ProgressCallback
+from .result import Assignment, Result, Stage
 
 __all__ = ["Assignment", "Result", "Stage", "solve", "solve_instance"]
 
@@ -43,139 +43,6 @@ SEED = 0
 
 #: Solver values are floating point; anything below this is a zero that drifted.
 TOLERANCE = 0.01
-
-
-def _seed_physical_rooms(
-    built: model_module.BuiltModel, values: list[float]
-) -> list[float]:
-    """Move the current incumbent into available physical rooms.
-
-    Room choice does not affect the staffing, timeslot, or preference terms. A
-    large solve can nevertheless spend its whole room stage proving its way out
-    of the all-off-campus incumbent produced by the preceding stage. This
-    deterministic greedy pass gives that stage a useful feasible start.
-    """
-    seeded = list(values)
-    overlaps: dict[str, set[str]] = defaultdict(set)
-    for first, second in built.instance.overlapping_timeslots:
-        overlaps[first].add(second)
-        overlaps[second].add(first)
-
-    occupied: dict[tuple[str, str], set[str]] = defaultdict(set)
-    off_campus: list[tuple[int, model_module.AssignmentKey, list[tuple[str, int]]]] = []
-    for key, variable in built.assign.items():
-        if seeded[variable] < 0.5:
-            continue
-        professor, course, section, semester, time_of_day, slot, room = key
-        if room != OFF_CAMPUS:
-            if not is_placeholder(slot):
-                occupied[(room, semester)].add(slot)
-            continue
-        if is_placeholder(slot):
-            continue
-
-        candidates = [
-            (candidate, candidate_variable)
-            for candidate in sorted(built.instance.classroom_capacity)
-            if (
-                candidate_variable := built.assign.get(
-                    (
-                        professor,
-                        course,
-                        section,
-                        semester,
-                        time_of_day,
-                        slot,
-                        candidate,
-                    )
-                )
-            )
-            is not None
-        ]
-        off_campus.append((variable, key, candidates))
-
-    # Place sections with the fewest options first. The remaining fields make
-    # the start byte-identical across runs.
-    off_campus.sort(key=lambda item: (len(item[2]), item[1]))
-    for old_variable, key, candidates in off_campus:
-        _, _, _, semester, _, slot, _ = key
-        for room, new_variable in candidates:
-            used = occupied[(room, semester)]
-            if slot in used or overlaps[slot].intersection(used):
-                continue
-            seeded[new_variable] = seeded[old_variable]
-            seeded[old_variable] = 0.0
-            used.add(slot)
-            break
-
-    return seeded
-
-
-@dataclass(frozen=True, slots=True)
-class Assignment:
-    """One scheduled section. Mirrors ``OPTIM_results.Optimization_Outputs``.
-
-    ``None`` means a fallback was used: no named professor (a part-timer), no
-    room of ours, or no real timeslot.
-    """
-
-    professor_id: str | None
-    course_id: str
-    section_id: int | str
-    semester_id: str
-    timeslot_id: str | None
-    classroom_id: str | None
-    time_of_day_id: str
-    solution_value: float
-
-
-@dataclass(frozen=True, slots=True)
-class Stage:
-    """What one solve stage cost, and whether it finished the job."""
-
-    name: str
-    value: float
-    seconds: float
-    proven: bool
-
-
-@dataclass(frozen=True, slots=True)
-class Result:
-    status: str
-    objective: float
-    assignments: list[Assignment]
-    solver: str = DEFAULT_BACKEND
-    stages: list[Stage] = field(default_factory=list)
-
-    @property
-    def unstaffed(self) -> list[Assignment]:
-        """Sections that fell through to a part-timer."""
-        return [a for a in self.assignments if a.professor_id is None]
-
-    @property
-    def unscheduled(self) -> list[Assignment]:
-        """Sections with no real timeslot — these need a human."""
-        return [a for a in self.assignments if a.timeslot_id is None]
-
-    @property
-    def off_campus(self) -> list[Assignment]:
-        return [a for a in self.assignments if a.classroom_id is None]
-
-    def to_dict(self) -> dict[str, Any]:
-        """JSON-ready form. This is the wire format."""
-        return {
-            "status": self.status,
-            "solver": self.solver,
-            "objective": self.objective,
-            "assignments": [asdict(a) for a in self.assignments],
-            "stages": [asdict(s) for s in self.stages],
-            "summary": {
-                "assignments": len(self.assignments),
-                "unstaffed": len(self.unstaffed),
-                "unscheduled": len(self.unscheduled),
-                "off_campus": len(self.off_campus),
-            },
-        }
 
 
 class _StagedSolve:
@@ -303,7 +170,7 @@ def solve_instance(
         staged = _StagedSolve(backend, reporter, time_limit)
         objective = staged.run(
             built.objectives,
-            room_seed=lambda values: _seed_physical_rooms(built, values),
+            room_seed=lambda values: seed_physical_rooms(built, values),
         )
 
         with reporter.step("exporting", "reading solution") as done:
