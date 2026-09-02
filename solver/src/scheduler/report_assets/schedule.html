@@ -1,0 +1,36 @@
+<div class="wrap">
+<header>
+  <p class="eyebrow">{eyebrow}</p>
+  <h1>{heading}</h1>
+</header>
+<div class="stats" id="stats"></div>
+<div class="controls">
+  <div class="ctl"><span class="ctl-label" id="lbl-sem">Semester</span>
+    <div class="seg" role="group" aria-labelledby="lbl-sem" id="semseg"></div></div>
+  <div class="ctl"><span class="ctl-label" id="lbl-staff">Staffing</span>
+    <div class="seg" role="group" aria-labelledby="lbl-staff" id="staffseg">
+      <button data-staff="all" aria-pressed="true">All</button>
+      <button data-staff="fac" aria-pressed="false">Named faculty</button>
+      <button data-staff="pt" aria-pressed="false">Part-timers</button>
+    </div></div>
+  <div class="ctl"><span class="ctl-label" id="lbl-room">Room</span>
+    <div class="seg" role="group" aria-labelledby="lbl-room" id="roomseg">
+      <button data-room="all" aria-pressed="true">All</button>
+      <button data-room="on" aria-pressed="false">On campus only</button>
+    </div></div>
+  <p class="count" id="count"></p>
+</div>
+<div class="gridwrap" id="gridwrap" tabindex="0" role="region" aria-label="Schedule grid">
+  <table><thead><tr id="head"></tr></thead><tbody id="body"></tbody></table>
+</div>
+<div class="detail" id="detail" hidden></div>
+<div class="legend">
+  <span class="key"><span class="sw f"></span> Named faculty</span>
+  <span class="key"><span class="sw p"></span> Part-time</span>
+  <span class="key">Room shown after section</span>
+</div>
+<div class="sect">
+  <h2>Solve stages</h2>
+  <div class="panel"><table class="stages" id="stagetable"></table></div>
+</div>
+</div>
