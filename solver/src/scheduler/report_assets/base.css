@@ -1,0 +1,179 @@
+:root{
+  /* brand -- University of Ottawa visual identity */
+  --garnet:#8F001A; --garnet-deep:#6B0014; --garnet-wash:#F5E6E9;
+  --grey-warm:#80746C; --grey-light:#ACA39A;
+  --charcoal:#2D2D2C; --polar:#F2F2F2; --sage:#67796C; --white:#FFFFFF;
+  /* roles */
+  --ground:var(--polar); --surface:var(--white); --sunk:var(--polar);
+  --ink:var(--charcoal); --muted:#5C554F; --faint:var(--grey-warm);
+  --line:#DEDAD5; --line-strong:#C6BFB8; --focus:var(--garnet);
+  /* semantic -- one meaning per colour, on both pages */
+  --deficit:var(--garnet);      /* the shortfall, the part-time hires */
+  --satisfied:var(--grey-warm); /* the quantities that already exist */
+  --ok:var(--sage);             /* passing checks only */
+  /* space */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px;
+  --s5:24px; --s6:32px; --s7:48px; --s8:72px;
+}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{background:var(--ground);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:17px;line-height:1.6;
+  margin:0;padding:0 clamp(16px,5vw,64px) var(--s8);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1400px;margin:0 auto}
+a{color:var(--garnet);text-decoration:underline;text-underline-offset:2px}
+/* masthead: a garnet rule, not a garnet slab */
+header{background:var(--surface);border-top:5px solid var(--garnet);
+  border-bottom:1px solid var(--line);
+  margin:var(--s5) 0 0;padding:var(--s8) var(--s6) var(--s7)}
+h1{font-family:"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:clamp(2.4rem,5.2vw,3.75rem);
+  line-height:1.02;margin:0 0 var(--s5);letter-spacing:-.015em;text-wrap:balance;max-width:16ch}
+.eyebrow{font-size:.6875rem;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--faint);margin:0 0 var(--s5)}
+/* summary band */
+.stats{display:flex;flex-wrap:wrap;gap:0;margin:0;
+  background:var(--surface);border:1px solid var(--line);border-top:0}
+.stat{flex:1 1 150px;padding:var(--s6) var(--s5);border-left:1px solid var(--line);
+  display:flex;flex-direction:column}
+.stat:first-child{border-left:0}
+.stat .n{font-family:"Helvetica Neue",Arial,sans-serif;font-size:clamp(2rem,4vw,2.75rem);font-weight:700;
+  font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.03em}
+/* margin-top:auto puts every label on one bottom line, however it wraps, so
+   the deficit cell's underscore sits level with its neighbours' floors */
+.stat .l{font-size:.6875rem;font-weight:600;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--faint);margin-top:auto;padding-top:var(--s3);line-height:1.4;max-width:22ch}
+/* the deficit is the only garnet cell, and it double-encodes with a rule */
+.stat.pt{box-shadow:inset 0 -3px 0 var(--deficit)}
+.stat.pt .n{color:var(--deficit)}
+.stat.pt .l{color:var(--garnet-deep)}
+.controls{display:flex;flex-wrap:wrap;gap:var(--s6);align-items:flex-end;
+  margin:var(--s7) 0 var(--s5)}
+.ctl{display:flex;flex-direction:column;gap:var(--s2)}
+.ctl-label{font-size:.6875rem;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--faint)}
+.seg{display:inline-flex;border:1px solid var(--line-strong);background:var(--surface)}
+.seg button{font-family:inherit;font-size:.9375rem;padding:7px 14px;border:0;
+  background:transparent;color:var(--muted);cursor:pointer;border-left:1px solid var(--line)}
+.seg button:first-child{border-left:0}
+.seg button:hover{background:var(--polar)}
+.seg button[aria-pressed="true"]{background:var(--garnet);color:var(--white);font-weight:600}
+.seg button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.seg button .n{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.75rem;opacity:.75;margin-left:5px}
+.count{font-size:.9375rem;color:var(--faint);padding-bottom:8px;margin:0}
+.count b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.gridwrap{overflow:auto;max-height:min(72vh,720px);border:1px solid var(--line);
+  background:var(--surface)}
+.gridwrap:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+table{border-collapse:collapse;width:100%;min-width:920px}
+th,td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:top}
+th:last-child,td:last-child{border-right:0}
+tbody tr:last-child td{border-bottom:0}
+thead th{background:var(--polar);padding:var(--s3);text-align:left;
+  font-size:.6875rem;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);position:sticky;top:0;z-index:2}
+.rowhead{background:var(--polar);width:118px;padding:var(--s3);white-space:nowrap;
+  font-size:.6875rem;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);text-align:left}
+.rowhead .cnt{display:block;margin-top:2px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8125rem;
+  color:var(--faint);letter-spacing:0;font-variant-numeric:tabular-nums;font-weight:400}
+td.cell{padding:var(--s3);min-width:152px}
+/* an empty cell is a finding, not whitespace */
+td.cell.empty{background:repeating-linear-gradient(135deg,transparent 0 7px,#EDE9E4 7px 8px)}
+/* no nested scroll: the region scrolls, a cell never hides its own contents */
+.cellinner{display:flex;flex-direction:column;gap:var(--s3)}
+/* a cell mixes 2-3 timeslots; the slot is the real event, so group by it */
+.grp-h{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.6875rem;letter-spacing:.04em;
+  color:var(--muted);margin-bottom:4px}
+.grp-h .dbl{color:var(--garnet-deep)}
+/* one column rhythm, so chips line up down the cell instead of ragging */
+.grp-c{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:4px}
+/* Night carries 175 of the 426 sections, so a cell there runs 15 rows deep and
+   the band dwarfs the other three. Show a group's first few and let it open. */
+.grp:not(.open) .chip.over{display:none}
+.more{margin-top:5px;font:inherit;font-size:.6875rem;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;background:transparent;border:0;padding:2px 0;cursor:pointer;
+  color:var(--garnet);text-decoration:underline;text-underline-offset:2px}
+.more:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+/* a chip carries staffing on its left edge and fill, never on the text colour */
+.chip{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.75rem;font-weight:400;padding:3px 8px;
+  cursor:pointer;border:0;display:flex;align-items:center;
+  gap:6px;line-height:1.35;white-space:nowrap;overflow:hidden;
+  background:var(--white);color:var(--ink);border-left:3px solid var(--grey-light)}
+/* the flag is the edge, not a fill: whichever way the filter tips, the grid
+   stays mostly white with flags in it -- the same logic as the room footnote */
+.chip.pt{border-left:3px solid var(--garnet)}
+.chip:hover{background:var(--polar)}
+.chip:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.chip .room{font-size:.6875rem;color:var(--muted)}
+.chip.dim{opacity:.3}
+/* the picked chip has to gain something, not just survive the others fading */
+.chip.sel{outline:2px solid var(--garnet);outline-offset:1px;background:var(--garnet-wash)}
+.detail{position:sticky;bottom:0;z-index:3;background:var(--surface);
+  border:1px solid var(--line-strong);border-top:3px solid var(--garnet);
+  padding:var(--s4) var(--s5);display:flex;flex-wrap:wrap;gap:var(--s6);align-items:center}
+.detail[hidden]{display:none}
+.detail dl{margin:0;display:flex;flex-direction:column;gap:2px}
+.detail dt{font-size:.6875rem;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--faint)}
+.detail dd{margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.875rem;font-weight:500;
+  font-variant-numeric:tabular-nums}
+.detail .close{margin-left:auto;background:transparent;border:1px solid var(--line-strong);
+  color:var(--muted);padding:6px 16px;cursor:pointer;font-family:inherit;font-size:.9375rem}
+.detail .close:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.legend{display:flex;flex-wrap:wrap;gap:var(--s5);margin:var(--s4) 0 0;
+  font-size:.9375rem;color:var(--muted);align-items:center}
+.key{display:inline-flex;align-items:center;gap:var(--s2)}
+.sw{width:14px;height:14px;border:1px solid var(--line-strong)}
+.sw.f{background:var(--white);border-left:3px solid var(--grey-warm)}
+.sw.p{background:var(--white);border-left:3px solid var(--garnet)}
+.stages{border-collapse:collapse;font-size:.9375rem;margin-top:2px;min-width:0}
+.stages td{border:0;padding:3px 14px 3px 0;color:var(--muted)}
+.stages td.v{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;
+  color:var(--ink);font-weight:500;text-align:right}
+.stages td.st{font-size:.6875rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.ok{color:var(--ok)}
+.early{color:var(--deficit)}
+/* instance page */
+.sect{margin:var(--s8) 0 0}
+.sect h2{font-family:"Helvetica Neue",Arial,sans-serif;font-size:clamp(1.5rem,2.6vw,1.95rem);font-weight:600;
+  margin:0 0 var(--s3);letter-spacing:-.015em}
+.sect .lead{color:var(--muted);font-size:1.0625rem;margin:0 0 var(--s5);max-width:65ch}
+.panel{border:1px solid var(--line);background:var(--surface);padding:var(--s6)}
+.bars{display:flex;flex-direction:column;gap:var(--s4)}
+.bar{display:grid;grid-template-columns:150px 1fr 132px;gap:var(--s4);align-items:center}
+.bar .nm{font-size:.6875rem;font-weight:600;color:var(--muted);
+  text-align:right;text-transform:uppercase;letter-spacing:.1em;line-height:1.35}
+.bar .track{background:#E7E3DE;height:22px;overflow:hidden}
+.bar .fill{height:100%;background:var(--satisfied)}
+.bar .fill.pt{background:var(--deficit)}
+.bar .vl{font-size:.8125rem;color:var(--muted)}
+.bar .vl .num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;color:var(--ink)}
+.hist{display:flex;align-items:flex-end;gap:5px;height:150px;padding-top:8px}
+.hist .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  gap:5px;height:100%}
+.hist .hb{width:100%;background:var(--satisfied);min-height:2px}
+.hist .hl{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.6875rem;color:var(--faint);
+  font-variant-numeric:tabular-nums}
+.hist .hv{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.75rem;color:var(--ink);font-weight:500;
+  font-variant-numeric:tabular-nums}
+.slotgrid td{padding:6px}
+.slot{display:inline-flex;flex-direction:column;gap:1px;border:1px solid var(--line-strong);
+  background:var(--white);color:var(--ink);padding:6px 8px;min-width:112px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8125rem;font-weight:500}
+.slot .meta{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:.75rem;font-weight:400;color:var(--faint);
+  letter-spacing:0}
+.slot.dbl{border-style:dashed;border-color:var(--garnet)}
+.slot.dbl .id{color:var(--garnet-deep)}
+.cap{width:100%;border-collapse:collapse;font-size:.9375rem;min-width:0}
+.cap th,.cap td{border:0;border-bottom:1px solid var(--line);padding:8px 10px;text-align:left}
+.cap th{font-size:.6875rem;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint)}
+.cap td{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8125rem}
+.cap td.n{font-variant-numeric:tabular-nums;text-align:right}
+.cap tr:last-child td{border-bottom:0}
+.two{display:grid;gap:var(--s5);grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+@media (max-width:900px){
+  .bar{grid-template-columns:1fr}
+  .bar .nm{text-align:left}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

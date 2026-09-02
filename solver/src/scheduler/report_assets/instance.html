@@ -1,0 +1,51 @@
+<div class="wrap">
+<header>
+  <p class="eyebrow">{eyebrow}</p>
+  <h1>{heading}</h1>
+</header>
+<div class="stats" id="stats"></div>
+
+<div class="sect">
+  <h2>Capacity</h2>
+  <div class="panel"><div class="bars" id="supply"></div></div>
+</div>
+
+<div class="sect">
+  <h2>Timeslots</h2>
+  <div class="gridwrap" tabindex="0" role="region" aria-label="Available timeslots">
+    <table class="slotgrid"><thead><tr id="slothead"></tr></thead>
+      <tbody id="slotbody"></tbody></table>
+  </div>
+</div>
+
+<div class="sect">
+  <h2>Demand</h2>
+  <div class="two">
+    <div class="panel"><div class="bars" id="bysem"></div></div>
+    <div class="panel"><div class="bars" id="bytod"></div></div>
+  </div>
+</div>
+
+<div class="sect">
+  <h2>Faculty</h2>
+  <div class="two">
+    <div class="panel">
+      <div class="ctl-label" style="margin-bottom:12px">Teaching load, professors per value</div>
+      <div class="hist" id="loadhist"></div>
+    </div>
+    <div class="panel"><div class="bars" id="perms"></div></div>
+  </div>
+</div>
+
+<div class="sect">
+  <h2>Rooms</h2>
+  <div class="two">
+    <div class="panel"><table class="cap" id="roomtable"></table></div>
+    <div class="panel">
+      <div class="ctl-label" style="margin-bottom:12px">Section size, sections per band</div>
+      <div class="hist" id="sizehist"></div>
+    </div>
+  </div>
+</div>
+
+</div>
