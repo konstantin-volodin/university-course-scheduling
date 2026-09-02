@@ -61,9 +61,12 @@ src/scheduler/
   instance.py    payload validation
   model.py       scheduling model
   program.py     solver-neutral MIP types
-  solve.py       staged solve and results
+  solve.py       staged solve orchestration
+  result.py      result types and JSON serialization
+  _room_seed.py  physical-room warm-start heuristic
   backends/      HiGHS and Gurobi adapters
-  report.py      HTML reports
+  report.py      report data preparation
+  report_assets/ HTML, CSS, and JavaScript embedded in reports
   cli.py         command line
 tests/
 ```
