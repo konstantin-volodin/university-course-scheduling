@@ -10,8 +10,8 @@
 
 ```bash
 cd solver
-uv venv --python 3.14 .venv
-uv pip install --python .venv/bin/python -e ".[dev]"
+uv python install 3.14
+uv sync --python 3.14 --extra dev
 cd ..
 cp instances/tiny.yaml instances/my-university.yaml
 # Or: cp -R instances/medium instances/my-university

@@ -8,7 +8,7 @@ The maintained application lives in `solver/`. Package code is under `solver/src
 
 Run development commands from `solver/`. Use `uv`, not Poetry or direct `pip`; `uv.lock` is committed.
 
-- `uv venv --python 3.14 .venv && uv pip install --python .venv/bin/python -e ".[dev]"` creates the development environment.
+- `uv python install 3.14 && uv sync --python 3.14 --extra dev` creates the development environment.
 - `make check` runs Ruff, strict mypy, and the full pytest suite.
 - `make test` runs tests; target one with `uv run pytest tests/test_model.py::test_name`.
 - `make fmt` applies Ruff's safe fixes.

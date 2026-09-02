@@ -5,8 +5,8 @@ Assigns professors, meeting times, and classrooms to course sections.
 ## Setup
 
 ```bash
-uv venv --python 3.14 .venv
-uv pip install --python .venv/bin/python -e ".[dev]"
+uv python install 3.14
+uv sync --python 3.14 --extra dev
 make check
 ```
 
@@ -44,7 +44,7 @@ Always set a time limit for large instances. The limit applies to each solve sta
 HiGHS is the default. Gurobi is optional:
 
 ```bash
-uv pip install --python .venv/bin/python -e ".[dev,gurobi]"
+uv sync --extra gurobi
 ```
 
 The free Gurobi license is too small for medium and full instances.
