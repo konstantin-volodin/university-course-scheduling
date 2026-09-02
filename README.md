@@ -1,7 +1,7 @@
 # University Course Scheduling
 
-This repository contains a jMIP optimization model for producing a Telfer course schedule
-for 2020. See the [model manuscript](solver/model/manuscript.pdf).
+This repository contains a mixed-integer programming (MIP) model for producing a 2020
+Telfer course schedule. See the [model manuscript](solver/model/manuscript.pdf).
 
 The full input is defined in [`instances/telfer/`](instances/telfer/). Smaller examples are
 available in [`instances/`](instances/).
