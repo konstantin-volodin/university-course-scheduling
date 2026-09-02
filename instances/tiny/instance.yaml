@@ -1,4 +1,4 @@
-# Validate: uv run scheduler solve ../instances/tiny.yaml --check
+# Validate: uv run scheduler solve ../instances/tiny --check
 
 semesters: [Fall]
 

@@ -13,7 +13,7 @@ from scheduler import config, report
 from scheduler.cli import main
 
 INSTANCES = Path(__file__).parents[2] / "instances"
-TINY = INSTANCES / "tiny.yaml"
+TINY = INSTANCES / "tiny"
 MEDIUM = INSTANCES / "medium"
 
 

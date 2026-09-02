@@ -18,7 +18,8 @@ import pytest
 from scheduler.cli import main
 
 INSTANCES = Path(__file__).parents[2] / "instances"
-TINY = INSTANCES / "tiny.yaml"
+TINY = INSTANCES / "tiny"
+TINY_FILE = TINY / "instance.yaml"
 MEDIUM = INSTANCES / "medium"
 
 
@@ -29,6 +30,21 @@ def test_solve_writes_json_to_a_file(tmp_path: Path, capsys: pytest.CaptureFixtu
     result = json.loads(output.read_text())
     assert result["status"] == "optimal"
     assert len(result["assignments"]) == 3
+
+
+def test_solve_writes_three_default_outputs(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "tiny.yaml"
+    source.write_text(TINY_FILE.read_text())
+
+    assert main(["solve", str(source), "-q"]) == 0
+
+    results = tmp_path / "results"
+    assert json.loads((results / "tiny.json").read_text())["status"] == "optimal"
+    assert (results / "tiny-schedule.html").read_text().startswith("<!doctype html>")
+    assert (results / "tiny-instance.html").read_text().startswith("<!doctype html>")
+    assert capsys.readouterr().out == ""
 
 
 def test_check_validates_without_solving(capsys: pytest.CaptureFixture[str]) -> None:
@@ -78,11 +94,11 @@ def test_infeasible_instance_exits_nonzero(
 
 
 @pytest.mark.slow
-def test_stdout_is_pure_json() -> None:
-    """Nothing — not the licence banner, not progress — may reach stdout."""
+def test_stdin_stdout_is_pure_json() -> None:
+    """The streaming form still reserves stdout exclusively for the result JSON."""
     completed = subprocess.run(
-        [sys.executable, "-m", "scheduler", "solve", str(TINY)],
-        capture_output=True, text=True, check=True,
+        [sys.executable, "-m", "scheduler", "solve", "-"],
+        input=TINY_FILE.read_text(), capture_output=True, text=True, check=True,
     )
     result = json.loads(completed.stdout)  # would raise if anything else leaked
     assert result["status"] == "optimal"
@@ -92,7 +108,7 @@ def test_stdout_is_pure_json() -> None:
 def test_reads_an_instance_from_stdin() -> None:
     completed = subprocess.run(
         [sys.executable, "-m", "scheduler", "solve", "-", "-q"],
-        input=TINY.read_text(), capture_output=True, text=True, check=True,
+        input=TINY_FILE.read_text(), capture_output=True, text=True, check=True,
     )
     assert json.loads(completed.stdout)["status"] == "optimal"
 
@@ -100,8 +116,8 @@ def test_reads_an_instance_from_stdin() -> None:
 @pytest.mark.slow
 def test_progress_goes_to_stderr() -> None:
     completed = subprocess.run(
-        [sys.executable, "-m", "scheduler", "solve", str(TINY)],
-        capture_output=True, text=True, check=True,
+        [sys.executable, "-m", "scheduler", "solve", "-"],
+        input=TINY_FILE.read_text(), capture_output=True, text=True, check=True,
     )
     assert "solving" in completed.stderr
     json.loads(completed.stdout)
