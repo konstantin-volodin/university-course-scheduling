@@ -110,9 +110,13 @@ professor_defaults: {can_teach_night: true, can_teach_off_campus: true}
 course_defaults: {penalise_friday_night: true}
 ```
 
-`professor_defaults` accepts `can_teach_night`, `can_teach_off_campus`, and
-`prefers_packed_days`; `course_defaults` accepts `penalise_friday_night`. A
-flag on an individual professor or course overrides the declared default.
+`professor_defaults` accepts `can_teach_night`, `can_teach_off_campus`,
+`prefers_packed_days`, and `preferred_class_length`; `course_defaults` accepts
+`penalise_friday_night` and `preferred_class_length`. A flag on an individual
+professor or course overrides the declared default. Note that a
+`preferred_class_length` default applies to *every* entry that omits it —
+including ones that previously had no preference — so only declare it when
+that is what you mean.
 
 ## Courses
 

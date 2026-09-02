@@ -234,8 +234,8 @@ def loads(text: str) -> dict[str, Any]:
     def as_id(value: Any) -> str:
         return str(value)
 
-    def flag_defaults(name: str, allowed: set[str]) -> dict[str, bool]:
-        """Read an optional ``*_defaults`` block of boolean flag defaults."""
+    def flag_defaults(name: str, allowed: set[str]) -> dict[str, Any]:
+        """Read an optional ``*_defaults`` block of per-field defaults."""
         raw = cfg.get(name)
         if raw is None:
             return {}
@@ -243,21 +243,35 @@ def loads(text: str) -> dict[str, Any]:
             problems.append(f"{name}: expected a mapping, got {type(raw).__name__}")
             return {}
         _check_unknown_fields(name, raw, allowed, problems)
-        defaults: dict[str, bool] = {}
-        for key, value in raw.items():
-            if str(key) not in allowed:
-                continue
-            if not isinstance(value, bool):
-                problems.append(f"{name}.{key}: expected true or false")
-                continue
-            defaults[str(key)] = value
-        return defaults
+        return {str(key): value for key, value in raw.items() if str(key) in allowed}
 
     professor_defaults = flag_defaults(
         "professor_defaults",
-        {"can_teach_night", "can_teach_off_campus", "prefers_packed_days"},
+        {
+            "can_teach_night",
+            "can_teach_off_campus",
+            "prefers_packed_days",
+            "preferred_class_length",
+        },
     )
-    course_defaults = flag_defaults("course_defaults", {"penalise_friday_night"})
+    for option in ("can_teach_night", "can_teach_off_campus", "prefers_packed_days"):
+        if option in professor_defaults and not isinstance(professor_defaults[option], bool):
+            problems.append(f"professor_defaults.{option}: expected true or false")
+    course_defaults = flag_defaults(
+        "course_defaults", {"penalise_friday_night", "preferred_class_length"}
+    )
+    if "penalise_friday_night" in course_defaults and not isinstance(
+        course_defaults["penalise_friday_night"], bool
+    ):
+        problems.append("course_defaults.penalise_friday_night: expected true or false")
+    for block_name, block in (
+        ("professor_defaults", professor_defaults),
+        ("course_defaults", course_defaults),
+    ):
+        if "preferred_class_length" in block and not isinstance(
+            block["preferred_class_length"], str
+        ):
+            problems.append(f"{block_name}.preferred_class_length: expected a class-length name")
 
     cal = cfg["calendar"]
     if not isinstance(cal, dict):
@@ -377,10 +391,12 @@ def loads(text: str) -> dict[str, Any]:
             problems.append(f"courses.{course}.penalise_friday_night: expected true or false")
         if penalty:
             friday.append(course)
-        if "preferred_class_length" in spec:
+        course_length_pref = spec.get(
+            "preferred_class_length", course_defaults.get("preferred_class_length")
+        )
+        if course_length_pref is not None:
             course_length.append(
-                [course, hours_of.get(spec["preferred_class_length"],
-                                      spec["preferred_class_length"])]
+                [course, hours_of.get(course_length_pref, course_length_pref)]
             )
         raw_sections = spec.get("sections") or []
         if not isinstance(raw_sections, list):
@@ -464,10 +480,12 @@ def loads(text: str) -> dict[str, Any]:
         pack.append([prof, int(bool(spec.get("prefers_packed_days",
                                              professor_defaults.get("prefers_packed_days",
                                                                     False))))])
-        if "preferred_class_length" in spec:
+        prof_length_pref = spec.get(
+            "preferred_class_length", professor_defaults.get("preferred_class_length")
+        )
+        if prof_length_pref is not None:
             prof_length.append(
-                [prof, hours_of.get(spec["preferred_class_length"],
-                                    spec["preferred_class_length"])]
+                [prof, hours_of.get(prof_length_pref, prof_length_pref)]
             )
         qualified = spec.get("qualified_for", [])
         if qualified != "all" and not isinstance(qualified, list):

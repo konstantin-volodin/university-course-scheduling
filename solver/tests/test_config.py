@@ -330,3 +330,55 @@ C1:
     payload = config.load(tmp_path)
     assert payload["professor_can_teach_night"] == [["p1", True]]
     assert payload["course_friday_penalty"] == ["C1"]
+
+
+def test_professor_defaults_cover_preferred_class_length() -> None:
+    payload = config.loads(
+        BASE
+        + """
+professor_defaults: {preferred_class_length: single}
+professors:
+  p1: {teaching_load: 3, qualified_for: all}
+  p2: {teaching_load: 1, qualified_for: [C1], preferred_class_length: double}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["professor_block_pref"] == [["p1", "1.5"], ["p2", "double"]]
+
+
+def test_course_defaults_cover_preferred_class_length() -> None:
+    payload = config.loads(
+        BASE
+        + """
+course_defaults: {preferred_class_length: single}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["course_block_pref"] == [["C1", "1.5"]]
+
+
+def test_bad_preferred_class_length_default_is_reported() -> None:
+    with pytest.raises(
+        InvalidInstanceError,
+        match=r"course_defaults\.preferred_class_length: expected a class-length name",
+    ):
+        config.loads(
+            BASE
+            + """
+course_defaults: {preferred_class_length: 3}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+        )
