@@ -118,7 +118,9 @@ def _extract(built: model_module.BuiltModel, values: list[float]) -> list[Assign
         value = values[index]
         if value < TOLERANCE:
             continue
-        professor, course, section, semester, time_of_day, slot, room = key
+        professor = key.professor
+        course, section, semester = key.course, key.section, key.semester
+        time_of_day, slot, room = key.time_of_day, key.timeslot, key.classroom
         try:
             result_section: int | str = int(section)
         except ValueError:

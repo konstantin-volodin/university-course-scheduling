@@ -196,10 +196,10 @@ def test_room_stage_gets_a_physical_room_seed(payload: dict[str, Any]) -> None:
     old_variable, old_key = next(
         (variable, key)
         for key, variable in built.assign.items()
-        if key[6] == OFF_CAMPUS
-        and not is_placeholder(key[5])
+        if key.classroom == OFF_CAMPUS
+        and not is_placeholder(key.timeslot)
         and any(
-            (*key[:6], room) in built.assign
+            key._replace(classroom=room) in built.assign
             for room in built.instance.classroom_capacity
         )
     )
@@ -212,7 +212,7 @@ def test_room_stage_gets_a_physical_room_seed(payload: dict[str, Any]) -> None:
     assert any(
         seeded[index] == 1.0
         for key, index in built.assign.items()
-        if key[:6] == old_key[:6] and key[6] != OFF_CAMPUS
+        if key[:-1] == old_key[:-1] and key.classroom != OFF_CAMPUS
     )
 
 

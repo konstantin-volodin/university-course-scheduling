@@ -21,7 +21,7 @@ def seed_physical_rooms(built: BuiltModel, values: list[float]) -> list[float]:
     for key, variable in built.assign.items():
         if seeded[variable] < 0.5:
             continue
-        professor, course, section, semester, time_of_day, slot, room = key
+        semester, slot, room = key.semester, key.timeslot, key.classroom
         if room != OFF_CAMPUS:
             if not is_placeholder(slot):
                 occupied[(room, semester)].add(slot)
@@ -34,13 +34,13 @@ def seed_physical_rooms(built: BuiltModel, values: list[float]) -> list[float]:
             for candidate in sorted(built.instance.classroom_capacity)
             if (
                 candidate_variable := built.assign.get(
-                    (
-                        professor,
-                        course,
-                        section,
-                        semester,
-                        time_of_day,
-                        slot,
+                    AssignmentKey(
+                        key.professor,
+                        key.course,
+                        key.section,
+                        key.semester,
+                        key.time_of_day,
+                        key.timeslot,
                         candidate,
                     )
                 )
@@ -51,7 +51,7 @@ def seed_physical_rooms(built: BuiltModel, values: list[float]) -> list[float]:
 
     off_campus.sort(key=lambda item: (len(item[2]), item[1]))
     for old_variable, key, candidates in off_campus:
-        _, _, _, semester, _, slot, _ = key
+        semester, slot = key.semester, key.timeslot
         for room, new_variable in candidates:
             used = occupied[(room, semester)]
             if slot in used or overlaps[slot].intersection(used):
