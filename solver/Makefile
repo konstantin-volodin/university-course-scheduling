@@ -36,7 +36,6 @@ example:
 # line:  make solve YAML=../instances/medium LIMIT=60
 YAML  ?= ../instances/telfer
 LIMIT ?= 900
-TITLE ?= Telfer
 # Outputs live in the instance folder's results/ -- the same place solve writes.
 DIR   := $(if $(wildcard $(YAML)/.),$(YAML),$(patsubst %/,%,$(dir $(YAML))))
 OUT   ?= $(DIR)/results
@@ -50,10 +49,9 @@ solve:
 # hour, because it does not re-solve.
 report:
 	@mkdir -p $(OUT)
-	$(PY) -m scheduler report $(YAML) -o $(OUT)/instance.html \
-		--title '$(TITLE) Instance'
+	$(PY) -m scheduler report $(YAML) -o $(OUT)/instance.html
 	$(PY) -m scheduler report $(YAML) --result $(OUT)/result.json \
-		-o $(OUT)/schedule.html --title '$(TITLE) Schedule'
+		-o $(OUT)/schedule.html
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache

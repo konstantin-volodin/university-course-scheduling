@@ -19,19 +19,9 @@ from .instance import OFF_CAMPUS, PART_TIMER
 
 __all__ = ["instance_page", "schedule_page"]
 
-# Archivo and Source Sans 3 stand in for the faces on telfer.uottawa.ca, which
-# are not licensed for redistribution. Swap them at the token if the licensed
-# webfonts ever become available; nothing else needs to change.
-_FONTS = (
-    '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
-    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
-    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
-    "family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&"
-    'family=IBM+Plex+Mono:wght@400;500&display=swap">\n'
-)
-_DISPLAY = '"Archivo","Helvetica Neue",Arial,sans-serif'
-_SANS = '"Source Sans 3",-apple-system,"Segoe UI",Roboto,sans-serif'
-_MONO = '"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace'
+_DISPLAY = '"Helvetica Neue",Arial,sans-serif'
+_SANS = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif'
+_MONO = 'ui-monospace,SFMono-Regular,Menlo,Consolas,monospace'
 
 _CSS = """
 :root{
@@ -119,7 +109,7 @@ td.cell.empty{background:repeating-linear-gradient(135deg,transparent 0 7px,#EDE
 .cellinner{display:flex;flex-direction:column;gap:var(--s3)}
 /* a cell mixes 2-3 timeslots; the slot is the real event, so group by it */
 .grp-h{font-family:__MONO__;font-size:.6875rem;letter-spacing:.04em;
-  color:var(--ink-mute);margin-bottom:4px}
+  color:var(--muted);margin-bottom:4px}
 .grp-h .dbl{color:var(--garnet-deep)}
 /* one column rhythm, so chips line up down the cell instead of ragging */
 .grp-c{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:4px}
@@ -140,7 +130,7 @@ td.cell.empty{background:repeating-linear-gradient(135deg,transparent 0 7px,#EDE
 .chip.pt{border-left:3px solid var(--garnet)}
 .chip:hover{background:var(--polar)}
 .chip:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-.chip .room{font-size:.6875rem;color:var(--ink-mute)}
+.chip .room{font-size:.6875rem;color:var(--muted)}
 .chip.dim{opacity:.3}
 /* the picked chip has to gain something, not just survive the others fading */
 .chip.sel{outline:2px solid var(--garnet);outline-offset:1px;background:var(--garnet-wash)}
@@ -162,14 +152,6 @@ td.cell.empty{background:repeating-linear-gradient(135deg,transparent 0 7px,#EDE
 .sw{width:14px;height:14px;border:1px solid var(--line-strong)}
 .sw.f{background:var(--white);border-left:3px solid var(--grey-warm)}
 .sw.p{background:var(--white);border-left:3px solid var(--garnet)}
-/* two columns, not four: at four the measure drops to fine print */
-.notes{margin:var(--s8) 0 0;border-top:1px solid var(--line);padding-top:var(--s6);
-  display:grid;gap:var(--s6) var(--s7);grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
-.note h3{font-family:__DISPLAY__;font-size:1.15rem;font-weight:600;margin:0 0 var(--s2);
-  letter-spacing:-.015em}
-.note p{margin:0;font-size:.9375rem;line-height:1.6;color:var(--muted);max-width:62ch}
-.note code{font-family:__MONO__;font-size:.8125rem;background:var(--polar);
-  padding:1px 4px;color:var(--ink)}
 .stages{border-collapse:collapse;font-size:.9375rem;margin-top:2px;min-width:0}
 .stages td{border:0;padding:3px 14px 3px 0;color:var(--muted)}
 .stages td.v{font-family:__MONO__;font-variant-numeric:tabular-nums;
@@ -219,7 +201,6 @@ td.cell.empty{background:repeating-linear-gradient(135deg,transparent 0 7px,#EDE
 @media (max-width:900px){
   .bar{grid-template-columns:1fr}
   .bar .nm{text-align:left}
-  .notes{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 """
@@ -237,12 +218,23 @@ def _doc(title: str, body: str, data: Any, script: str) -> str:
         "<!doctype html>\n<html lang=\"en\">\n<head>\n"
         '<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
-        f"{_FONTS}"
         f"<title>{html.escape(title)}</title>\n"
         f"<style>{_CSS}</style>\n</head>\n<body>\n"
         f"{body}\n"
-        f"<script>\nconst DATA={json.dumps(data, separators=(',', ':'))};\n</script>\n"
+        f"<script>\nconst DATA={_json_for_script(data)};\n</script>\n"
         f"<script>\n{script}\n</script>\n</body>\n</html>\n"
+    )
+
+
+def _json_for_script(data: Any) -> str:
+    """Encode data without allowing it to close the surrounding script tag."""
+    return (
+        json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+        .replace("&", "\\u0026")
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
     )
 
 
@@ -338,18 +330,23 @@ _SCHEDULE_BODY = """<div class="wrap">
 
 _SCHEDULE_JS = """
 (function(){
-  var R=DATA.r, DAYS=DATA.days, TODS=DATA.tods, SEMS=DATA.sems, ROOMS=DATA.rooms;
-  var P=0,C=1,SEC=2,SEM=3,SLOT=4,ROOM=5,TOD=6,DYS=7,LEN=8,STU=9,LABEL=10;
+  function esc(value){
+    return String(value == null ? "" : value).replace(/[&<>"']/g,function(char){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char];
+    });
+  }
+  var R=DATA.assignments, DAYS=DATA.days, TODS=DATA.timesOfDay;
+  var SEMS=DATA.semesters, ROOMS=DATA.rooms;
   var state={sem:SEMS[0],staff:"all",room:"all",pick:null};
   var CAP=6;  // chips shown per slot group before it has to be opened
 
-  var totalPT=R.filter(function(r){return r[P]===null}).length;
-  var profs={}; R.forEach(function(r){ if(r[P]!==null) profs[r[P]]=1; });
+  var totalPT=R.filter(function(r){return r.professor===null}).length;
+  var profs={}; R.forEach(function(r){ if(r.professor!==null) profs[r.professor]=1; });
   [["",R.length,"sections"],
    ["",R.length-totalPT,"named-faculty sections"],
    ["pt",totalPT,"part-time sections"],
    ["",Object.keys(profs).length,"professors"],
-   ["",R.filter(function(r){return r[ROOM]!==null}).length,"on campus"],
+   ["",R.filter(function(r){return r.room!==null}).length,"on campus"],
    ["",DATA.summary.unscheduled,"unscheduled"]
   ].forEach(function(s){
     var d=document.createElement("div"); d.className="stat "+s[0];
@@ -360,55 +357,56 @@ _SCHEDULE_JS = """
 
   document.getElementById("stagetable").innerHTML=DATA.stages.map(function(s){
     var early=!s.proven;
-    return '<tr><td>'+s.name.replace(/^./,function(c){return c.toUpperCase()})+'</td>'+
+    return '<tr><td>'+esc(s.name.replace(/^./,function(c){return c.toUpperCase()}))+'</td>'+
       '<td class="v">'+s.value.toFixed(2)+'</td>'+
       '<td class="v">'+Math.round(s.seconds)+'s</td>'+
       '<td class="st '+(early?"early":"ok")+'">'+(early?"stopped early":"proven")+'</td></tr>';
   }).join("");
 
   document.getElementById("semseg").innerHTML=SEMS.map(function(s){
-    var n=R.filter(function(r){return r[SEM]===s}).length;
-    return '<button data-sem="'+s+'" aria-pressed="'+(s===state.sem)+'">'+s+
+    var n=R.filter(function(r){return r.semester===s}).length;
+    return '<button data-sem="'+esc(s)+'" aria-pressed="'+(s===state.sem)+'">'+esc(s)+
       ' <span class="n">'+n+'</span></button>';
   }).join("");
   document.getElementById("head").innerHTML='<td style="width:118px"></td>'+
-    DAYS.map(function(d){return '<th scope="col">'+d+'</th>'}).join("");
+    DAYS.map(function(d){return '<th scope="col">'+esc(d)+'</th>'}).join("");
 
   function visible(r){
-    if(r[SEM]!==state.sem) return false;
-    if(state.staff==="fac" && r[P]===null) return false;
-    if(state.staff==="pt" && r[P]!==null) return false;
-    if(state.room==="on" && r[ROOM]===null) return false;
+    if(r.semester!==state.sem) return false;
+    if(state.staff==="fac" && r.professor===null) return false;
+    if(state.staff==="pt" && r.professor!==null) return false;
+    if(state.room==="on" && r.room===null) return false;
     return true;
   }
   function render(){
     var rows=R.filter(visible), byCell={};
-    rows.forEach(function(r){ r[DYS].forEach(function(d){
-      var k=d+"|"+r[TOD]; (byCell[k]=byCell[k]||[]).push(r);
+    rows.forEach(function(r){ r.days.forEach(function(d){
+      var k=d+"|"+r.timeOfDay; (byCell[k]=byCell[k]||[]).push(r);
     }); });
     document.getElementById("body").innerHTML=TODS.map(function(tod){
-      var n=rows.filter(function(r){return r[TOD]===tod}).length;
-      return '<tr><th scope="row" class="rowhead">'+tod+'<span class="cnt">'+n+'</span></th>'+
+      var n=rows.filter(function(r){return r.timeOfDay===tod}).length;
+      return '<tr><th scope="row" class="rowhead">'+esc(tod)+'<span class="cnt">'+n+'</span></th>'+
         DAYS.map(function(d){
           var list=(byCell[d+"|"+tod]||[]).slice().sort(function(a,b){
-            return String(a[C]).localeCompare(String(b[C]),undefined,{numeric:true}) ||
-                   String(a[SEC]).localeCompare(String(b[SEC]),undefined,{numeric:true});
+            return String(a.course).localeCompare(String(b.course),undefined,{numeric:true}) ||
+                   String(a.section).localeCompare(String(b.section),undefined,{numeric:true});
           });
           if(!list.length) return '<td class="cell empty"></td>';
           var bySlot={};
-          list.forEach(function(r){ (bySlot[r[SLOT]]=bySlot[r[SLOT]]||[]).push(r); });
+          list.forEach(function(r){ (bySlot[r.slot]=bySlot[r.slot]||[]).push(r); });
           return '<td class="cell"><div class="cellinner">'+
             Object.keys(bySlot).sort().map(function(slot){
               var g=bySlot[slot], f=g[0];
               return '<div class="grp"><div class="grp-h'+
-                (f[LEN]==="double"?' dbl':'')+'">'+slot+'</div>'+
+                (f.length==="double"?' dbl':'')+'">'+esc(slot)+'</div>'+
                 '<div class="grp-c">'+g.map(function(r,gi){
-                  var pt=r[P]===null;
+                  var pt=r.professor===null;
                   return '<button class="chip'+(pt?' pt':'')+(gi>=CAP?' over':'')+
-                    '" data-sec="'+r[SEC]+'" title="'+
-                    (pt?'Part-timer':'Prof '+r[P])+' \\u00b7 course '+r[C]+' \\u00b7 '+r[SLOT]+'">'+
-                    '<span>'+r[LABEL]+'</span>'+
-                    (r[ROOM]?'<span class="room">'+r[ROOM]+'</span>':'')+'</button>';
+                    '" data-row="'+r.id+'" title="'+
+                    esc((pt?'Part-timer':'Prof '+r.professor)+' \\u00b7 course '+r.course+
+                      ' \\u00b7 '+r.slot)+'">'+
+                    '<span>'+esc(r.label)+'</span>'+
+                    (r.room?'<span class="room">'+esc(r.room)+'</span>':'')+'</button>';
                 }).join("")+'</div>'+
                 (g.length>CAP
                   ? '<button class="more" data-n="'+(g.length-CAP)+'">+'+(g.length-CAP)+
@@ -417,15 +415,15 @@ _SCHEDULE_JS = """
             }).join("")+'</div></td>';
         }).join("")+'</tr>';
     }).join("");
-    var pt=rows.filter(function(r){return r[P]===null}).length;
+    var pt=rows.filter(function(r){return r.professor===null}).length;
     document.getElementById("count").innerHTML='<b>'+rows.length+'</b> sections shown \\u00b7 <b>'+
       (rows.length-pt)+'</b> faculty \\u00b7 <b>'+pt+'</b> part-time';
-    if(state.pick && !rows.some(function(r){return r[SEC]===state.pick})) hideDetail();
+    if(state.pick && !rows.some(function(r){return String(r.id)===state.pick})) hideDetail();
     else if(state.pick) markPick();
   }
   function markPick(){
     Array.prototype.forEach.call(document.querySelectorAll(".chip"),function(c){
-      var mine=c.dataset.sec===state.pick;
+      var mine=c.dataset.row===state.pick;
       c.classList.toggle("dim", state.pick!==null && !mine);
       c.classList.toggle("sel", state.pick!==null && mine);
     });
@@ -437,19 +435,19 @@ _SCHEDULE_JS = """
       c.classList.remove("dim"); c.classList.remove("sel");
     });
   }
-  function showDetail(sec){
-    var r=R.filter(function(x){return x[SEC]===sec && x[SEM]===state.sem})[0];
+  function showDetail(rowId){
+    var r=R.filter(function(x){return String(x.id)===rowId})[0];
     if(!r) return;
-    state.pick=sec;
-    var f=[["Course",r[C]],["Section",r[SEC]],
-      ["Professor",r[P]===null?"part-timer":r[P]],
-      ["Meets",r[DYS].join(" + ")+" \\u00b7 "+r[TOD]],
-      ["Slot",r[SLOT]+" ("+r[LEN]+")"],
-      ["Room",r[ROOM]?r[ROOM]+" \\u00b7 "+ROOMS[r[ROOM]]+" seats":"off campus"],
-      ["Students",r[STU]===null?"\\u2014":r[STU]]];
+    state.pick=rowId;
+    var f=[["Course",r.course],["Section",r.section],
+      ["Professor",r.professor===null?"part-timer":r.professor],
+      ["Meets",r.days.join(" + ")+" \\u00b7 "+r.timeOfDay],
+      ["Slot",r.slot+" ("+r.length+")"],
+      ["Room",r.room?r.room+" \\u00b7 "+ROOMS[r.room]+" seats":"off campus"],
+      ["Students",r.students===null?"\\u2014":r.students]];
     var d=document.getElementById("detail");
     d.innerHTML=f.map(function(x){
-      return '<dl><dt>'+x[0]+'</dt><dd>'+x[1]+'</dd></dl>';
+      return '<dl><dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd></dl>';
     }).join("")+'<button class="close" id="closebtn" title="Clear (Esc)">Clear</button>';
     d.hidden=false;
     document.getElementById("closebtn").onclick=hideDetail;
@@ -463,7 +461,7 @@ _SCHEDULE_JS = """
       return;
     }
     var chip=e.target.closest?e.target.closest(".chip"):null;
-    if(chip){ chip.classList.contains("sel")?hideDetail():showDetail(chip.dataset.sec); return; }
+    if(chip){ chip.classList.contains("sel")?hideDetail():showDetail(chip.dataset.row); return; }
     var b=e.target.closest?e.target.closest("#semseg button,#staffseg button,#roomseg button"):null;
     if(!b) return;
     Array.prototype.forEach.call(b.parentNode.children,function(x){
@@ -484,36 +482,46 @@ def schedule_page(payload: Any, result: Any, *, title: str = "Solved Schedule") 
     """The solved schedule as a week grid, one per semester."""
     days_of = _slot_days(payload)
     len_of = _slot_len(payload)
-    students = {str(k[1]): v for k, v in _pairs(payload.get("section_attendance"))
-                if isinstance(k, (list, tuple)) and len(k) > 1}
+    students = {
+        tuple(str(part) for part in key): value
+        for key, value in _pairs(payload.get("section_attendance"))
+        if isinstance(key, (list, tuple)) and len(key) == 4
+    }
     rooms = {str(k): v for k, v in _pairs(payload.get("classroom_cap"))}
 
     rows = []
-    for a in result.get("assignments", []):
+    for row_id, a in enumerate(result.get("assignments", [])):
         slot = a.get("timeslot_id")
         room = a.get("classroom_id")
         prof = a.get("professor_id")
-        rows.append([
-            None if prof in (None, PART_TIMER) else prof,
-            a.get("course_id"),
-            str(a.get("section_id")),
-            a.get("semester_id"),
-            slot,
-            None if room in (None, OFF_CAMPUS) else room,
-            a.get("time_of_day_id"),
-            days_of.get(slot, []),
-            len_of.get(slot, "single"),
-            students.get(str(a.get("section_id"))),
-            _section_label(a.get("course_id"), a.get("section_id")),
-        ])
+        course = str(a.get("course_id"))
+        section = str(a.get("section_id"))
+        semester = str(a.get("semester_id"))
+        time_of_day = str(a.get("time_of_day_id"))
+        rows.append(
+            {
+                "id": row_id,
+                "professor": None if prof in (None, PART_TIMER) else prof,
+                "course": course,
+                "section": section,
+                "semester": semester,
+                "slot": slot,
+                "room": None if room in (None, OFF_CAMPUS) else room,
+                "timeOfDay": time_of_day,
+                "days": days_of.get(slot, []),
+                "length": len_of.get(slot, "single"),
+                "students": students.get((course, section, semester, time_of_day)),
+                "label": _section_label(course, section),
+            }
+        )
 
     summary = result.get("summary") or {}
     data = {
-        "r": rows,
+        "assignments": rows,
         "rooms": rooms,
         "days": _order(payload, "day_of_week_set", _DAYS),
-        "tods": _order(payload, "time_of_day_set", _TODS),
-        "sems": [str(s) for s in payload.get("semester_set") or []],
+        "timesOfDay": _order(payload, "time_of_day_set", _TODS),
+        "semesters": [str(s) for s in payload.get("semester_set") or []],
         "summary": {"unscheduled": summary.get("unscheduled", 0)},
         "stages": result.get("stages") or [],
     }
@@ -594,6 +602,11 @@ _INSTANCE_BODY = """<div class="wrap">
 
 _INSTANCE_JS = """
 (function(){
+  function esc(value){
+    return String(value == null ? "" : value).replace(/[&<>"']/g,function(char){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char];
+    });
+  }
   function bars(id, rows, opts){
     opts = opts || {};
     var max = opts.max || Math.max.apply(null, rows.map(function(r){return r[1]})) || 1;
@@ -637,15 +650,15 @@ _INSTANCE_JS = """
   hist("sizehist", DATA.sizehist);
 
   document.getElementById("slothead").innerHTML='<td style="width:118px"></td>'+
-    DATA.days.map(function(d){return '<th scope="col">'+d+'</th>'}).join("");
+    DATA.days.map(function(d){return '<th scope="col">'+esc(d)+'</th>'}).join("");
   document.getElementById("slotbody").innerHTML=DATA.tods.map(function(tod){
-    return '<tr><th scope="row" class="rowhead">'+tod+'</th>'+DATA.days.map(function(d){
+    return '<tr><th scope="row" class="rowhead">'+esc(tod)+'</th>'+DATA.days.map(function(d){
       var here=DATA.slots.filter(function(s){return s[2].indexOf(d)>=0 && s[1]===tod});
       if(!here.length) return '<td class="cell empty"></td>';
       return '<td class="cell"><div class="cellinner">'+here.map(function(s){
         return '<span class="slot'+(s[3]==="double"?" dbl":"")+'">'+
-          '<span class="id">'+s[0]+'</span>'+
-          '<span class="meta">'+s[2].join("+")+' \\u00b7 '+s[3]+'</span></span>';
+          '<span class="id">'+esc(s[0])+'</span>'+
+          '<span class="meta">'+esc(s[2].join("+")+' \\u00b7 '+s[3])+'</span></span>';
       }).join("")+'</div></td>';
     }).join("")+'</tr>';
   }).join("");
@@ -654,7 +667,8 @@ _INSTANCE_JS = """
     '<tr><th>Room</th><th style="text-align:right">Seats</th>'+
     '<th style="text-align:right">Sections that fit</th></tr>'+
     DATA.rooms.map(function(r){
-      return '<tr><td>'+r[0]+'</td><td class="n">'+r[1]+'</td><td class="n">'+r[2]+'</td></tr>';
+      return '<tr><td>'+esc(r[0])+'</td><td class="n">'+esc(r[1])+
+        '</td><td class="n">'+esc(r[2])+'</td></tr>';
     }).join("");
 })();
 """
