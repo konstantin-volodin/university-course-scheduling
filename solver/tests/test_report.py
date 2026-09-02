@@ -93,6 +93,30 @@ def test_schedule_rows_carry_the_meeting_pattern(payload, result) -> None:
         assert row[7] == days_by_slot[row[4]]
 
 
+def test_schedule_labels_do_not_repeat_the_course(payload, result) -> None:
+    rows = _embedded(report.schedule_page(payload, result))["r"]
+    assert rows
+    for row in rows:
+        course, section, label = str(row[1]), str(row[2]), str(row[10])
+        expected = section if section.startswith(f"{course}-") else f"{course}-{section}"
+        assert label == expected
+        assert not label.startswith(f"{course}-{course}-")
+
+
+def test_reports_keep_explanatory_copy_short(payload, result) -> None:
+    pages = report.instance_page(payload) + report.schedule_page(payload, result)
+    stale_copy = (
+        "Who can teach, and what they will accept",
+        "Where the demand sits",
+        "Read together",
+        "however good",
+        "which matters because",
+        "Timeslots are fixed patterns, not free hours",
+        "Every section the solver placed",
+    )
+    assert all(text not in pages for text in stale_copy)
+
+
 def test_a_two_day_slot_carries_both_days(payload, result) -> None:
     """The grid draws one cell per day, so a Mon+Thu section must carry both.
 

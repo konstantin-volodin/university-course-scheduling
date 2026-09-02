@@ -158,6 +158,40 @@ def test_no_available_professors_falls_back_to_part_timers(payload: dict[str, An
     assert len(result.unstaffed) == 3
 
 
+def test_room_stage_gets_a_physical_room_seed(payload: dict[str, Any]) -> None:
+    from scheduler.instance import OFF_CAMPUS, Instance, is_placeholder
+    from scheduler.model import build
+    from scheduler.progress import Progress
+    from scheduler.solve import _seed_physical_rooms
+
+    # Make off-campus variables available for the named faculty, then imitate
+    # the all-off-campus incumbent produced before room use is optimised.
+    payload["professor_can_teach_out_DMS"] = [["prof_a", True], ["prof_b", True]]
+    built = build(Instance.from_payload(payload), Progress(silent))
+    values = [0.0] * len(built.program.variables)
+    old_variable, old_key = next(
+        (variable, key)
+        for key, variable in built.assign.items()
+        if key[5] == OFF_CAMPUS
+        and not is_placeholder(key[4])
+        and any(
+            (*key[:5], room) in built.assign
+            for room in built.instance.classroom_capacity
+        )
+    )
+    values[old_variable] = 1.0
+
+    seeded = _seed_physical_rooms(built, values)
+
+    assert seeded[old_variable] == 0.0
+    assert sum(seeded[index] for index in built.assign.values()) == 1.0
+    assert any(
+        seeded[index] == 1.0
+        for key, index in built.assign.items()
+        if key[:5] == old_key[:5] and key[5] != OFF_CAMPUS
+    )
+
+
 def test_impossible_load_raises_rather_than_returning_junk(payload: dict[str, Any]) -> None:
     """The load slack is one-directional: it lets a professor exceed their
     target, never fall short. Demanding more teachings than there are sections
