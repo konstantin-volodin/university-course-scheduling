@@ -34,7 +34,7 @@ def _read_file(path: str) -> str:
         raise SchedulerError(f"{path}: {exc.strerror}") from exc
 
 
-def _write(text: str, output: str | None) -> None:
+def _write(text: str, output: str | Path | None) -> None:
     """stdout when there is no path, otherwise the file. OSError becomes ours."""
     if output is None:
         print(text)
@@ -44,6 +44,31 @@ def _write(text: str, output: str | None) -> None:
     except OSError as exc:
         raise SchedulerError(f"{output}: {exc.strerror}") from exc
     print(f"wrote {output}", file=sys.stderr)
+
+
+def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path] | None:
+    """Return the result, schedule, and instance paths for a file-backed solve."""
+    if args.instance == "-" and args.output is None:
+        return None
+
+    if args.output is not None:
+        result = Path(args.output)
+    else:
+        source = Path(args.instance)
+        folder = source if source.is_dir() else source.parent
+        name = source.name if source.is_dir() else source.stem
+        result = folder / "results" / f"{name}.json"
+
+    stem = result.with_suffix("")
+    schedule = Path(args.html) if args.html else stem.with_name(f"{stem.name}-schedule.html")
+    instance = stem.with_name(f"{stem.name}-instance.html")
+    try:
+        result.parent.mkdir(parents=True, exist_ok=True)
+        schedule.parent.mkdir(parents=True, exist_ok=True)
+        instance.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        raise SchedulerError(f"could not create the results directory: {exc}") from exc
+    return result, schedule, instance
 
 
 def _as_json(payload: Any) -> str:
@@ -81,11 +106,16 @@ def _cmd_solve(args: argparse.Namespace) -> int:
         instance, reporter, time_limit=args.time_limit, solver=args.solver
     )
     payload_result = result.to_dict()
-    _write(_as_json(payload_result), args.output)
-    if args.html:
-        from .report import schedule_page
+    outputs = _solve_output_paths(args)
+    if outputs is None:
+        _write(_as_json(payload_result), None)
+    else:
+        from .report import instance_page, schedule_page
 
-        _write(schedule_page(payload, payload_result), args.html)
+        result_path, schedule_path, instance_path = outputs
+        _write(_as_json(payload_result), result_path)
+        _write(schedule_page(payload, payload_result), schedule_path)
+        _write(instance_page(payload), instance_path)
 
     if not args.quiet:
         print(
@@ -125,7 +155,10 @@ def build_parser() -> argparse.ArgumentParser:
         "instance",
         help="split-instance directory, YAML/JSON file, or - for stdin",
     )
-    solve_cmd.add_argument("-o", "--output", help="write the result here instead of stdout")
+    solve_cmd.add_argument(
+        "-o", "--output", metavar="PATH",
+        help="override the result JSON path (HTML reports are written beside it)",
+    )
     solve_cmd.add_argument("-q", "--quiet", action="store_true", help="no progress output")
     solve_cmd.add_argument(
         "--check", action="store_true", help="validate the instance and stop without solving"
@@ -140,7 +173,7 @@ def build_parser() -> argparse.ArgumentParser:
              "is still returned, with status 'feasible'",
     )
     solve_cmd.add_argument(
-        "--html", metavar="PATH", help="also write the schedule as a standalone HTML page"
+        "--html", metavar="PATH", help="override the schedule HTML path"
     )
     solve_cmd.set_defaults(handler=_cmd_solve)
 

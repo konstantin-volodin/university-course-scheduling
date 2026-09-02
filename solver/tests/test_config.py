@@ -13,7 +13,7 @@ from scheduler.instance import PAYLOAD_KEYS, Instance
 from scheduler.progress import silent
 
 INSTANCES = Path(__file__).parents[2] / "instances"
-TINY = INSTANCES / "tiny.yaml"
+TINY = INSTANCES / "tiny"
 MEDIUM = INSTANCES / "medium"
 TELFER = INSTANCES / "telfer"
 

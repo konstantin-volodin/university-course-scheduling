@@ -12,7 +12,7 @@ make check
 
 ## Instances
 
-- `../instances/tiny.yaml`: single-file example
+- `../instances/tiny/`: minimal example
 - `../instances/medium/`: split example
 - `../instances/telfer/`: full instance
 
@@ -21,15 +21,19 @@ See [../instances/README.md](../instances/README.md) for the YAML fields.
 ## Commands
 
 ```bash
-scheduler solve ../instances/tiny.yaml -o result.json
-scheduler solve ../instances/tiny.yaml --check
+scheduler solve ../instances/tiny
+scheduler solve ../instances/tiny --check
 scheduler solve ../instances/medium --time-limit 60
 scheduler solve ../instances/telfer --solver gurobi --time-limit 600
 scheduler report ../instances/medium -o instance.html
-cat ../instances/tiny.yaml | scheduler solve -
+cat ../instances/tiny/instance.yaml | scheduler solve -
 ```
 
-Output goes to stdout unless `-o` is set. Progress goes to stderr.
+A file-backed solve writes three files to the instance folder's `results/`
+directory: `<name>.json`, `<name>-schedule.html`, and `<name>-instance.html`.
+A split instance directory is itself the instance folder. Use `-o` to
+override the JSON path; the two HTML pages are written beside it. A solve read
+from stdin continues to write JSON to stdout. Progress goes to stderr.
 
 Exit codes:
 

@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-TINY = Path(__file__).parents[2] / "instances" / "tiny.yaml"
+TINY = Path(__file__).parents[2] / "instances" / "tiny"
 
 SCRIPT = """
 import json, sys

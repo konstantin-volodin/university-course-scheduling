@@ -13,7 +13,7 @@ INSTANCES = Path(__file__).parents[2] / "instances"
 
 @pytest.fixture(scope="session")
 def tiny_payload_source() -> dict[str, Any]:
-    return config.load(INSTANCES / "tiny.yaml")
+    return config.load(INSTANCES / "tiny")
 
 
 @pytest.fixture

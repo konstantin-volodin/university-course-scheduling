@@ -2,7 +2,7 @@
 
 | Path | Format | Size |
 |---|---|---|
-| `tiny.yaml` | single file | 3 sections |
+| `tiny/` | one file | 3 sections |
 | `medium/` | split files | 36 sections |
 | `telfer/` | split files | 426 sections |
 
@@ -13,7 +13,7 @@ cd solver
 uv python install 3.14
 uv sync --python 3.14 --extra dev
 cd ..
-cp instances/tiny.yaml instances/my-university.yaml
+cp -R instances/tiny instances/my-university
 # Or: cp -R instances/medium instances/my-university
 ```
 
@@ -130,8 +130,7 @@ Run from `solver/`:
 ```bash
 uv run scheduler solve ../instances/my-university --check
 uv run scheduler report ../instances/my-university -o instance.html
-uv run scheduler solve ../instances/my-university \
-  --time-limit 600 -o result.json --html schedule.html
+uv run scheduler solve ../instances/my-university --time-limit 600
 ```
 
 Result summary fields:

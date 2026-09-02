@@ -14,8 +14,7 @@ Install [uv](https://docs.astral.sh/uv/), then run:
 cd solver
 uv python install 3.14
 uv sync --python 3.14 --extra dev
-uv run scheduler solve ../instances/telfer --time-limit 900 \
-  -o ../instances/results/telfer.json
+uv run scheduler solve ../instances/telfer --time-limit 900
 ```
 
 Validate the instance without solving it:
