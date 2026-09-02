@@ -8,8 +8,8 @@ from typing import Any
 import pytest
 
 from scheduler import config, solve
+from scheduler.config.instance import PAYLOAD_KEYS, Instance
 from scheduler.errors import InvalidInstanceError
-from scheduler.instance import PAYLOAD_KEYS, Instance
 from scheduler.progress import silent
 
 INSTANCES = Path(__file__).parents[2] / "instances"

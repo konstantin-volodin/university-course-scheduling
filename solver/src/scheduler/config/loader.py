@@ -8,7 +8,7 @@ from difflib import get_close_matches
 from pathlib import Path
 from typing import Any
 
-from .errors import InvalidInstanceError, SchedulerError
+from ..errors import InvalidInstanceError, SchedulerError
 
 __all__ = ["load", "loads"]
 
@@ -60,6 +60,8 @@ def _expand_meeting_times(cfg: dict[str, Any]) -> dict[str, Any]:
             "professors",
             "courses",
             "course_concurrency",
+            "professor_defaults",
+            "course_defaults",
         },
         problems,
     )
@@ -181,6 +183,9 @@ def _expand_meeting_times(cfg: dict[str, Any]) -> dict[str, Any]:
     }
     if "course_concurrency" in cfg:
         expanded["course_concurrency"] = cfg["course_concurrency"]
+    for defaults_key in ("professor_defaults", "course_defaults"):
+        if defaults_key in cfg:
+            expanded[defaults_key] = cfg[defaults_key]
     return expanded
 
 
@@ -220,12 +225,39 @@ def loads(text: str) -> dict[str, Any]:
             "professors",
             "courses",
             "course_concurrency",
+            "professor_defaults",
+            "course_defaults",
         },
         problems,
     )
 
     def as_id(value: Any) -> str:
         return str(value)
+
+    def flag_defaults(name: str, allowed: set[str]) -> dict[str, bool]:
+        """Read an optional ``*_defaults`` block of boolean flag defaults."""
+        raw = cfg.get(name)
+        if raw is None:
+            return {}
+        if not isinstance(raw, dict):
+            problems.append(f"{name}: expected a mapping, got {type(raw).__name__}")
+            return {}
+        _check_unknown_fields(name, raw, allowed, problems)
+        defaults: dict[str, bool] = {}
+        for key, value in raw.items():
+            if str(key) not in allowed:
+                continue
+            if not isinstance(value, bool):
+                problems.append(f"{name}.{key}: expected true or false")
+                continue
+            defaults[str(key)] = value
+        return defaults
+
+    professor_defaults = flag_defaults(
+        "professor_defaults",
+        {"can_teach_night", "can_teach_off_campus", "prefers_packed_days"},
+    )
+    course_defaults = flag_defaults("course_defaults", {"penalise_friday_night"})
 
     cal = cfg["calendar"]
     if not isinstance(cal, dict):
@@ -338,10 +370,12 @@ def loads(text: str) -> dict[str, Any]:
         )
         if "sections" not in spec:
             problems.append(f"courses.{course}: missing 'sections'")
-        penalty = spec.get("penalise_friday_night", False)
+        penalty = spec.get(
+            "penalise_friday_night", course_defaults.get("penalise_friday_night", False)
+        )
         if not isinstance(penalty, bool):
             problems.append(f"courses.{course}.penalise_friday_night: expected true or false")
-        if spec.get("penalise_friday_night"):
+        if penalty:
             friday.append(course)
         if "preferred_class_length" in spec:
             course_length.append(
@@ -423,9 +457,13 @@ def loads(text: str) -> dict[str, Any]:
         ):
             if option in spec and not isinstance(spec[option], bool):
                 problems.append(f"professors.{prof}.{option}: expected true or false")
-        night.append([prof, bool(spec.get("can_teach_night"))])
-        offc.append([prof, bool(spec.get("can_teach_off_campus"))])
-        pack.append([prof, int(bool(spec.get("prefers_packed_days", False)))])
+        night.append([prof, bool(spec.get("can_teach_night",
+                                          professor_defaults.get("can_teach_night", False)))])
+        offc.append([prof, bool(spec.get("can_teach_off_campus",
+                                         professor_defaults.get("can_teach_off_campus", False)))])
+        pack.append([prof, int(bool(spec.get("prefers_packed_days",
+                                             professor_defaults.get("prefers_packed_days",
+                                                                    False))))])
         if "preferred_class_length" in spec:
             prof_length.append(
                 [prof, hours_of.get(spec["preferred_class_length"],
@@ -544,7 +582,7 @@ def load(path: Any) -> dict[str, Any]:
     if not isinstance(manifest, dict) or "files" not in manifest:
         return loads(text)
 
-    allowed_manifest = {"semesters", "files"}
+    allowed_manifest = {"semesters", "files", "professor_defaults", "course_defaults"}
     problems = [
         f"instance.yaml: unknown field {key!r}"
         for key in manifest
@@ -614,4 +652,7 @@ def load(path: Any) -> dict[str, Any]:
     }
     if "course_concurrency" in fragments:
         combined["course_concurrency"] = fragments["course_concurrency"]
+    for defaults_key in ("professor_defaults", "course_defaults"):
+        if defaults_key in manifest:
+            combined[defaults_key] = manifest[defaults_key]
     return loads(yaml.safe_dump(combined, sort_keys=False))

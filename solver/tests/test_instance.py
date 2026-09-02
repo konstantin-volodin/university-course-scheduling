@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from scheduler import Instance, InvalidInstanceError
-from scheduler.instance import OFF_CAMPUS, PART_TIMER, placeholder_for
+from scheduler.config.instance import OFF_CAMPUS, PART_TIMER, placeholder_for
 
 
 def problems_from(payload: dict[str, Any]) -> list[str]:

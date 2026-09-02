@@ -16,7 +16,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from ..errors import SolverError
-from ..program import LinearExpr, Program, Sense, VarKind
+from ..model.program import LinearExpr, Program, Sense, VarKind
 from .base import Outcome, SolutionStatus
 
 __all__ = ["GurobiBackend"]
@@ -25,7 +25,7 @@ _LICENCE_HINTS = ("size-limited", "license", "licence")
 
 
 class GurobiBackend:
-    """Solves a :class:`~scheduler.program.Program` with Gurobi."""
+    """Solves a :class:`~scheduler.model.program.Program` with Gurobi."""
 
     name = "gurobi"
 
@@ -161,4 +161,3 @@ def _explain(status: int) -> str:
         gp.GRB.TIME_LIMIT: "hit the time limit before finding any solution",
         gp.GRB.INTERRUPTED: "interrupted before finding any solution",
     }.get(status, f"gurobi status {status}")
-

@@ -57,21 +57,18 @@ The free Gurobi license is too small for medium and full instances.
 
 ```text
 src/scheduler/
-  config.py      YAML loading
-  instance.py    payload validation
-  model.py       scheduling model
-  program.py     solver-neutral MIP types
-  solve.py       staged solve orchestration
-  result.py      result types and JSON serialization
-  _room_seed.py  physical-room warm-start heuristic
-  backends/      HiGHS and Gurobi adapters
-  report.py      report data preparation
-  report_assets/ HTML, CSS, and JavaScript embedded in reports
-  cli.py         command line
+  config/    YAML loading and payload validation
+  model/     scheduling formulation and solver-neutral MIP types
+  solve/     staged solving, results, and room seeding
+  backends/  HiGHS and Gurobi adapters
+  report/    report rendering and frontend assets
+  cli.py     command line
 tests/
 ```
 
-Dependency direction: `config → instance → model → program`.
+Dependency direction: `cli → solve → model → config`, with `backends` and
+`report` as leaves. Every `__init__.py` is re-exports only; cross-package
+imports go through them rather than reaching into a submodule.
 
 ## Input formats
 

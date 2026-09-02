@@ -11,8 +11,8 @@ from typing import Any
 
 from . import __version__
 from .backends import BACKENDS, DEFAULT_BACKEND
+from .config import Instance
 from .errors import InvalidInstanceError, SchedulerError
-from .instance import Instance
 from .progress import silent, to_stderr
 from .solve import solve_instance
 

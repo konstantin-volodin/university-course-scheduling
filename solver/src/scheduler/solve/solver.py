@@ -17,14 +17,14 @@ import math
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from . import model as model_module
-from ._room_seed import seed_physical_rooms
-from .backends import DEFAULT_BACKEND, Backend, SolutionStatus, open_backend
-from .errors import SolveError
-from .instance import OFF_CAMPUS, PART_TIMER, Instance, is_placeholder
-from .program import LinearExpr, Sense
-from .progress import Progress, ProgressCallback
+from ..backends import DEFAULT_BACKEND, Backend, SolutionStatus, open_backend
+from ..config import OFF_CAMPUS, PART_TIMER, Instance, is_placeholder
+from ..errors import SolveError
+from ..model import BuiltModel, Objectives, build
+from ..model.program import LinearExpr, Sense
+from ..progress import Progress, ProgressCallback
 from .result import Assignment, Result, Stage
+from .room_seed import seed_physical_rooms
 
 __all__ = ["Assignment", "Result", "Stage", "solve", "solve_instance"]
 
@@ -89,7 +89,7 @@ class _StagedSolve:
 
     def run(
         self,
-        objectives: model_module.Objectives,
+        objectives: Objectives,
         room_seed: Callable[[list[float]], list[float]] | None = None,
     ) -> float:
         self._minimise_then_cap(
@@ -112,7 +112,7 @@ class _StagedSolve:
         )
 
 
-def _extract(built: model_module.BuiltModel, values: list[float]) -> list[Assignment]:
+def _extract(built: BuiltModel, values: list[float]) -> list[Assignment]:
     assignments: list[Assignment] = []
     for key, index in built.assign.items():
         value = values[index]
@@ -162,7 +162,7 @@ def solve_instance(
     reporter = Progress(progress)
     reporter(inst.summary())
 
-    built = model_module.build(inst, reporter)
+    built = build(inst, reporter)
 
     backend = open_backend(solver, threads=THREADS, seed=SEED)
     try:
@@ -209,7 +209,7 @@ def solve(
     """Solve one workload-allocation instance.
 
     :param payload: one key per ``/OPTIM_data/`` endpoint. See
-        :data:`scheduler.instance.PAYLOAD_KEYS`.
+        :data:`scheduler.config.instance.PAYLOAD_KEYS`.
     :param progress: called as ``(stage, message)`` while the solve runs.
         Defaults to writing to stderr; pass :func:`scheduler.progress.silent`
         for nothing.

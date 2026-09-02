@@ -1,7 +1,7 @@
-"""Builds the mixed-integer program from an :class:`~scheduler.instance.Instance`.
+"""Build the mixed-integer program from a validated scheduling instance.
 
 The formulation is the one written up in ``model/manuscript.tex``. This module
-translates it into a solver-agnostic :class:`~scheduler.program.Program`; how
+translates it into a solver-agnostic :class:`~scheduler.model.program.Program`; how
 that gets solved is :mod:`scheduler.solve` and :mod:`scheduler.backends`.
 
 Two things shape the code here.
@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from itertools import product
 from typing import Any, NamedTuple
 
-from .instance import (
+from ..config import (
     BIG_M,
     BLOCK_WEIGHTS,
     LARGE_SECTION,
@@ -37,8 +37,8 @@ from .instance import (
     is_placeholder,
     placeholder_for,
 )
+from ..progress import Progress
 from .program import INFINITY, LinearExpr, Program, Sense, VarKind
-from .progress import Progress
 
 __all__ = ["AssignmentKey", "BuiltModel", "Objectives", "build"]
 

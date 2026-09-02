@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from .backends import DEFAULT_BACKEND
+from ..backends import DEFAULT_BACKEND
 
 __all__ = ["Assignment", "Result", "Stage"]
 

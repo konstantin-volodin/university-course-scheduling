@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from .backends import BACKENDS, DEFAULT_BACKEND
+from .config import PAYLOAD_KEYS, Instance
 from .errors import InvalidInstanceError, SchedulerError, SolveError, SolverError
-from .instance import PAYLOAD_KEYS, Instance
 from .progress import Progress, silent, to_stderr
 from .solve import Assignment, Result, Stage, solve, solve_instance
 

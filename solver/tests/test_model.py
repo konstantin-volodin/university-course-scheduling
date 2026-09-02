@@ -12,9 +12,9 @@ from typing import Any
 
 import pytest
 
-from scheduler.instance import PART_TIMER, Instance
+from scheduler.config.instance import PART_TIMER, Instance
 from scheduler.model import build
-from scheduler.program import Program, Sense, VarKind
+from scheduler.model.program import Program, Sense, VarKind
 from scheduler.progress import Progress, silent
 
 

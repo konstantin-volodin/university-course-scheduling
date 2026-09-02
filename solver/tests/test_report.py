@@ -25,7 +25,7 @@ def payload() -> dict[str, Any]:
 
 @pytest.fixture(scope="module")
 def result(payload: dict[str, Any]) -> dict[str, Any]:
-    from scheduler.instance import Instance
+    from scheduler.config.instance import Instance
     from scheduler.progress import silent
     from scheduler.solve import solve_instance
 
@@ -95,7 +95,9 @@ def test_schedule_page_carries_every_assignment(payload, result) -> None:
 
 def test_schedule_rows_carry_the_meeting_pattern(payload, result) -> None:
     rows = _embedded(report.schedule_page(payload, result))["assignments"]
-    days_by_slot = report._slot_days(payload)
+    days_by_slot: dict[str, list[str]] = {}
+    for slot, day in payload["timeslot_dow_subset"]:
+        days_by_slot.setdefault(slot, []).append(day)
     assert rows, "no assignments to check"
     for row in rows:
         assert row["days"] == days_by_slot[row["slot"]]
@@ -145,7 +147,11 @@ def test_a_two_day_slot_carries_both_days(payload, result) -> None:
 
 def test_instance_page_counts_supply_against_demand(payload) -> None:
     data = _embedded(report.instance_page(payload))
-    loads = dict(report._pairs(payload["professor_teaching"]))
+    loads = {
+        professor: load
+        for row in payload["professor_teaching"]
+        for professor, load in row.items()
+    }
     assert data["supply"]["capacity"] == sum(loads.values())
     assert data["supply"]["demand"] == len(payload["section_subset"])
     assert data["supply"]["gap"] == max(

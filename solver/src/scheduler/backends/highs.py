@@ -18,7 +18,7 @@ import highspy
 import numpy as np
 
 from ..errors import SolverError
-from ..program import LinearExpr, Program, Sense, VarKind
+from ..model.program import LinearExpr, Program, Sense, VarKind
 from .base import Outcome, SolutionStatus
 
 __all__ = ["HighsBackend"]
@@ -27,7 +27,7 @@ _HIGHS_INFINITY = highspy.kHighsInf
 
 
 class HighsBackend:
-    """Solves a :class:`~scheduler.program.Program` with HiGHS."""
+    """Solves a :class:`~scheduler.model.program.Program` with HiGHS."""
 
     name = "highs"
 
@@ -165,4 +165,3 @@ def _bounds(sense: Sense, rhs: float) -> tuple[float, float]:
     if sense is Sense.GE:
         return rhs, _HIGHS_INFINITY
     return rhs, rhs
-
