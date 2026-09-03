@@ -1,179 +1,103 @@
-- {courses: [ADM4725, ADM4325], semester: Winter, must_run: together}
-- {courses: [ADM1100, ADM1101], semester: Summer, must_run: apart}
-- {courses: [ADM1100, ADM1101], semester: Fall, must_run: apart}
-- {courses: [ADM1100, ADM1101], semester: Winter, must_run: apart}
+- {courses: [ADM1100, ADM1101], must_run: apart}
+- {courses: [ADM2304, ADM2342], must_run: apart}
+- {courses: [ADM2342, ADM2350], must_run: apart}
+- {courses: [ADM3350, ADM3360], must_run: apart}
+- {courses: [ADM2337, ADM3350], semester: [Summer, Fall], must_run: apart}
+- {courses: [ADM1340, ADM1370], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM1500, ADM1501], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM1740, ADM1770], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM2313, ADM3313], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM2352, ADM3350], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM2702, ADM2703], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM2703, ADM2704], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM2704, ADM2720], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM2720, ADM2736], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM2736, ADM2737], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM2737, ADM2741], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM2750, ADM2772], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM2752, ADM2772], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3319, ADM4318], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3321, ADM3322], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3322, ADM3323], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3323, ADM3326], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3326, ADM4325], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3340, ADM3345], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3345, ADM3346], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3346, ADM3349], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3349, ADM3350], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3350, ADM3351], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3352, ADM4350], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM3360, ADM4341], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4322, ADM4326], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4325, ADM4326], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4328, ADM4338], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4340, ADM4349], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4341, ADM4344], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4342, ADM4346], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4344, ADM4345], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4345, ADM4346], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4346, ADM4348], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4348, ADM4349], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4350, ADM4351], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4351, ADM4352], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4352, ADM4354], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4354, ADM4355], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM4355, ADM4356], semester: [Fall, Winter], must_run: apart}
+- {courses: [ADM2313, ADM4315, ADM4316], semester: Fall, must_run: apart}
+- {courses: [ADM2702, ADM2741, ADM2750], semester: Fall, must_run: apart}
+- {courses: [ADM3305, ADM3308, ADM3363], semester: Fall, must_run: apart}
+- {courses: [ADM3305, ADM3378, ADM4307], semester: Fall, must_run: apart}
+- {courses: [ADM3305, ADM4363, ADM4378], semester: Fall, must_run: apart}
+- {courses: [ADM3333, ADM3334, ADM3337], semester: Fall, must_run: apart}
+- {courses: [ADM3358, ADM4728, ADM4738], semester: Fall, must_run: apart}
+- {courses: [ADM3701, ADM3721, ADM3726], semester: Fall, must_run: apart}
+- {courses: [ADM3701, ADM3723, ADM3733], semester: Fall, must_run: apart}
+- {courses: [ADM3701, ADM3734, ADM3737], semester: Fall, must_run: apart}
+- {courses: [ADM3701, ADM3740, ADM3745], semester: Fall, must_run: apart}
+- {courses: [ADM3701, ADM3749, ADM3750], semester: Fall, must_run: apart}
+- {courses: [ADM3750, ADM4750, ADM4751], semester: Fall, must_run: apart}
+- {courses: [ADM4503, ADM4716, ADM4717], semester: Fall, must_run: apart}
+- {courses: [ADM4740, ADM4741, ADM4742], semester: Fall, must_run: apart}
+- {courses: [ADM4740, ADM4745, ADM4746], semester: Fall, must_run: apart}
+- {courses: [ADM4750, ADM4754, ADM4755], semester: Fall, must_run: apart}
 - {courses: [ADM1300, ADM1301], semester: Fall, must_run: apart}
 - {courses: [ADM1301, ADM1370], semester: Fall, must_run: apart}
-- {courses: [ADM1340, ADM1370], semester: Fall, must_run: apart}
-- {courses: [ADM1340, ADM1370], semester: Winter, must_run: apart}
-- {courses: [ADM1500, ADM1501], semester: Fall, must_run: apart}
-- {courses: [ADM1500, ADM1501], semester: Winter, must_run: apart}
 - {courses: [ADM1700, ADM1701], semester: Fall, must_run: apart}
-- {courses: [ADM1701, ADM1770], semester: Fall, must_run: apart}
 - {courses: [ADM1701, ADM1740], semester: Fall, must_run: apart}
-- {courses: [ADM1770, ADM1740], semester: Fall, must_run: apart}
-- {courses: [ADM1740, ADM1770], semester: Winter, must_run: apart}
-- {courses: [ADM2304, ADM2342], semester: Summer, must_run: apart}
-- {courses: [ADM2304, ADM2350], semester: Summer, must_run: apart}
-- {courses: [ADM2342, ADM2350], semester: Summer, must_run: apart}
-- {courses: [ADM2304, ADM2342], semester: Fall, must_run: apart}
-- {courses: [ADM2342, ADM2350], semester: Fall, must_run: apart}
-- {courses: [ADM2304, ADM2342], semester: Winter, must_run: apart}
-- {courses: [ADM2342, ADM2350], semester: Winter, must_run: apart}
-- {courses: [ADM2313, ADM3313], semester: Fall, must_run: apart}
-- {courses: [ADM2313, ADM4315], semester: Fall, must_run: apart}
-- {courses: [ADM2313, ADM4316], semester: Fall, must_run: apart}
-- {courses: [ADM3313, ADM4315], semester: Fall, must_run: apart}
-- {courses: [ADM4315, ADM4316], semester: Fall, must_run: apart}
-- {courses: [ADM2313, ADM3313], semester: Winter, must_run: apart}
-- {courses: [ADM2337, ADM3301], semester: Summer, must_run: apart}
-- {courses: [ADM2337, ADM3318], semester: Summer, must_run: apart}
-- {courses: [ADM2337, ADM3346], semester: Summer, must_run: apart}
-- {courses: [ADM2337, ADM3350], semester: Summer, must_run: apart}
-- {courses: [ADM2337, ADM3360], semester: Summer, must_run: apart}
-- {courses: [ADM2337, ADM4311], semester: Summer, must_run: apart}
-- {courses: [ADM3301, ADM3318], semester: Summer, must_run: apart}
-- {courses: [ADM3318, ADM3346], semester: Summer, must_run: apart}
-- {courses: [ADM3346, ADM3350], semester: Summer, must_run: apart}
-- {courses: [ADM3350, ADM3360], semester: Summer, must_run: apart}
-- {courses: [ADM3360, ADM4311], semester: Summer, must_run: apart}
-- {courses: [ADM2352, ADM3350], semester: Fall, must_run: apart}
-- {courses: [ADM2352, ADM3350], semester: Winter, must_run: apart}
-- {courses: [ADM2702, ADM2703], semester: Fall, must_run: apart}
+- {courses: [ADM1701, ADM1770], semester: Fall, must_run: apart}
+- {courses: [ADM2313, ADM4103], semester: Fall, must_run: apart}
+- {courses: [ADM2337, ADM4349], semester: Fall, must_run: apart}
+- {courses: [ADM2352, ADM3340], semester: Fall, must_run: apart}
 - {courses: [ADM2702, ADM2704], semester: Fall, must_run: apart}
 - {courses: [ADM2702, ADM2720], semester: Fall, must_run: apart}
 - {courses: [ADM2702, ADM2736], semester: Fall, must_run: apart}
 - {courses: [ADM2702, ADM2737], semester: Fall, must_run: apart}
-- {courses: [ADM2702, ADM2741], semester: Fall, must_run: apart}
-- {courses: [ADM2702, ADM2750], semester: Fall, must_run: apart}
 - {courses: [ADM2702, ADM2772], semester: Fall, must_run: apart}
-- {courses: [ADM2703, ADM2704], semester: Fall, must_run: apart}
-- {courses: [ADM2704, ADM2720], semester: Fall, must_run: apart}
-- {courses: [ADM2720, ADM2736], semester: Fall, must_run: apart}
-- {courses: [ADM2736, ADM2737], semester: Fall, must_run: apart}
-- {courses: [ADM2737, ADM2741], semester: Fall, must_run: apart}
-- {courses: [ADM2741, ADM2750], semester: Fall, must_run: apart}
-- {courses: [ADM2750, ADM2772], semester: Fall, must_run: apart}
-- {courses: [ADM2702, ADM2703], semester: Winter, must_run: apart}
-- {courses: [ADM2702, ADM2742], semester: Winter, must_run: apart}
-- {courses: [ADM2703, ADM2704], semester: Winter, must_run: apart}
-- {courses: [ADM2704, ADM2720], semester: Winter, must_run: apart}
-- {courses: [ADM2720, ADM2736], semester: Winter, must_run: apart}
-- {courses: [ADM2736, ADM2737], semester: Winter, must_run: apart}
-- {courses: [ADM2737, ADM2741], semester: Winter, must_run: apart}
-- {courses: [ADM2741, ADM2742], semester: Winter, must_run: apart}
-- {courses: [ADM2742, ADM2750], semester: Winter, must_run: apart}
-- {courses: [ADM2750, ADM2772], semester: Winter, must_run: apart}
 - {courses: [ADM2713, ADM4716], semester: Fall, must_run: apart}
-- {courses: [ADM2737, ADM3701], semester: Summer, must_run: apart}
-- {courses: [ADM2737, ADM3718], semester: Summer, must_run: apart}
-- {courses: [ADM2737, ADM3746], semester: Summer, must_run: apart}
-- {courses: [ADM2737, ADM3750], semester: Summer, must_run: apart}
-- {courses: [ADM2737, ADM3760], semester: Summer, must_run: apart}
-- {courses: [ADM2737, ADM4711], semester: Summer, must_run: apart}
-- {courses: [ADM3701, ADM3718], semester: Summer, must_run: apart}
-- {courses: [ADM3718, ADM3746], semester: Summer, must_run: apart}
-- {courses: [ADM3746, ADM3750], semester: Summer, must_run: apart}
-- {courses: [ADM3750, ADM3760], semester: Summer, must_run: apart}
-- {courses: [ADM3760, ADM4711], semester: Summer, must_run: apart}
 - {courses: [ADM2737, ADM2752], semester: Fall, must_run: apart}
-- {courses: [ADM2752, ADM2772], semester: Fall, must_run: apart}
-- {courses: [ADM2752, ADM2772], semester: Winter, must_run: apart}
-- {courses: [ADM3701, ADM3750], semester: Fall, must_run: apart}
-- {courses: [ADM3302, ADM3316], semester: Winter, must_run: apart}
-- {courses: [ADM3302, ADM3317], semester: Winter, must_run: apart}
-- {courses: [ADM3302, ADM4312], semester: Winter, must_run: apart}
-- {courses: [ADM3302, ADM4317], semester: Winter, must_run: apart}
-- {courses: [ADM3302, ADM4319], semester: Winter, must_run: apart}
-- {courses: [ADM3316, ADM3317], semester: Winter, must_run: apart}
-- {courses: [ADM3317, ADM4312], semester: Winter, must_run: apart}
-- {courses: [ADM4312, ADM4317], semester: Winter, must_run: apart}
-- {courses: [ADM4317, ADM4319], semester: Winter, must_run: apart}
-- {courses: [ADM3305, ADM3308], semester: Fall, must_run: apart}
-- {courses: [ADM3305, ADM3363], semester: Fall, must_run: apart}
-- {courses: [ADM3305, ADM3378], semester: Fall, must_run: apart}
-- {courses: [ADM3305, ADM4307], semester: Fall, must_run: apart}
-- {courses: [ADM3305, ADM4363], semester: Fall, must_run: apart}
-- {courses: [ADM3305, ADM4378], semester: Fall, must_run: apart}
-- {courses: [ADM3308, ADM3363], semester: Fall, must_run: apart}
-- {courses: [ADM3363, ADM3378], semester: Fall, must_run: apart}
-- {courses: [ADM3378, ADM4307], semester: Fall, must_run: apart}
-- {courses: [ADM4307, ADM4363], semester: Fall, must_run: apart}
-- {courses: [ADM4363, ADM4378], semester: Fall, must_run: apart}
-- {courses: [ADM3313, ADM3319], semester: Summer, must_run: apart}
-- {courses: [ADM3313, ADM3321], semester: Summer, must_run: apart}
-- {courses: [ADM3319, ADM3321], semester: Summer, must_run: apart}
+- {courses: [ADM3308, ADM3705], semester: Fall, must_run: apart}
+- {courses: [ADM3308, ADM4707], semester: Fall, must_run: apart}
+- {courses: [ADM3313, ADM4315], semester: Fall, must_run: apart}
+- {courses: [ADM3316, ADM4103], semester: Fall, must_run: apart}
+- {courses: [ADM3316, ADM4316], semester: Fall, must_run: apart}
 - {courses: [ADM3319, ADM3358], semester: Fall, must_run: apart}
-- {courses: [ADM3319, ADM4318], semester: Fall, must_run: apart}
 - {courses: [ADM3319, ADM4328], semester: Fall, must_run: apart}
 - {courses: [ADM3319, ADM4338], semester: Fall, must_run: apart}
-- {courses: [ADM3358, ADM4318], semester: Fall, must_run: apart}
-- {courses: [ADM4318, ADM4328], semester: Fall, must_run: apart}
-- {courses: [ADM4328, ADM4338], semester: Fall, must_run: apart}
-- {courses: [ADM3319, ADM4318], semester: Winter, must_run: apart}
-- {courses: [ADM4318, ADM4319], semester: Winter, must_run: apart}
-- {courses: [ADM4319, ADM4328], semester: Winter, must_run: apart}
-- {courses: [ADM4328, ADM4338], semester: Winter, must_run: apart}
-- {courses: [ADM3321, ADM3322], semester: Fall, must_run: apart}
 - {courses: [ADM3321, ADM3323], semester: Fall, must_run: apart}
 - {courses: [ADM3321, ADM3326], semester: Fall, must_run: apart}
 - {courses: [ADM3321, ADM4325], semester: Fall, must_run: apart}
 - {courses: [ADM3321, ADM4326], semester: Fall, must_run: apart}
-- {courses: [ADM3322, ADM3323], semester: Fall, must_run: apart}
-- {courses: [ADM3323, ADM3326], semester: Fall, must_run: apart}
-- {courses: [ADM3326, ADM4325], semester: Fall, must_run: apart}
-- {courses: [ADM4325, ADM4326], semester: Fall, must_run: apart}
-- {courses: [ADM3321, ADM3322], semester: Winter, must_run: apart}
-- {courses: [ADM3322, ADM3323], semester: Winter, must_run: apart}
-- {courses: [ADM3323, ADM3326], semester: Winter, must_run: apart}
-- {courses: [ADM3326, ADM4325], semester: Winter, must_run: apart}
-- {courses: [ADM4325, ADM4326], semester: Winter, must_run: apart}
 - {courses: [ADM3322, ADM4322], semester: Fall, must_run: apart}
-- {courses: [ADM4322, ADM4326], semester: Fall, must_run: apart}
-- {courses: [ADM4322, ADM4326], semester: Winter, must_run: apart}
-- {courses: [ADM3333, ADM3334], semester: Fall, must_run: apart}
-- {courses: [ADM3333, ADM3337], semester: Fall, must_run: apart}
-- {courses: [ADM3334, ADM3337], semester: Fall, must_run: apart}
 - {courses: [ADM3337, ADM4338], semester: Fall, must_run: apart}
-- {courses: [ADM3340, ADM3345], semester: Fall, must_run: apart}
 - {courses: [ADM3340, ADM3349], semester: Fall, must_run: apart}
 - {courses: [ADM3340, ADM4341], semester: Fall, must_run: apart}
 - {courses: [ADM3340, ADM4344], semester: Fall, must_run: apart}
 - {courses: [ADM3340, ADM4345], semester: Fall, must_run: apart}
 - {courses: [ADM3340, ADM4346], semester: Fall, must_run: apart}
-- {courses: [ADM3345, ADM3346], semester: Fall, must_run: apart}
-- {courses: [ADM3346, ADM3349], semester: Fall, must_run: apart}
-- {courses: [ADM3349, ADM3350], semester: Fall, must_run: apart}
-- {courses: [ADM3350, ADM3360], semester: Fall, must_run: apart}
-- {courses: [ADM3360, ADM4341], semester: Fall, must_run: apart}
-- {courses: [ADM4341, ADM4344], semester: Fall, must_run: apart}
-- {courses: [ADM4344, ADM4345], semester: Fall, must_run: apart}
-- {courses: [ADM4345, ADM4346], semester: Fall, must_run: apart}
-- {courses: [ADM3340, ADM3345], semester: Winter, must_run: apart}
-- {courses: [ADM3345, ADM3346], semester: Winter, must_run: apart}
-- {courses: [ADM3346, ADM3349], semester: Winter, must_run: apart}
-- {courses: [ADM3349, ADM3350], semester: Winter, must_run: apart}
-- {courses: [ADM3350, ADM3360], semester: Winter, must_run: apart}
-- {courses: [ADM3360, ADM4341], semester: Winter, must_run: apart}
-- {courses: [ADM4341, ADM4344], semester: Winter, must_run: apart}
-- {courses: [ADM4344, ADM4345], semester: Winter, must_run: apart}
-- {courses: [ADM4345, ADM4346], semester: Winter, must_run: apart}
 - {courses: [ADM3345, ADM4342], semester: Fall, must_run: apart}
 - {courses: [ADM3345, ADM4348], semester: Fall, must_run: apart}
 - {courses: [ADM3345, ADM4349], semester: Fall, must_run: apart}
-- {courses: [ADM4342, ADM4346], semester: Fall, must_run: apart}
-- {courses: [ADM4346, ADM4348], semester: Fall, must_run: apart}
-- {courses: [ADM4348, ADM4349], semester: Fall, must_run: apart}
-- {courses: [ADM4342, ADM4346], semester: Winter, must_run: apart}
-- {courses: [ADM4346, ADM4348], semester: Winter, must_run: apart}
-- {courses: [ADM4348, ADM4349], semester: Winter, must_run: apart}
 - {courses: [ADM3346, ADM4340], semester: Fall, must_run: apart}
-- {courses: [ADM4340, ADM4349], semester: Fall, must_run: apart}
-- {courses: [ADM4340, ADM4349], semester: Winter, must_run: apart}
-- {courses: [ADM3350, ADM2337], semester: Fall, must_run: apart}
-- {courses: [ADM2337, ADM4349], semester: Fall, must_run: apart}
-- {courses: [ADM2352, ADM3340], semester: Fall, must_run: apart}
-- {courses: [ADM3351, ADM3350], semester: Fall, must_run: apart}
 - {courses: [ADM3351, ADM3352], semester: Fall, must_run: apart}
 - {courses: [ADM3351, ADM4350], semester: Fall, must_run: apart}
 - {courses: [ADM3351, ADM4351], semester: Fall, must_run: apart}
@@ -181,113 +105,77 @@
 - {courses: [ADM3351, ADM4354], semester: Fall, must_run: apart}
 - {courses: [ADM3351, ADM4355], semester: Fall, must_run: apart}
 - {courses: [ADM3351, ADM4356], semester: Fall, must_run: apart}
-- {courses: [ADM3352, ADM4350], semester: Fall, must_run: apart}
-- {courses: [ADM4350, ADM4351], semester: Fall, must_run: apart}
-- {courses: [ADM4351, ADM4352], semester: Fall, must_run: apart}
-- {courses: [ADM4352, ADM4354], semester: Fall, must_run: apart}
-- {courses: [ADM4354, ADM4355], semester: Fall, must_run: apart}
-- {courses: [ADM4355, ADM4356], semester: Fall, must_run: apart}
-- {courses: [ADM3351, ADM3350], semester: Winter, must_run: apart}
-- {courses: [ADM3352, ADM4350], semester: Winter, must_run: apart}
-- {courses: [ADM4350, ADM4351], semester: Winter, must_run: apart}
-- {courses: [ADM4351, ADM4352], semester: Winter, must_run: apart}
-- {courses: [ADM4352, ADM4354], semester: Winter, must_run: apart}
-- {courses: [ADM4354, ADM4355], semester: Winter, must_run: apart}
-- {courses: [ADM4355, ADM4356], semester: Winter, must_run: apart}
 - {courses: [ADM3358, ADM3719], semester: Fall, must_run: apart}
-- {courses: [ADM3358, ADM4728], semester: Fall, must_run: apart}
-- {courses: [ADM3358, ADM4738], semester: Fall, must_run: apart}
-- {courses: [ADM3719, ADM4338], semester: Fall, must_run: apart}
-- {courses: [ADM4338, ADM4728], semester: Fall, must_run: apart}
-- {courses: [ADM4728, ADM4738], semester: Fall, must_run: apart}
-- {courses: [ADM3379, ADM4377], semester: Winter, must_run: apart}
-- {courses: [ADM3379, ADM4379], semester: Winter, must_run: apart}
-- {courses: [ADM4377, ADM4379], semester: Winter, must_run: apart}
-- {courses: [ADM3701, ADM3721], semester: Fall, must_run: apart}
-- {courses: [ADM3701, ADM3726], semester: Fall, must_run: apart}
-- {courses: [ADM3701, ADM3723], semester: Fall, must_run: apart}
-- {courses: [ADM3701, ADM3733], semester: Fall, must_run: apart}
-- {courses: [ADM3701, ADM3734], semester: Fall, must_run: apart}
-- {courses: [ADM3701, ADM3737], semester: Fall, must_run: apart}
-- {courses: [ADM3701, ADM3740], semester: Fall, must_run: apart}
-- {courses: [ADM3701, ADM3745], semester: Fall, must_run: apart}
-- {courses: [ADM3701, ADM3749], semester: Fall, must_run: apart}
+- {courses: [ADM3358, ADM4318], semester: Fall, must_run: apart}
+- {courses: [ADM3363, ADM3378], semester: Fall, must_run: apart}
 - {courses: [ADM3718, ADM3721], semester: Fall, must_run: apart}
-- {courses: [ADM3721, ADM3726], semester: Fall, must_run: apart}
-- {courses: [ADM3726, ADM3723], semester: Fall, must_run: apart}
-- {courses: [ADM3723, ADM3733], semester: Fall, must_run: apart}
-- {courses: [ADM3733, ADM3734], semester: Fall, must_run: apart}
-- {courses: [ADM3734, ADM3737], semester: Fall, must_run: apart}
-- {courses: [ADM3737, ADM3740], semester: Fall, must_run: apart}
-- {courses: [ADM3740, ADM3745], semester: Fall, must_run: apart}
-- {courses: [ADM3745, ADM3749], semester: Fall, must_run: apart}
-- {courses: [ADM3749, ADM3750], semester: Fall, must_run: apart}
-- {courses: [ADM3701, ADM3713], semester: Winter, must_run: apart}
-- {courses: [ADM3701, ADM3716], semester: Winter, must_run: apart}
-- {courses: [ADM3701, ADM3717], semester: Winter, must_run: apart}
-- {courses: [ADM3701, ADM3722], semester: Winter, must_run: apart}
-- {courses: [ADM3701, ADM3751], semester: Winter, must_run: apart}
-- {courses: [ADM3701, ADM3752], semester: Winter, must_run: apart}
-- {courses: [ADM3713, ADM3716], semester: Winter, must_run: apart}
-- {courses: [ADM3716, ADM3717], semester: Winter, must_run: apart}
-- {courses: [ADM3717, ADM3718], semester: Winter, must_run: apart}
-- {courses: [ADM3718, ADM3722], semester: Winter, must_run: apart}
-- {courses: [ADM3722, ADM3760], semester: Winter, must_run: apart}
-- {courses: [ADM3760, ADM3751], semester: Winter, must_run: apart}
-- {courses: [ADM3751, ADM3752], semester: Winter, must_run: apart}
-- {courses: [ADM3705, ADM3308], semester: Fall, must_run: apart}
-- {courses: [ADM3716, ADM3702], semester: Winter, must_run: apart}
-- {courses: [ADM3716, ADM4719], semester: Winter, must_run: apart}
-- {courses: [ADM3702, ADM4719], semester: Winter, must_run: apart}
+- {courses: [ADM3719, ADM4338], semester: Fall, must_run: apart}
 - {courses: [ADM3721, ADM4726], semester: Fall, must_run: apart}
-- {courses: [ADM3722, ADM4722], semester: Winter, must_run: apart}
-- {courses: [ADM3722, ADM4725], semester: Winter, must_run: apart}
-- {courses: [ADM4722, ADM4725], semester: Winter, must_run: apart}
-- {courses: [ADM4725, ADM4726], semester: Winter, must_run: apart}
+- {courses: [ADM3723, ADM3726], semester: Fall, must_run: apart}
+- {courses: [ADM3733, ADM3734], semester: Fall, must_run: apart}
+- {courses: [ADM3737, ADM3740], semester: Fall, must_run: apart}
 - {courses: [ADM3737, ADM4739], semester: Fall, must_run: apart}
-- {courses: [ADM4738, ADM4739], semester: Fall, must_run: apart}
-- {courses: [ADM3746, ADM3750], semester: Winter, must_run: apart}
-- {courses: [ADM3750, ADM3752], semester: Winter, must_run: apart}
-- {courses: [ADM3751, ADM4752], semester: Winter, must_run: apart}
-- {courses: [ADM3751, ADM4756], semester: Winter, must_run: apart}
-- {courses: [ADM3752, ADM4752], semester: Winter, must_run: apart}
-- {courses: [ADM4752, ADM4756], semester: Winter, must_run: apart}
-- {courses: [ADM3760, ADM4744], semester: Winter, must_run: apart}
-- {courses: [ADM3760, ADM4749], semester: Winter, must_run: apart}
-- {courses: [ADM4744, ADM4749], semester: Winter, must_run: apart}
-- {courses: [ADM4103, ADM3316], semester: Fall, must_run: apart}
+- {courses: [ADM3745, ADM3749], semester: Fall, must_run: apart}
 - {courses: [ADM4103, ADM4503], semester: Fall, must_run: apart}
-- {courses: [ADM3316, ADM4316], semester: Fall, must_run: apart}
+- {courses: [ADM4307, ADM4363], semester: Fall, must_run: apart}
 - {courses: [ADM4316, ADM4317], semester: Fall, must_run: apart}
 - {courses: [ADM4317, ADM4503], semester: Fall, must_run: apart}
-- {courses: [ADM2313, ADM4103], semester: Fall, must_run: apart}
+- {courses: [ADM4318, ADM4328], semester: Fall, must_run: apart}
+- {courses: [ADM4338, ADM4728], semester: Fall, must_run: apart}
+- {courses: [ADM4715, ADM4716], semester: Fall, must_run: apart}
+- {courses: [ADM4738, ADM4739], semester: Fall, must_run: apart}
+- {courses: [ADM4740, ADM4748], semester: Fall, must_run: apart}
+- {courses: [ADM4742, ADM4745], semester: Fall, must_run: apart}
+- {courses: [ADM4746, ADM4748], semester: Fall, must_run: apart}
+- {courses: [ADM4751, ADM4754], semester: Fall, must_run: apart}
+- {courses: [ADM3746, ADM3750], semester: [Summer, Winter], must_run: apart}
+- {courses: [ADM2337, ADM3301, ADM3318], semester: Summer, must_run: apart}
+- {courses: [ADM2337, ADM3360, ADM4311], semester: Summer, must_run: apart}
+- {courses: [ADM2737, ADM3701, ADM3718], semester: Summer, must_run: apart}
+- {courses: [ADM2737, ADM3750, ADM3760], semester: Summer, must_run: apart}
+- {courses: [ADM3313, ADM3319, ADM3321], semester: Summer, must_run: apart}
+- {courses: [ADM2304, ADM2350], semester: Summer, must_run: apart}
+- {courses: [ADM2337, ADM3346], semester: Summer, must_run: apart}
+- {courses: [ADM2737, ADM3746], semester: Summer, must_run: apart}
+- {courses: [ADM2737, ADM4711], semester: Summer, must_run: apart}
+- {courses: [ADM3318, ADM3346], semester: Summer, must_run: apart}
+- {courses: [ADM3346, ADM3350], semester: Summer, must_run: apart}
+- {courses: [ADM3718, ADM3746], semester: Summer, must_run: apart}
+- {courses: [ADM3760, ADM4711], semester: Summer, must_run: apart}
+- {courses: [ADM3302, ADM3316, ADM3317], semester: Winter, must_run: apart}
+- {courses: [ADM3302, ADM4312, ADM4317], semester: Winter, must_run: apart}
+- {courses: [ADM3379, ADM4377, ADM4379], semester: Winter, must_run: apart}
+- {courses: [ADM3701, ADM3713, ADM3716], semester: Winter, must_run: apart}
+- {courses: [ADM3701, ADM3751, ADM3752], semester: Winter, must_run: apart}
+- {courses: [ADM3702, ADM3716, ADM4719], semester: Winter, must_run: apart}
+- {courses: [ADM3722, ADM4722, ADM4725], semester: Winter, must_run: apart}
+- {courses: [ADM3751, ADM4752, ADM4756], semester: Winter, must_run: apart}
+- {courses: [ADM3760, ADM4744, ADM4749], semester: Winter, must_run: apart}
+- {courses: [ADM2702, ADM2742], semester: Winter, must_run: apart}
+- {courses: [ADM2741, ADM2742], semester: Winter, must_run: apart}
+- {courses: [ADM2742, ADM2750], semester: Winter, must_run: apart}
+- {courses: [ADM3302, ADM4319], semester: Winter, must_run: apart}
+- {courses: [ADM3317, ADM4312], semester: Winter, must_run: apart}
 - {courses: [ADM3358, ADM4326], semester: Winter, must_run: apart}
+- {courses: [ADM3701, ADM3717], semester: Winter, must_run: apart}
+- {courses: [ADM3701, ADM3722], semester: Winter, must_run: apart}
+- {courses: [ADM3702, ADM4712], semester: Winter, must_run: apart}
+- {courses: [ADM3716, ADM3717], semester: Winter, must_run: apart}
+- {courses: [ADM3717, ADM3718], semester: Winter, must_run: apart}
+- {courses: [ADM3717, ADM4718], semester: Winter, must_run: apart}
+- {courses: [ADM3718, ADM3722], semester: Winter, must_run: apart}
+- {courses: [ADM3722, ADM3760], semester: Winter, must_run: apart}
+- {courses: [ADM3750, ADM3752], semester: Winter, must_run: apart}
+- {courses: [ADM3751, ADM3760], semester: Winter, must_run: apart}
+- {courses: [ADM3752, ADM4752], semester: Winter, must_run: apart}
+- {courses: [ADM4317, ADM4319], semester: Winter, must_run: apart}
+- {courses: [ADM4318, ADM4319], semester: Winter, must_run: apart}
+- {courses: [ADM4319, ADM4328], semester: Winter, must_run: apart}
 - {courses: [ADM4326, ADM4338], semester: Winter, must_run: apart}
 - {courses: [ADM4336, ADM4337], semester: Winter, must_run: apart}
 - {courses: [ADM4336, ADM4339], semester: Winter, must_run: apart}
 - {courses: [ADM4337, ADM4338], semester: Winter, must_run: apart}
 - {courses: [ADM4338, ADM4339], semester: Winter, must_run: apart}
-- {courses: [ADM4503, ADM4716], semester: Fall, must_run: apart}
-- {courses: [ADM4503, ADM4717], semester: Fall, must_run: apart}
-- {courses: [ADM4716, ADM4717], semester: Fall, must_run: apart}
-- {courses: [ADM4707, ADM3308], semester: Fall, must_run: apart}
-- {courses: [ADM4712, ADM3702], semester: Winter, must_run: apart}
-- {courses: [ADM4715, ADM4716], semester: Fall, must_run: apart}
-- {courses: [ADM4718, ADM3717], semester: Winter, must_run: apart}
 - {courses: [ADM4712, ADM4718], semester: Winter, must_run: apart}
-- {courses: [ADM4740, ADM4741], semester: Fall, must_run: apart}
-- {courses: [ADM4740, ADM4742], semester: Fall, must_run: apart}
-- {courses: [ADM4740, ADM4745], semester: Fall, must_run: apart}
-- {courses: [ADM4740, ADM4746], semester: Fall, must_run: apart}
-- {courses: [ADM4740, ADM4748], semester: Fall, must_run: apart}
-- {courses: [ADM4741, ADM4742], semester: Fall, must_run: apart}
-- {courses: [ADM4742, ADM4745], semester: Fall, must_run: apart}
-- {courses: [ADM4745, ADM4746], semester: Fall, must_run: apart}
-- {courses: [ADM4746, ADM4748], semester: Fall, must_run: apart}
-- {courses: [ADM4750, ADM3750], semester: Fall, must_run: apart}
-- {courses: [ADM4750, ADM4751], semester: Fall, must_run: apart}
-- {courses: [ADM4750, ADM4754], semester: Fall, must_run: apart}
-- {courses: [ADM4750, ADM4755], semester: Fall, must_run: apart}
-- {courses: [ADM3750, ADM4751], semester: Fall, must_run: apart}
-- {courses: [ADM4751, ADM4754], semester: Fall, must_run: apart}
-- {courses: [ADM4754, ADM4755], semester: Fall, must_run: apart}
+- {courses: [ADM4725, ADM4726], semester: Winter, must_run: apart}
+- {courses: [ADM4325, ADM4725], semester: Winter, must_run: together}

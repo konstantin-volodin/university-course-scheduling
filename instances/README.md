@@ -85,11 +85,11 @@ smith-jordan:
   course_ranks: {BIO205: 3}
 ```
 
-Required: `teaching_load`, `qualified_for`.
+Required: `teaching_load`.
 
 Optional:
 
-- `qualified_for: all`
+- `qualified_for: all` (the default when omitted) or a list of course ids
 - `can_teach_night` (default `false`)
 - `can_teach_off_campus` (default `false`)
 - `prefers_packed_days` (default `false`)
@@ -137,9 +137,12 @@ Optional concurrency rules:
 
 ```yaml
 - {courses: [BIO101, BIO205], semester: Fall, must_run: apart}
+- {courses: [BIO101, BIO205, BIO305], must_run: apart}
 ```
 
-`apart` prevents overlap. `together` requires the same meeting time.
+`apart` prevents overlap. `together` requires the same meeting time and takes
+exactly two courses. Omit `semester` (or pass a list) to cover every semester;
+listing more than two courses under `apart` keeps every pair apart.
 
 ## Commands
 

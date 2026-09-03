@@ -349,6 +349,24 @@ courses:
     assert payload["professor_block_pref"] == [["p1", "1.5"], ["p2", "double"]]
 
 
+def test_qualified_for_defaults_to_all() -> None:
+    payload = config.loads(
+        BASE
+        + """
+professors:
+  p1: {teaching_load: 1}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+  C2:
+    sections:
+      - {id: C2-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["professor_qualification"] == [["p1", "C1"], ["p1", "C2"]]
+
+
 def test_course_defaults_cover_preferred_class_length() -> None:
     payload = config.loads(
         BASE
@@ -380,5 +398,64 @@ courses:
   C1:
     sections:
       - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+        )
+
+
+CONC = """
+semesters: [Fall, Winter]
+meeting_times:
+  - {id: A, days: {Mon: '09:00'}, duration_minutes: 90, time_of_day: Morning}
+classrooms: {R1: 30}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1: {sections: [{id: C1-1, semester: Fall, time_of_day: Morning, students: 30}]}
+  C2: {sections: [{id: C2-1, semester: Fall, time_of_day: Morning, students: 30}]}
+  C3: {sections: [{id: C3-1, semester: Fall, time_of_day: Morning, students: 30}]}
+"""
+
+
+def test_concurrency_without_semester_covers_every_semester() -> None:
+    payload = config.loads(
+        CONC
+        + """
+course_concurrency:
+  - {courses: [C1, C2], must_run: apart}
+"""
+    )
+    assert payload["course_concurrency_nt"] == [
+        ["C1", "C2", "Fall"],
+        ["C1", "C2", "Winter"],
+    ]
+
+
+def test_concurrency_apart_expands_course_groups_to_pairs() -> None:
+    payload = config.loads(
+        CONC
+        + """
+course_concurrency:
+  - {courses: [C1, C2, C3], semester: [Fall, Winter], must_run: apart}
+"""
+    )
+    assert payload["course_concurrency_nt"] == [
+        ["C1", "C2", "Fall"],
+        ["C1", "C2", "Winter"],
+        ["C1", "C3", "Fall"],
+        ["C1", "C3", "Winter"],
+        ["C2", "C3", "Fall"],
+        ["C2", "C3", "Winter"],
+    ]
+
+
+def test_concurrency_together_still_requires_a_pair() -> None:
+    with pytest.raises(
+        InvalidInstanceError, match="'together' expects exactly two courses"
+    ):
+        config.loads(
+            CONC
+            + """
+course_concurrency:
+  - {courses: [C1, C2, C3], must_run: together}
 """
         )

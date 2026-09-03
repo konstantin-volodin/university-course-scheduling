@@ -455,9 +455,8 @@ def loads(text: str) -> dict[str, Any]:
             },
             problems,
         )
-        for required in ("teaching_load", "qualified_for"):
-            if required not in spec:
-                problems.append(f"professors.{prof}: missing {required!r}")
+        if "teaching_load" not in spec:
+            problems.append(f"professors.{prof}: missing 'teaching_load'")
         teaching_load = spec.get("teaching_load", 0)
         if (
             isinstance(teaching_load, bool)
@@ -487,7 +486,7 @@ def loads(text: str) -> dict[str, Any]:
             prof_length.append(
                 [prof, hours_of.get(prof_length_pref, prof_length_pref)]
             )
-        qualified = spec.get("qualified_for", [])
+        qualified = spec.get("qualified_for", "all")
         if qualified != "all" and not isinstance(qualified, list):
             problems.append(
                 f"professors.{prof}.qualified_for: expected 'all' or a list of course ids"
@@ -528,14 +527,15 @@ def loads(text: str) -> dict[str, Any]:
             {"courses", "semester", "must_run"},
             problems,
         )
-        for name in ("courses", "semester", "must_run"):
-            if name not in rule:
-                problems.append(f"course_concurrency[{index}]: missing '{name}'")
-        if not all(name in rule for name in ("courses", "semester", "must_run")):
+        if "courses" not in rule:
+            problems.append(f"course_concurrency[{index}]: missing 'courses'")
+        if "must_run" not in rule:
+            problems.append(f"course_concurrency[{index}]: missing 'must_run'")
+        if "courses" not in rule or "must_run" not in rule:
             continue
         rule_courses = rule["courses"]
-        if not isinstance(rule_courses, list) or len(rule_courses) != 2:
-            problems.append(f"course_concurrency[{index}].courses: expected exactly two courses")
+        if not isinstance(rule_courses, list) or len(rule_courses) < 2:
+            problems.append(f"course_concurrency[{index}].courses: expected at least two courses")
             continue
         kind = rule["must_run"]
         if kind not in {"together", "apart"}:
@@ -543,9 +543,31 @@ def loads(text: str) -> dict[str, Any]:
                 f"course_concurrency[{index}].must_run: expected 'together' or 'apart'"
             )
             continue
-        first, second = rule_courses
+        if kind == "together" and len(rule_courses) != 2:
+            problems.append(
+                f"course_concurrency[{index}].courses: 'together' expects exactly two courses"
+            )
+            continue
+        # A missing semester applies to every semester; more than two courses
+        # under 'apart' keeps every pair apart.
+        raw_semesters = rule.get("semester")
+        if raw_semesters is None:
+            semesters = list(cal.get("semesters") or [])
+        elif isinstance(raw_semesters, str):
+            semesters = [raw_semesters]
+        elif isinstance(raw_semesters, list) and all(
+            isinstance(item, str) for item in raw_semesters
+        ):
+            semesters = list(raw_semesters)
+        else:
+            problems.append(
+                f"course_concurrency[{index}].semester: expected a name or a list of names"
+            )
+            continue
         target = together if kind == "together" else apart
-        target.append([as_id(first), as_id(second), rule["semester"]])
+        for first, second in itertools.combinations(rule_courses, 2):
+            for semester in semesters:
+                target.append([as_id(first), as_id(second), semester])
 
     if problems:
         raise InvalidInstanceError(problems)
