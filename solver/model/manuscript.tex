@@ -154,6 +154,8 @@ $KCount_{k}$ - Counts total sections assigned to each classrooms $k$ \\
 $CBLPen_{c,bl}$ - Counts the number of violations of block preference $bl$ per course $c$   \\
 $CFNPen_{c}$ - Counts the number of violations of blocks scheduled to Friday night 3 hour block \\
 $PDayT_{p,s,dw}$ - Indicates if a professor $p$ is teaching during day of the week $dw$, semeseter $s$ \\ 
+$PRoomU_{p,s,dw,k}$ - Indicates if a professor $p$ uses classroom $k$ during day of the week $dw$, semester $s$ \\
+$RoomExtra_{p,s,dw}$ - Counts the classrooms a professor uses on a day past the first one \\
 $ProfBBV_{}$ - Counts the number of back to back occurences for professor $p$ 
 
 
@@ -196,6 +198,18 @@ Professors can only teach courses they are qualified to teach (removed by $XV$)
 Counts the maximum number of days a professor is teaching per each semester
 \begin{equation}
 	\sum_{\substack{citk \\ [t,dw] \in \{TDW\}}} X_{pcistk} <= M * PDayT_{p,s,dw} \quad \forall P, S, DW, [pcistk] \in \{ XV \}
+\end{equation}
+
+Counts the classrooms a professor uses per day, so room-hopping within a
+teaching day can be penalised: the first room of the day is free, every
+further room adds to $RoomExtra_{p,s,dw}$.
+\begin{equation}
+	\sum_{\substack{cit \\ [t,dw] \in \{TDW\}}} X_{pcistk} <= M * PRoomU_{p,s,dw,k} 
+	\quad \forall P, S, DW, K, [pcistk] \in \{ XV \}, k \not \in \{ \text{other} \}
+\end{equation}
+\begin{equation}
+	\sum_{k} PRoomU_{p,s,dw,k} \le PDayT_{p,s,dw} + RoomExtra_{p,s,dw} 
+	\quad \forall P, S, DW, k \not \in \{ \text{other} \}
 \end{equation}
 
 Counts the number of occurences a professor has back to back classes (in different classrooms)
@@ -342,6 +356,7 @@ a few notes: (1) there is no need to minimize part-timers, because 1st step ensu
 					 & - 10 \sum_s (DayMax_s - DayMin_s) \\
 					 & - 3 \sum_{c,bl} CBLPen_{c,bl} 	& [c,bl] \in \{ cb \} \\
 					 & - 3 \sum_c CFNPen_c \\ 
+					 & - 3 \sum_{p,s,dw} RoomExtra_{p,s,dw} \\
 					 & + 1 \sum_{pcistk} X * pcp_{pc} 		& [pcistk] \in XV, pcp_{pc} > 0 \\
 					 & + 1 \sum_{pcistk,td} X * ptp_{ps,td} & [pcistk] \in XV, [t,td] \in \{ TTD \}, ptp_{ps,td} > 0 \\
 					 & + 1 \sum_{pcistk,bl} X 				& [pcistk] \in XV, [t,bl] \in \{ TBL \}, pc \in \{ pbp \} \\ 
