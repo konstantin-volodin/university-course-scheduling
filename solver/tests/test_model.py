@@ -194,3 +194,28 @@ def test_pack_day_penalty_weights_every_day_the_same(payload: dict[str, Any]) ->
     for professor, by_day in weights.items():
         assert {"Mon", "Wed"} <= set(by_day), by_day
         assert len(set(by_day.values())) == 1, f"{professor} is charged by day: {by_day}"
+
+
+def test_extra_room_rows_charge_only_past_the_first_room(program: Program) -> None:
+    """One room a day is free; the penalty starts at the second."""
+    extra = [row for row in program.rows if row.name.startswith("professor_extra_rooms")]
+    assert extra
+    for row in extra:
+        assert row.sense is Sense.LE
+        assert row.rhs == 0.0
+        coefficients = sorted(row.terms.values())
+        # room indicators at +1, then exactly one teaches-day indicator and the
+        # extra-rooms variable at -1 each.
+        assert coefficients.count(-1.0) == 2
+        assert coefficients.count(1.0) == len(coefficients) - 2
+
+
+def test_uses_room_indicators_are_binary_and_forced(program: Program) -> None:
+    indicators = [v for v in program.variables if v.name.startswith("uses_room[")]
+    assert indicators
+    assert all(v.kind is VarKind.BINARY for v in indicators)
+    rows = {row.name: row for row in program.rows if row.name.startswith("professor_uses_room")}
+    assert rows
+    for row in rows.values():
+        assert row.sense is Sense.LE
+        assert min(row.terms.values()) < -1.0  # the BIG_M forcing coefficient

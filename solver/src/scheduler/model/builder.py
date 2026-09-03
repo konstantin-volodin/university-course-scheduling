@@ -78,6 +78,7 @@ class Objectives:
     day_of_week_spread: LinearExpr
     block_violation: LinearExpr
     friday_night: LinearExpr
+    room_spread: LinearExpr
 
     # preference rewards
     course_reward: LinearExpr
@@ -96,6 +97,7 @@ class Objectives:
         score.extend(self.day_of_week_spread, -10.0)
         score.extend(self.block_violation, -3.0)
         score.extend(self.friday_night, -3.0)
+        score.extend(self.room_spread, -3.0)
         score.extend(self.course_reward, 1.0)
         score.extend(self.time_reward, 1.0)
         score.extend(self.block_reward, 1.0)
@@ -313,13 +315,14 @@ class _Builder:
 
     # -- constraints ----------------------------------------------------- #
 
-    def add_professor_constraints(self) -> tuple[LinearExpr, LinearExpr]:
-        """Returns the teaching-load violation and pack-day penalty expressions."""
+    def add_professor_constraints(self) -> tuple[LinearExpr, LinearExpr, LinearExpr]:
+        """Returns teaching-load violation, pack-day penalty, and room spread."""
         inst, ix = self.inst, self.ix
 
         one_at_a_time: dict[tuple[str, str, str], Terms] = defaultdict(dict)
         load: dict[str, Terms] = defaultdict(dict)
         teaches: dict[tuple[str, str, str], Terms] = defaultdict(dict)
+        uses_room: dict[tuple[str, str, str, str], Terms] = defaultdict(dict)
 
         for key, variable in self.assign.items():
             professor, semester, slot = key.professor, key.semester, key.timeslot
@@ -330,6 +333,8 @@ class _Builder:
                 one_at_a_time[(professor, semester, slot)][variable] = 1.0
             for day in ix.days_of.get(slot, ()):
                 teaches[(professor, semester, day)][variable] = 1.0
+                if key.classroom != OFF_CAMPUS:
+                    uses_room[(professor, semester, day, key.classroom)][variable] = 1.0
 
         self._emit("professor_one_at_a_time", one_at_a_time, Sense.LE, 1.0)
 
@@ -351,21 +356,46 @@ class _Builder:
 
         # Light up "taught something that day", then charge for it.
         pack_penalty = LinearExpr()
+        teaches_indicator: dict[tuple[str, str, str], int] = {}
         for day_key in sorted(teaches, key=_label):
             professor, _, _ = day_key
             indicator = self.program.add_variable(
                 f"teaches_day[{_label(day_key)}]", upper=1.0, kind=VarKind.BINARY
             )
             teaches[day_key][indicator] = -float(BIG_M)
+            teaches_indicator[day_key] = indicator
             # Every day counts the same: the weight is the professor's own
             # preference, never the size of the day. (Resolved 2026-08-26.)
             pack_penalty.add(indicator, float(inst.pack_day_preference[professor]))
         self._emit("professor_teaches_day", teaches, Sense.LE, 0.0)
 
+        # Light up "used this room that day", then charge for every room past
+        # the first: room-hopping between classes is pure discomfort.
+        uses_indicator: dict[tuple[str, str, str, str], int] = {}
+        for room_key in sorted(uses_room, key=_label):
+            indicator = self.program.add_variable(
+                f"uses_room[{_label(room_key)}]", upper=1.0, kind=VarKind.BINARY
+            )
+            uses_room[room_key][indicator] = -float(BIG_M)
+            uses_indicator[room_key] = indicator
+        self._emit("professor_uses_room", uses_room, Sense.LE, 0.0)
+
+        room_spread = LinearExpr()
+        extra_rooms: dict[tuple[str, str, str], Terms] = defaultdict(dict)
+        for room_key, indicator in uses_indicator.items():
+            professor, semester, day, _ = room_key
+            extra_rooms[(professor, semester, day)][indicator] = 1.0
+        for day_key in sorted(extra_rooms, key=_label):
+            extra = self.program.add_variable(f"extra_rooms[{_label(day_key)}]")
+            extra_rooms[day_key][extra] = -1.0
+            extra_rooms[day_key][teaches_indicator[day_key]] = -1.0
+            room_spread.add(extra, 1.0)
+        self._emit("professor_extra_rooms", extra_rooms, Sense.LE, 0.0)
+
         self._add_overlap_rows(
             "professor_no_overlap", owner=lambda key: key.professor, skip=PART_TIMER
         )
-        return load_violation, pack_penalty
+        return load_violation, pack_penalty, room_spread
 
     def _add_overlap_rows(
         self, name: str, owner: Callable[[AssignmentKey], str], skip: str
@@ -579,7 +609,7 @@ def build(inst: Instance, progress: Progress) -> BuiltModel:
         done(f"{len(viable):,} assignments")
 
     with progress.step("building", "professor constraints"):
-        teaching_load, pack_day_penalty = builder.add_professor_constraints()
+        teaching_load, pack_day_penalty, room_spread = builder.add_professor_constraints()
     with progress.step("building", "balance constraints"):
         time_spread, day_spread = builder.add_balance_constraints()
     with progress.step("building", "classroom constraints"):
@@ -607,6 +637,7 @@ def build(inst: Instance, progress: Progress) -> BuiltModel:
         day_of_week_spread=day_spread,
         block_violation=block_violation,
         friday_night=friday_night,
+        room_spread=room_spread,
         course_reward=course_reward,
         time_reward=time_reward,
         block_reward=block_reward,
