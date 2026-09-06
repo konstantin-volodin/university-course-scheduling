@@ -1,7 +1,8 @@
-<div class="wrap">
+<div class="wrap schedule-page">
 <header>
   <p class="eyebrow">{eyebrow}</p>
   <h1>{heading}</h1>
+  <p class="schedule-intro">Your week, at a glance. Select a course to highlight its complete meeting bundle.</p>
 </header>
 <div class="stats" id="stats"></div>
 <div class="controls">
@@ -41,10 +42,11 @@
 <div class="legend">
   <span class="key"><span class="sw f"></span> Named faculty</span>
   <span class="key"><span class="sw p"></span> Part-time</span>
-  <span class="key">Room shown after section</span>
+  <span class="key">Matching colors identify the same course · Times are meeting starts</span>
 </div>
-<div class="sect">
-  <h2>Solve stages</h2>
+<details class="sect solver-details">
+  <summary>Solver details</summary>
+  <p>Backend optimality uses configured gap and numerical tolerances; it does not necessarily certify an exact optimum.</p>
   <div class="panel"><table class="stages" id="stagetable"></table></div>
-</div>
+</details>
 </div>

@@ -2,6 +2,8 @@
 
 | Path | Format | Size |
 |---|---|---|
+| `template/` | commented starter | 1 section |
+| `faculty/` | editable generated/custom bundles | 6 sections |
 | `tiny/` | one file | 3 sections |
 | `medium/` | split files | 36 sections |
 | `telfer/` | split files | 426 sections |
@@ -13,7 +15,7 @@ cd solver
 uv python install 3.14
 uv sync --python 3.14 --extra dev
 cd ..
-cp -R instances/tiny instances/my-university
+cp -R instances/template instances/my-university
 # Or: cp -R instances/medium instances/my-university
 ```
 
@@ -22,7 +24,7 @@ cp -R instances/tiny instances/my-university
 ```text
 my-university/
 ├── instance.yaml
-├── meeting-times.yaml
+├── meeting-patterns.yaml
 ├── classrooms.yaml
 ├── professors.yaml
 ├── courses.yaml
@@ -35,7 +37,7 @@ my-university/
 ```yaml
 semesters: [Fall, Winter]
 files:
-  meeting_times: meeting-times.yaml
+  meeting_patterns: meeting-patterns.yaml
   classrooms: classrooms.yaml
   professors: professors.yaml
   courses: courses.yaml
@@ -51,19 +53,61 @@ courses: [courses/business.yaml, courses/science.yaml]
 
 Paths are relative to `instance.yaml`. IDs must be unique across files.
 
-## Meeting times
+## Meeting patterns
+
+The solver chooses a complete weekly bundle for each section, together with one
+professor and one room shared by every meeting. Bundles repeat throughout their
+semester. Teaching-week calendars and separately staffed lecture/lab components
+are future extensions; there is no week field to maintain today.
+
+A pool can generate bundles, supply custom bundles, or combine both:
 
 ```yaml
-- id: MW-0900
-  days: {Mon: "09:00", Wed: "09:00"}
-  duration_minutes: 90
-  time_of_day: Morning
+meeting_patterns:
+  standard:
+    generate:
+      formats:
+        - meetings: 2
+          minutes_each: 75
+          day_combinations:
+            - [Mon, Thu]
+            - [Tue, Fri]
+      start_times: ["09:00", "10:30", "13:00"]
+      finish_by: "17:00"
+      same_start: false
+    custom:
+      special:
+        - {day: Mon, start: "08:30", minutes: 75}
+        - {day: Thu, start: "10:00", minutes: 75}
 ```
 
-- Quote times and use the 24-hour clock.
-- `duration_minutes`: `90` or `180`.
-- Different daily starts are allowed: `{Mon: "08:30", Thu: "10:00"}`.
-- Keep the names `Fri` and `Night` when using Friday/night rules.
+Each format explicitly states its meeting count and duration. Three 50-minute
+meetings use `meetings: 3`, `minutes_each: 50`, and a three-day combination.
+A single meeting may use `days: [Mon, Tue, Wed]` instead of `day_combinations`.
+Durations are positive whole minutes. Quote all clock times and use weekday
+names `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, `Sun`.
+
+`same_start` defaults to `false`: the generator considers independently chosen
+starts on each day. Set it to `true` to require matching starts. `finish_by`
+limits the end of each generated meeting. Start times may instead be a window:
+
+```yaml
+start_times:
+  start: "08:30"
+  end: "11:30"  # Last permitted start, included if aligned with the increment.
+  every_minutes: 30
+```
+
+Generation enumerates permitted choices; optimization selects among them.
+Equivalent bundles are deduplicated, and custom IDs take precedence over generated
+IDs. Pool `time_of_day` defaults to `Day`; set it explicitly for categories such
+as `Morning` or `Night`. Custom bundles may use different starts on different days.
+Touching endpoints do not overlap. Wider windows and more day combinations create
+more candidates; start with your faculty's actual permitted teaching periods.
+
+See [template/instance.yaml](template/instance.yaml) for a commented starter and
+[faculty/instance.yaml](faculty/instance.yaml) for six courses with both custom and
+generated bundles. No YAML anchors are needed.
 
 ## Classrooms
 
@@ -72,11 +116,25 @@ SCI-201: 80
 LIB-100: 160
 ```
 
-Rooms must fit the section. By default they must also be at least 80% full.
-Set top-level `minimum_room_fill` in `instance.yaml` to a fraction from 0 to 1
-to change that institutional policy; `minimum_room_fill: 0` disables only the
-minimum-fill rule, not the capacity upper bound. The setting also works in a
-single-file instance.
+Rooms must fit the section. The `general` preset (the default) imposes no minimum
+occupancy. Institution policy is explicit:
+
+```yaml
+preset: telfer
+policy:
+  minimum_room_fill: 0.8
+  allowed_durations: [90, 180]
+  large_section_threshold: 75
+  long_meeting_minutes: 180
+  night_period: Night
+```
+
+These are the Telfer defaults: long meetings above the threshold require the night
+period. General policy allows arbitrary positive durations and has no large-section
+night rule. Override individual fields, for example `minimum_room_fill: 0` or
+`large_section_threshold: null`. Capacity remains a hard upper bound. Telfer also
+defaults to penalizing Friday-night teaching; general policy permits night teaching
+unless a professor opts out.
 
 `other` is reserved.
 
@@ -97,7 +155,7 @@ Required: `teaching_load`.
 Optional:
 
 - `qualified_for: all` (the default when omitted) or a list of course ids
-- `can_teach_night` (default `false`)
+- `can_teach_night` (default `true` for general, `false` for Telfer)
 - `can_teach_off_campus` (default `false`)
 - `prefers_packed_days` (default `false`)
 - `preferred_class_length`: `single` or `double`
@@ -106,6 +164,22 @@ Optional:
 
 Preference scores: `0` or omitted = none; higher values = stronger. `part-timer`
 is reserved.
+
+Hard unavailability and soft clock-based preferences are separate:
+
+```yaml
+unavailable:
+  - {semester: Fall, days: [Tue], start: "13:00", end: "17:00"}
+time_preferences:
+  - {days: [Mon, Thu], start: "08:00", end: "10:00", score: -2}
+  - {days: [Wed], start: "10:00", end: "12:00", score: 3}
+```
+
+A window applies to any bundle with an intersecting meeting; touching endpoints
+are legal. Omit `semester` to apply it to every term. Positive time preference
+scores favor a bundle, negative scores discourage it, and matching windows add.
+Each window contributes once per bundle even if several meetings intersect it.
+`teaching_load` counts sections, while daily teaching load uses minutes.
 
 ## Flag defaults
 
@@ -125,20 +199,39 @@ professor or course overrides the declared default. Note that a
 including ones that previously had no preference — so only declare it when
 that is what you mean.
 
-## Courses
+## Courses and inherited defaults
 
 ```yaml
-BIO101:
-  preferred_class_length: single
-  penalise_friday_night: true
-  sections:
-    - id: BIO101-1
-      semester: Fall
-      time_of_day: Morning
-      students: 72
+course_defaults:
+  semester: Fall
+  meeting_patterns: [standard]
+  formats:
+    - {meetings: 2, minutes_each: 75}
+courses:
+  BIO101:
+    sections:
+      - id: BIO101-1
+        students: 72
+      - id: BIO101-2
+        students: 30
+        meeting_patterns: [evening]
+        formats:
+          - {meetings: 1, minutes_each: 150}
 ```
 
-Section IDs must be unique. Semesters and time-of-day names must already exist.
+Define every referenced pool, including `evening` in this illustration.
+`meeting_patterns`, `formats`, `semester`, and `time_of_day` inherit from
+`course_defaults` to course to section; the closest value replaces the inherited
+value. Pool lists select eligible bundles; `formats` further restricts them to
+acceptable teaching structures. These are hard requirements. Empty candidate
+sets produce a validation error.
+
+Without a pool selection all pools are eligible. Without `formats` all structures
+in the selected pools are accepted. `time_of_day` defaults to `Any`, allowing
+choices across categories; an explicit category restricts the choices. Semester
+may be omitted only when the instance has one semester or a default supplies it.
+Section IDs must be unique. Courses in different semesters can reuse rooms and
+times without conflicts.
 
 Optional concurrency rules:
 
@@ -168,12 +261,20 @@ programs:
 
 Programs are read and validated, but do not yet affect the schedule.
 
+## Complete or partial schedules
+
+Default mode returns the best available schedule and identifies unscheduled,
+unstaffed, or off-campus sections. Hard conflicts remain forbidden.
+Set top-level `strict: true` (or CLI `--strict`) to require every section to have
+a complete bundle, named professor, and listed room. An impossible strict instance
+is reported as infeasible.
+
 ## Commands
 
 Run from `solver/`:
 
 ```bash
-uv run scheduler solve ../instances/my-university --check
+uv run scheduler solve ../instances/my-university --check --time-limit 30
 uv run scheduler report ../instances/my-university -o instance.html
 uv run scheduler solve ../instances/my-university --time-limit 600
 ```

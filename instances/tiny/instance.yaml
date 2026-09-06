@@ -1,25 +1,8 @@
-# Validate: uv run scheduler solve ../instances/tiny --check
-
-semesters: [Fall]
-
-meeting_times:
-  - id: Mon0900
-    days: {Mon: "09:00"}
-    duration_minutes: 90
-    time_of_day: Day
-  - id: Wed0900
-    days: {Wed: "09:00"}
-    duration_minutes: 90
-    time_of_day: Day
-  - id: Mon1800
-    days: {Mon: "18:00"}
-    duration_minutes: 180
-    time_of_day: Night
-
+semesters:
+- Fall
 classrooms:
   DMS1160: 50
   DMS1150: 40
-
 professors:
   prof_a:
     teaching_load: 2
@@ -29,23 +12,53 @@ professors:
     prefers_packed_days: true
     preferred_class_length: single
     availability:
-      Fall: {Day: 2}
+      Fall:
+        Day: 2
     course_ranks:
       ADM2000: 5
   prof_b:
     teaching_load: 1
-    qualified_for: [ADM1000]
+    qualified_for:
+    - ADM1000
     can_teach_off_campus: true
     prefers_packed_days: true
     course_ranks:
       ADM1000: 3
-
 courses:
   ADM1000:
     preferred_class_length: single
     sections:
-      - {id: "1", semester: Fall, time_of_day: Day, students: 40}
-      - {id: "2", semester: Fall, time_of_day: Day, students: 40}
+    - id: '1'
+      semester: Fall
+      time_of_day: Day
+      students: 40
+    - id: '2'
+      semester: Fall
+      time_of_day: Day
+      students: 40
   ADM2000:
     sections:
-      - {id: "3", semester: Fall, time_of_day: Night, students: 35}
+    - id: '3'
+      semester: Fall
+      time_of_day: Night
+      students: 35
+preset: telfer
+meeting_patterns:
+  day:
+    time_of_day: Day
+    custom:
+      Mon0900:
+      - day: Mon
+        start: 09:00
+        minutes: 90
+      Wed0900:
+      - day: Wed
+        start: 09:00
+        minutes: 90
+  night:
+    time_of_day: Night
+    custom:
+      Mon1800:
+      - day: Mon
+        start: '18:00'
+        minutes: 180

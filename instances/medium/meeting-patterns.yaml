@@ -1,0 +1,112 @@
+morning:
+  time_of_day: Morning
+  custom:
+    Mon0900:
+    - day: Mon
+      start: 09:00
+      minutes: 90
+    Mon1030:
+    - day: Mon
+      start: '10:30'
+      minutes: 90
+    Tue0900:
+    - day: Tue
+      start: 09:00
+      minutes: 90
+    Tue1030:
+    - day: Tue
+      start: '10:30'
+      minutes: 90
+    Wed0900:
+    - day: Wed
+      start: 09:00
+      minutes: 90
+    Wed1030:
+    - day: Wed
+      start: '10:30'
+      minutes: 90
+    Thu0900:
+    - day: Thu
+      start: 09:00
+      minutes: 90
+    Thu1030:
+    - day: Thu
+      start: '10:30'
+      minutes: 90
+    Fri0900:
+    - day: Fri
+      start: 09:00
+      minutes: 90
+    Fri1030:
+    - day: Fri
+      start: '10:30'
+      minutes: 90
+afternoon:
+  time_of_day: Afternoon
+  custom:
+    Mon1200:
+    - day: Mon
+      start: '12:00'
+      minutes: 90
+    Tue1200:
+    - day: Tue
+      start: '12:00'
+      minutes: 90
+    Wed1200:
+    - day: Wed
+      start: '12:00'
+      minutes: 90
+    Thu1200:
+    - day: Thu
+      start: '12:00'
+      minutes: 90
+    Fri1200:
+    - day: Fri
+      start: '12:00'
+      minutes: 90
+evening:
+  time_of_day: Evening
+  custom:
+    Mon1500:
+    - day: Mon
+      start: '15:00'
+      minutes: 90
+    Tue1500:
+    - day: Tue
+      start: '15:00'
+      minutes: 90
+    Wed1500:
+    - day: Wed
+      start: '15:00'
+      minutes: 90
+    Thu1500:
+    - day: Thu
+      start: '15:00'
+      minutes: 90
+    Fri1500:
+    - day: Fri
+      start: '15:00'
+      minutes: 90
+night:
+  time_of_day: Night
+  custom:
+    Mon1800:
+    - day: Mon
+      start: '18:00'
+      minutes: 180
+    Tue1800:
+    - day: Tue
+      start: '18:00'
+      minutes: 180
+    Wed1800:
+    - day: Wed
+      start: '18:00'
+      minutes: 180
+    Thu1800:
+    - day: Thu
+      start: '18:00'
+      minutes: 180
+    Fri1800:
+    - day: Fri
+      start: '18:00'
+      minutes: 180

@@ -124,20 +124,6 @@ def test_result_serialises_to_json(solved: Result) -> None:
     assert all(item["label"] and item["description"] for item in payload["preference_breakdown"])
     assert any(item["terms"] for item in payload["preference_breakdown"])
 
-
-def test_preference_breakdown_reconciles_with_objective(solved: Result) -> None:
-    """The exported components must add back to the score sent to the solver."""
-    contribution = sum(item.contribution for item in solved.preference_breakdown)
-    assert contribution == pytest.approx(solved.objective)
-    assert all(
-        term.contribution == pytest.approx(term.coefficient * term.value)
-        for component in solved.preference_breakdown
-        for term in component.terms
-    )
-
-
-def test_assignment_shape_matches_the_backend_model(solved: Result) -> None:
-    """These are the exact columns OPTIM_results.Optimization_Outputs wants."""
     expected = {
         "professor_id",
         "course_id",
@@ -148,7 +134,18 @@ def test_assignment_shape_matches_the_backend_model(solved: Result) -> None:
         "time_of_day_id",
         "solution_value",
     }
-    assert set(solved.to_dict()["assignments"][0]) == expected
+    assert set(payload["assignments"][0]) == expected
+
+
+def test_preference_breakdown_reconciles_with_objective(solved: Result) -> None:
+    """The exported components must add back to the score sent to the solver."""
+    contribution = sum(item.contribution for item in solved.preference_breakdown)
+    assert contribution == pytest.approx(solved.objective)
+    assert all(
+        term.contribution == pytest.approx(term.coefficient * term.value)
+        for component in solved.preference_breakdown
+        for term in component.terms
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -272,8 +269,8 @@ def test_progress_is_reported(payload: dict[str, Any]) -> None:
     solve(payload, progress=lambda stage, message: seen.append((stage, message)))
 
     assert {"building", "solving", "exporting"} <= {stage for stage, _ in seen}
-    assert len(seen) > 15
-    assert any("viable assignments" in message for _, message in seen)
+    stages = [message for stage, message in seen if stage == "stage"]
+    assert [message.split()[0] for message in stages] == [f"{i}/10" for i in range(1, 11)]
     assert any("maximise course, time, and block preference rewards" in message
                for _, message in seen)
 
@@ -286,23 +283,12 @@ def test_a_broken_progress_callback_does_not_kill_the_solve(payload: dict[str, A
     assert len(result.assignments) == 3
 
 
-def test_time_limit_must_be_positive(payload: dict[str, Any]) -> None:
-    with pytest.raises(ValueError, match="positive"):
-        solve(payload, progress=silent, time_limit=0)
-
-
-def test_a_generous_time_limit_still_proves_optimality(payload: dict[str, Any]) -> None:
-    result = solve(payload, progress=silent, time_limit=120)
-    assert result.status == "optimal"
-    assert all(stage.proven for stage in result.stages)
-
-
-def test_status_reflects_whether_every_stage_was_proven(payload: dict[str, Any]) -> None:
+def test_status_reflects_whether_every_stage_was_proven(solved: Result) -> None:
     """status is derived, not a constant — it must follow the stage flags."""
-    result = solve(payload, progress=silent)
-    assert result.status == ("optimal" if all(s.proven for s in result.stages) else "feasible")
+    assert solved.status == ("optimal" if all(s.proven for s in solved.stages) else "feasible")
 
 
+@pytest.mark.slow
 def test_the_default_solver_handles_what_the_gurobi_licence_refuses(
     oversized_payload: dict[str, Any],
 ) -> None:

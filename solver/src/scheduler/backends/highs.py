@@ -20,11 +20,16 @@ import numpy as np
 
 from ..errors import SolverError
 from ..model.program import LinearExpr, Program, Row, Sense, VarKind
-from .base import Outcome, SolutionStatus
+from .base import Outcome, SolutionStatus, finite_or_none
 
 __all__ = ["HighsBackend"]
 
 _HIGHS_INFINITY = highspy.kHighsInf
+
+# On Telfer's 780k-column model, presolve alone exceeded a 30-second
+# budget without improving the seed. Keep presolve for smaller models and
+# longer searches; skip it for large, short searches with an incumbent.
+_SHORT_SEARCH_COLUMNS = 100_000
 
 
 class HighsBackend:
@@ -43,6 +48,7 @@ class HighsBackend:
         self._highs.setOptionValue("threads", threads)
         self._highs.setOptionValue("random_seed", seed)
         self._columns = 0
+        self._is_mip = False
         self._start: list[float] = []
 
     # -- construction ---------------------------------------------------- #
@@ -64,6 +70,7 @@ class HighsBackend:
             for index, variable in enumerate(program.variables)
             if variable.kind in (VarKind.INTEGER, VarKind.BINARY)
         ]
+        self._is_mip = bool(integral)
         if integral:
             highs.changeColsIntegrality(
                 len(integral),
@@ -108,6 +115,7 @@ class HighsBackend:
     def optimise(
         self, objective: LinearExpr, *, maximise: bool, gap: float, time_limit: float | None
     ) -> Outcome:
+        started = time.perf_counter()
         highs = self._highs
 
         costs = np.zeros(self._columns, dtype=np.float64)
@@ -120,7 +128,13 @@ class HighsBackend:
             highspy.ObjSense.kMaximize if maximise else highspy.ObjSense.kMinimize
         )
         highs.setOptionValue("mip_rel_gap", gap)
-        highs.setOptionValue("time_limit", time_limit if time_limit else _HIGHS_INFINITY)
+        short_search = (
+            self._columns >= _SHORT_SEARCH_COLUMNS
+            and time_limit is not None
+            and time_limit <= 30.0
+            and bool(self._start)
+        )
+        highs.setOptionValue("presolve", "off" if short_search else "choose")
 
         if self._start:
             highs.setSolution(
@@ -129,7 +143,17 @@ class HighsBackend:
                 np.array(self._start, dtype=np.float64),
             )
 
-        started = time.perf_counter()
+        # Large short runs can spend several seconds returning/postsolving an
+        # incumbent after the internal limit expires. Reserve 20% for that
+        # overhead, and charge objective/warm-start setup to the same budget.
+        # This reduces overruns; the native solver still has no hard deadline.
+        search_limit = _HIGHS_INFINITY
+        if time_limit is not None:
+            search_limit = max(
+                0.0, time_limit * (0.8 if short_search else 1.0)
+                - (time.perf_counter() - started),
+            )
+        highs.setOptionValue("time_limit", search_limit)
         highs.run()
         elapsed = time.perf_counter() - started
 
@@ -148,7 +172,15 @@ class HighsBackend:
             if model_status == highspy.HighsModelStatus.kOptimal
             else SolutionStatus.FEASIBLE
         )
-        return Outcome(status, objective_value, values, elapsed, label)
+        bound = (
+            finite_or_none(info.mip_dual_bound) if self._is_mip
+            else objective_value if status is SolutionStatus.OPTIMAL else None
+        )
+        relative_gap = (
+            finite_or_none(info.mip_gap) if self._is_mip
+            else 0.0 if status is SolutionStatus.OPTIMAL else None
+        )
+        return Outcome(status, objective_value, values, elapsed, label, bound, relative_gap)
 
     def close(self) -> None:
         self._highs.clear()

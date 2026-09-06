@@ -1,6 +1,5 @@
 """Reject output collisions before opening logs or invoking a solver."""
 
-import json
 from pathlib import Path
 from typing import Any
 
@@ -58,11 +57,12 @@ def test_split_fragment_cannot_be_overwritten(tmp_path: Path, directory_input: b
 
 
 def test_cli_rejects_input_output_collision_before_solving(
-    tmp_path: Path, payload: dict[str, Any], monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    source = tmp_path / "input.json"
-    original = json.dumps(payload)
+    source = tmp_path / "input.yaml"
+    template = Path(__file__).parents[2] / "instances" / "tiny" / "instance.yaml"
+    original = template.read_text()
     source.write_text(original)
 
     def forbidden(*args: Any, **kwargs: Any) -> None:

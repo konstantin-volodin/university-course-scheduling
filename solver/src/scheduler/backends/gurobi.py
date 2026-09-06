@@ -17,7 +17,7 @@ from typing import Any
 
 from ..errors import SolverError
 from ..model.program import LinearExpr, Program, Row, Sense, VarKind
-from .base import Outcome, SolutionStatus
+from .base import Outcome, SolutionStatus, finite_or_none
 
 __all__ = ["GurobiBackend"]
 
@@ -128,7 +128,19 @@ class GurobiBackend:
             else SolutionStatus.FEASIBLE
         )
         values = [float(v.X) for v in self._vars]
-        return Outcome(status, float(self._model.ObjVal), values, elapsed)
+        objective_value = float(self._model.ObjVal)
+        bound = (
+            finite_or_none(self._model.ObjBound, gp.GRB.INFINITY) if self._model.IsMIP
+            else objective_value if status is SolutionStatus.OPTIMAL else None
+        )
+        relative_gap = (
+            finite_or_none(self._model.MIPGap, gp.GRB.INFINITY) if self._model.IsMIP
+            else 0.0 if status is SolutionStatus.OPTIMAL else None
+        )
+        return Outcome(
+            status, objective_value, values, elapsed,
+            best_bound=bound, relative_gap=relative_gap,
+        )
 
     def close(self) -> None:
         self._model.dispose()

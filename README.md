@@ -1,7 +1,11 @@
 # University Course Scheduling
 
-This repository contains a mixed-integer programming (MIP) model for producing a 2020
-Telfer course schedule. See the [model manuscript](solver/model/manuscript.pdf).
+A mixed-integer programming scheduler for faculty, rooms, and weekly meeting bundles.
+Start with the [editable template](instances/template/instance.yaml) and
+[input guide](instances/README.md). Telfer rules are an explicit institution preset.
+
+The [formulation manuscript source](solver/model/manuscript.tex) can be built with
+`bash solver/model/build.sh`; the generated PDF is not versioned.
 
 The full input is defined in [`instances/telfer/`](instances/telfer/). Smaller examples are
 available in [`instances/`](instances/).

@@ -7,6 +7,8 @@ import json
 import math
 import sys
 from collections.abc import Sequence
+from contextlib import nullcontext
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
@@ -14,8 +16,8 @@ from . import __version__
 from .backends import BACKENDS, DEFAULT_BACKEND
 from .config import Instance
 from .errors import InvalidInstanceError, SchedulerError
-from .progress import ProgressCallback, TeeProgress, TerminalProgress, silent, to_stderr
-from .solve import solve_instance
+from .progress import format_line, to_stderr
+from .solve import Result, solve_instance
 
 __all__ = ["main"]
 
@@ -44,7 +46,6 @@ def _write(text: str, output: str | Path | None) -> None:
         Path(output).write_text(text, encoding="utf-8")
     except OSError as exc:
         raise SchedulerError(f"{output}: {exc.strerror}") from exc
-    print(f"wrote {output}", file=sys.stderr)
 
 
 def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Path] | None:
@@ -76,7 +77,7 @@ def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Pat
         if source.is_dir():
             source = source / "instance.yaml"
         inputs = {source.resolve()}
-        if source.suffix.lower() in {".yaml", ".yml"}:
+        if source.is_file():
             import yaml
 
             manifest = yaml.safe_load(source.read_text(encoding="utf-8"))
@@ -104,47 +105,36 @@ def _as_json(payload: Any) -> str:
 
 
 def _read_instance(path: str) -> Any:
-    """A YAML file or directory is config; anything else is legacy JSON."""
+    """Read the editable YAML schema from a file, directory, or stdin."""
+    from .config import load as load_config
+    from .config import loads as load_config_text
+
     if path == "-":
-        raw = sys.stdin.read()
-        try:
-            return json.loads(raw)
-        except json.JSONDecodeError:
-            from .config import loads as load_config_text
-
-            return load_config_text(raw)
-    config_path = Path(path)
-    if config_path.is_dir() or path.lower().endswith((".yaml", ".yml")):
-        from .config import load as load_config
-
-        return load_config(config_path)
-    return _read_json(path)
+        return load_config_text(sys.stdin.read())
+    return load_config(Path(path))
 
 
 def _cmd_solve(args: argparse.Namespace) -> int:
     payload = _read_instance(args.instance)
     instance = Instance.from_payload(payload)
+    if getattr(args, "strict", False):
+        instance = replace(instance, strict=True)
     if args.check:
         print(f"instance is valid: {instance.summary()}", file=sys.stderr)
         return 0
 
     outputs = _solve_output_paths(args)
-    live_reporter = silent if args.quiet else (
-        TerminalProgress() if sys.stderr.isatty() else to_stderr
-    )
-    log_file = None
-    if outputs is not None:
-        log_file = (outputs[0].with_name("solve.log")).open("w", encoding="utf-8")
-        reporter: ProgressCallback = TeeProgress(live_reporter, log_file)
-    else:
-        reporter = live_reporter
-    try:
+    log_path = outputs[0].with_name("solve.log") if outputs and args.verbose else None
+    with log_path.open("w", encoding="utf-8") if log_path else nullcontext() as log_file:
+        def reporter(stage: str, message: str) -> None:
+            if log_file is not None:
+                print(format_line(stage, message), file=log_file, flush=True)
+            if not args.quiet:
+                to_stderr(stage, message)
+
         result = solve_instance(
             instance, reporter, time_limit=args.time_limit, solver=args.solver
         )
-    finally:
-        if log_file is not None:
-            log_file.close()
     payload_result = result.to_dict()
     if outputs is None:
         _write(_as_json(payload_result), None)
@@ -158,20 +148,24 @@ def _cmd_solve(args: argparse.Namespace) -> int:
         _write(objective_markdown(payload_result), objective_path)
 
     if result.unscheduled:
-        print(
-            f"warning: incomplete timetable: {len(result.unscheduled)} of "
+        to_stderr(
+            "warning", f"incomplete timetable: {len(result.unscheduled)} of "
             f"{len(result.assignments)} sections have no timeslot. Solver feasibility "
             "allows unscheduled placeholders; it does not mean the timetable is ready to use.",
-            file=sys.stderr,
         )
     if not args.quiet:
-        print(
-            f"\n{result.status} via {result.solver}: {len(result.assignments)} assignments "
+        to_stderr(
+            "finished",
+            f"{result.status} via {result.solver}: {len(result.assignments)} assignments "
             f"({len(result.unstaffed)} unstaffed, "
             f"{len(result.unscheduled)} unscheduled, "
             f"{len(result.off_campus)} off campus)",
-            file=sys.stderr,
         )
+        if outputs:
+            to_stderr("output", f"Schedule: {outputs[1]}")
+            to_stderr("output", f"Results: {outputs[0]}")
+        if log_path:
+            to_stderr("output", f"Diagnostics: {log_path}")
     return 0
 
 
@@ -186,6 +180,8 @@ def _cmd_report(args: argparse.Namespace) -> int:
     else:
         result = _read_json(args.result)
         _write(schedule_page(payload, result, title=args.title or "Solved Schedule"), args.output)
+    if args.output:
+        print(f"wrote {args.output}", file=sys.stderr)
     return 0
 
 
@@ -207,15 +203,24 @@ def build_parser() -> argparse.ArgumentParser:
     solve_cmd = subcommands.add_parser("solve", help="solve an instance")
     solve_cmd.add_argument(
         "instance",
-        help="split-instance directory, YAML/JSON file, or - for stdin",
+        help="split-instance directory, YAML file, or - for stdin",
     )
     solve_cmd.add_argument(
         "-o", "--output", metavar="PATH",
         help="override the result JSON path (HTML reports are written beside it)",
     )
-    solve_cmd.add_argument("-q", "--quiet", action="store_true", help="no progress output")
+    logging = solve_cmd.add_mutually_exclusive_group()
+    logging.add_argument("-q", "--quiet", action="store_true", help="warnings and errors only")
+    logging.add_argument(
+        "-v", "--verbose", action="store_true",
+        help="show diagnostic details and write solve.log beside file outputs",
+    )
     solve_cmd.add_argument(
         "--check", action="store_true", help="validate the instance and stop without solving"
+    )
+    solve_cmd.add_argument(
+        "--strict", action="store_true",
+        help="require every section to have a meeting pattern, named professor, and listed room",
     )
     solve_cmd.add_argument(
         "--solver", choices=BACKENDS, default=DEFAULT_BACKEND,
@@ -235,7 +240,7 @@ def build_parser() -> argparse.ArgumentParser:
         "report", help="render an instance, or a solved schedule, as an HTML page"
     )
     report_cmd.add_argument(
-        "instance", help="split-instance directory, .yaml config, or legacy JSON instance"
+        "instance", help="split-instance directory, YAML file, or - for stdin"
     )
     report_cmd.add_argument(
         "--result", help="a result JSON; without it the page shows the inputs instead"

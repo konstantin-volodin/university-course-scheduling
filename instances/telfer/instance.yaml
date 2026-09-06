@@ -1,9 +1,16 @@
-semesters: [Summer, Fall, Winter]
-professor_defaults: {can_teach_night: true, can_teach_off_campus: true}
-course_defaults: {penalise_friday_night: true}
+semesters:
+- Summer
+- Fall
+- Winter
+professor_defaults:
+  can_teach_night: true
+  can_teach_off_campus: true
+course_defaults:
+  penalise_friday_night: true
 files:
-  meeting_times: meeting-times.yaml
   classrooms: classrooms.yaml
   professors: professors.yaml
   courses: courses.yaml
   course_concurrency: course-concurrency.yaml
+  meeting_patterns: meeting-patterns.yaml
+preset: telfer

@@ -1,7 +1,6 @@
 """Configuration loading and validated scheduling inputs."""
 
 from .instance import (
-    BIG_M,
     BLOCK_WEIGHTS,
     LARGE_SECTION,
     MIN_ROOM_FILL,
@@ -15,9 +14,9 @@ from .instance import (
     placeholder_for,
 )
 from .loader import load, loads
+from .patterns import Meeting, MeetingPattern
 
 __all__ = [
-    "BIG_M",
     "BLOCK_WEIGHTS",
     "LARGE_SECTION",
     "MIN_ROOM_FILL",
@@ -26,6 +25,8 @@ __all__ = [
     "PAYLOAD_KEYS",
     "PLACEHOLDER_PREFIX",
     "Instance",
+    "Meeting",
+    "MeetingPattern",
     "SectionKey",
     "is_placeholder",
     "load",

@@ -3,17 +3,16 @@
 from __future__ import annotations
 
 import itertools
-import re
 from difflib import get_close_matches
 from pathlib import Path
 from typing import Any
 
 from ..errors import InvalidInstanceError, SchedulerError
+from .normalize import normalize
 
 __all__ = ["load", "loads"]
 
 LENGTH_HOURS = {"single": "1.5", "double": "3.0"}
-MINUTES_TO_LENGTH = {90: "single", 180: "double"}
 
 
 def _check_unknown_fields(
@@ -37,160 +36,6 @@ def _import_yaml() -> Any:
     return yaml
 
 
-def _derive_overlaps(
-    slots: list[str], days_of: dict[str, set[str]], tod_of: dict[str, str]
-) -> set[tuple[str, str]]:
-    return {
-        tuple(sorted((a, b)))  # type: ignore[misc]
-        for a, b in itertools.combinations(slots, 2)
-        if days_of[a] & days_of[b] and tod_of[a] == tod_of[b]
-    }
-
-
-def _expand_meeting_times(cfg: dict[str, Any]) -> dict[str, Any]:
-    """Convert meeting times to the internal grouped shape."""
-    problems: list[str] = []
-    _check_unknown_fields(
-        "config",
-        cfg,
-        {
-            "semesters",
-            "meeting_times",
-            "minimum_room_fill",
-            "classrooms",
-            "professors",
-            "courses",
-            "course_concurrency",
-            "professor_defaults",
-            "course_defaults",
-            "programs",
-        },
-        problems,
-    )
-    semesters = cfg.get("semesters")
-    meetings = cfg.get("meeting_times")
-    if not isinstance(semesters, list) or not semesters:
-        problems.append("semesters: expected a non-empty list")
-        semesters = []
-    if not isinstance(meetings, list) or not meetings:
-        problems.append("meeting_times: expected a non-empty list")
-        meetings = []
-
-    timeslots: list[dict[str, Any]] = []
-    intervals: list[tuple[str, str, int, int]] = []
-    days_seen: list[str] = []
-    periods_seen: list[str] = []
-    lengths_seen: list[str] = []
-    ids_seen: set[str] = set()
-
-    allowed = {"id", "days", "duration_minutes", "time_of_day"}
-    for index, meeting in enumerate(meetings):
-        where = f"meeting_times[{index}]"
-        if not isinstance(meeting, dict):
-            problems.append(f"{where}: expected a mapping")
-            continue
-        _check_unknown_fields(where, meeting, allowed, problems)
-        for key in allowed:
-            if key not in meeting:
-                problems.append(f"{where}: missing {key!r}")
-        if not allowed <= set(meeting):
-            continue
-
-        slot_id = str(meeting["id"])
-        if slot_id in ids_seen:
-            problems.append(f"{where}.id: duplicate meeting time id {slot_id!r}")
-        ids_seen.add(slot_id)
-
-        schedule = meeting["days"]
-        if (
-            not isinstance(schedule, dict)
-            or not schedule
-            or not all(isinstance(day, str) for day in schedule)
-        ):
-            problems.append(
-                f"{where}.days: expected day-to-start mappings such as "
-                "{Mon: '09:00', Wed: '09:00'}"
-            )
-            continue
-        period = meeting["time_of_day"]
-        if not isinstance(period, str) or not period:
-            problems.append(f"{where}.time_of_day: expected a name")
-            continue
-
-        raw_duration = meeting["duration_minutes"]
-        if isinstance(raw_duration, bool) or raw_duration not in MINUTES_TO_LENGTH:
-            problems.append(
-                f"{where}.duration_minutes: expected 90 or 180, got {raw_duration!r}"
-            )
-            continue
-        duration = int(raw_duration)
-        starts: dict[str, int] = {}
-        for day, raw_start in schedule.items():
-            match = (
-                re.fullmatch(r"([01]?\d|2[0-3]):([0-5]\d)", raw_start)
-                if isinstance(raw_start, str)
-                else None
-            )
-            if match is None:
-                problems.append(
-                    f"{where}.days.{day}: expected a quoted 24-hour time such as '09:00'"
-                )
-                continue
-            start = int(match.group(1)) * 60 + int(match.group(2))
-            if start + duration > 24 * 60:
-                problems.append(f"{where}.days.{day}: meeting cannot continue past midnight")
-                continue
-            starts[day] = start
-        if len(starts) != len(schedule):
-            continue
-
-        length = MINUTES_TO_LENGTH[duration]
-        days = list(schedule)
-        for day in days:
-            if day not in days_seen:
-                days_seen.append(day)
-        if period not in periods_seen:
-            periods_seen.append(period)
-        if length not in lengths_seen:
-            lengths_seen.append(length)
-        timeslots.append(
-            {"days": days, "length": length, "slots": {period: [slot_id]}}
-        )
-        intervals.extend((slot_id, day, start, start + duration) for day, start in starts.items())
-
-    overlap_pairs = {
-        tuple(sorted((first_id, second_id)))
-        for (first_id, first_day, first_start, first_end),
-        (second_id, second_day, second_start, second_end) in itertools.combinations(intervals, 2)
-        if first_id != second_id
-        and first_day == second_day
-        and max(first_start, second_start) < min(first_end, second_end)
-    }
-    overlaps = [list(pair) for pair in sorted(overlap_pairs)]
-    if problems:
-        raise InvalidInstanceError(problems)
-
-    expanded = {
-        "calendar": {
-            "semesters": semesters,
-            "days": days_seen,
-            "times_of_day": periods_seen,
-            "class_lengths": lengths_seen,
-        },
-        "timeslots": timeslots,
-        "overlapping_timeslots": overlaps,
-        "classrooms": cfg.get("classrooms"),
-        "professors": cfg.get("professors"),
-        "courses": cfg.get("courses"),
-    }
-    if "course_concurrency" in cfg:
-        expanded["course_concurrency"] = cfg["course_concurrency"]
-    for optional_key in ("professor_defaults", "course_defaults", "programs", "minimum_room_fill"):
-        if optional_key in cfg:
-            expanded[optional_key] = cfg[optional_key]
-    return expanded
-
-
 def loads(text: str) -> dict[str, Any]:
     """Parse YAML into the flat model payload."""
     yaml = _import_yaml()
@@ -201,9 +46,7 @@ def loads(text: str) -> dict[str, Any]:
         raise InvalidInstanceError([f"invalid YAML: {exc}"]) from exc
     if not isinstance(cfg, dict):
         raise InvalidInstanceError(["config must be a mapping of sections"])
-    if "meeting_times" in cfg:
-        cfg = _expand_meeting_times(cfg)
-
+    cfg, metadata = normalize(cfg)
     missing = [k for k in ("calendar", "timeslots", "classrooms", "professors", "courses")
                if k not in cfg]
     if missing:
@@ -304,8 +147,6 @@ def loads(text: str) -> dict[str, Any]:
     dow: list[list[str]] = []
     tod: list[list[str]] = []
     blk: list[list[Any]] = []  # slot id + block length, which YAML may give as a number
-    days_of: dict[str, set[str]] = {}
-    tod_of: dict[str, str] = {}
     timeslot_patterns = cfg["timeslots"]
     if not isinstance(timeslot_patterns, list):
         problems.append(f"timeslots: expected a list, got {type(timeslot_patterns).__name__}")
@@ -340,15 +181,13 @@ def loads(text: str) -> dict[str, Any]:
                 slots.append(sid)
                 tod.append([sid, time_name])
                 blk.append([sid, hours])
-                days_of[sid] = set(days)
-                tod_of[sid] = time_name
                 dow.extend([sid, day] for day in days)
 
     overlaps = cfg.get("overlapping_timeslots")
     pairs = (
         [list(p) for p in overlaps]
         if overlaps is not None
-        else [list(p) for p in sorted(_derive_overlaps(slots, days_of, tod_of))]
+        else []
     )
 
     classrooms = cfg["classrooms"]
@@ -400,7 +239,9 @@ def loads(text: str) -> dict[str, Any]:
         )
         if course_length_pref is not None:
             course_length.append(
-                [course, hours_of.get(course_length_pref, course_length_pref)]
+                [course, hours_of.get(
+                    course_length_pref, LENGTH_HOURS.get(course_length_pref, course_length_pref)
+                )]
             )
         raw_sections = spec.get("sections") or []
         if not isinstance(raw_sections, list):
@@ -488,7 +329,9 @@ def loads(text: str) -> dict[str, Any]:
         )
         if prof_length_pref is not None:
             prof_length.append(
-                [prof, hours_of.get(prof_length_pref, prof_length_pref)]
+                [prof, hours_of.get(
+                    prof_length_pref, LENGTH_HOURS.get(prof_length_pref, prof_length_pref)
+                )]
             )
         qualified = spec.get("qualified_for", "all")
         if qualified != "all" and not isinstance(qualified, list):
@@ -632,6 +475,7 @@ def loads(text: str) -> dict[str, Any]:
     }
     if "minimum_room_fill" in cfg:
         payload["minimum_room_fill"] = cfg["minimum_room_fill"]
+    payload.update(metadata)
     return payload
 
 
@@ -655,7 +499,7 @@ def load(path: Any) -> dict[str, Any]:
 
     allowed_manifest = {
         "semesters", "files", "professor_defaults", "course_defaults", "programs",
-        "minimum_room_fill",
+        "minimum_room_fill", "preset", "policy", "strict", "meeting_patterns",
     }
     problems = [
         f"instance.yaml: unknown field {key!r}"
@@ -663,13 +507,16 @@ def load(path: Any) -> dict[str, Any]:
         if key not in allowed_manifest
     ]
     files = manifest.get("files")
-    required = {"meeting_times", "classrooms", "professors", "courses"}
+    required = {"classrooms", "professors", "courses"}
     if not isinstance(files, dict):
         problems.append("instance.yaml.files: expected a mapping")
         files = {}
+    if "meeting_patterns" not in files and "meeting_patterns" not in manifest:
+        problems.append("instance.yaml.files: missing meeting_patterns")
     for key in sorted(required - set(files)):
         problems.append(f"instance.yaml.files: missing {key!r}")
-    for key in sorted(set(files) - required - {"course_concurrency", "programs"}):
+    optional_files = {"course_concurrency", "programs", "meeting_patterns"}
+    for key in sorted(set(files) - required - optional_files):
         problems.append(f"instance.yaml.files: unknown entry {key!r}")
     if problems:
         raise InvalidInstanceError(problems)
@@ -686,7 +533,9 @@ def load(path: Any) -> dict[str, Any]:
                 f"instance.yaml.files.{key}: expected a file path or non-empty list of paths"
             )
             continue
-        mapping_kind = key in {"classrooms", "professors", "courses", "programs"}
+        mapping_kind = key in {
+            "classrooms", "professors", "courses", "programs", "meeting_patterns",
+        }
         merged: Any = {} if mapping_kind else []
         for relative_path in paths:
             fragment_path = source.parent / relative_path
@@ -719,11 +568,15 @@ def load(path: Any) -> dict[str, Any]:
 
     combined = {
         "semesters": manifest.get("semesters"),
-        "meeting_times": fragments.get("meeting_times"),
         "classrooms": fragments.get("classrooms"),
         "professors": fragments.get("professors"),
         "courses": fragments.get("courses"),
     }
+    if "meeting_patterns" in fragments:
+        combined["meeting_patterns"] = fragments["meeting_patterns"]
+    for key in ("preset", "policy", "strict", "meeting_patterns"):
+        if key in manifest:
+            combined[key] = manifest[key]
     if "course_concurrency" in fragments:
         combined["course_concurrency"] = fragments["course_concurrency"]
     if "programs" in fragments:

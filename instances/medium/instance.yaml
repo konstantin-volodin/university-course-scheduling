@@ -1,7 +1,10 @@
-semesters: [Fall, Winter]
+semesters:
+- Fall
+- Winter
 files:
-  meeting_times: meeting-times.yaml
   classrooms: classrooms.yaml
   professors: professors.yaml
   courses: courses.yaml
   course_concurrency: course-concurrency.yaml
+  meeting_patterns: meeting-patterns.yaml
+preset: telfer

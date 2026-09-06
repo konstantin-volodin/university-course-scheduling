@@ -1,0 +1,42 @@
+# Copy this directory, then edit course, professor and room names.
+# Every meeting repeats weekly throughout its semester. Quote clock times.
+semesters: [Fall]
+preset: general
+
+meeting_patterns:
+  standard:
+    generate:
+      formats:
+        - meetings: 2
+          minutes_each: 75
+          day_combinations:
+            - [Mon, Thu]
+            - [Tue, Fri]
+      start_times: ["09:00", "10:30", "13:00"]
+      finish_by: "17:00"
+      same_start: false  # Each day can use a different permitted start.
+
+course_defaults:
+  semester: Fall
+  meeting_patterns: [standard]
+
+classrooms:
+  MAIN-101: 40  # Maximum number of students.
+
+professors:
+  jordan-smith:
+    teaching_load: 1  # Number of sections, not hours.
+    qualified_for: [BIO101]
+    unavailable:
+      - days: [Fri]
+        start: "13:00"
+        end: "17:00"
+
+courses:
+  BIO101:
+    sections:
+      - id: BIO101-1
+        students: 30
+
+# strict: true requires all sections to use named professors and listed rooms.
+# Otherwise the result clearly reports any staffing, room or schedule fallbacks.

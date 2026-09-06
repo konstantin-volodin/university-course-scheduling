@@ -185,3 +185,58 @@ td.cell.empty{background:repeating-linear-gradient(135deg,transparent 0 7px,#EDE
   .bar .nm{text-align:left}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Timetable: compact context, then a week ordered by meeting start time. */
+.schedule-page{max-width:1500px}
+.schedule-page header{padding:28px 28px 24px;border-radius:12px 12px 0 0}
+.schedule-page h1{font-size:clamp(1.8rem,3.2vw,2.7rem);max-width:none;margin:0 0 10px}
+.schedule-page .eyebrow{margin-bottom:12px}
+.schedule-intro{font-size:15px;color:var(--muted);margin:0}
+.schedule-page .stats{border-radius:0 0 12px 12px;overflow:hidden}
+.schedule-page .stat{padding:18px 24px;flex-basis:130px}
+.schedule-page .stat .n{font-size:27px}
+.schedule-page .stat .l{font-size:10px;padding-top:7px;letter-spacing:.06em}
+.schedule-page .stat.pt{box-shadow:none}
+.schedule-page .controls{gap:16px 24px;margin:26px 0 12px}
+.schedule-page .seg{border-radius:7px;overflow:hidden}
+.schedule-page .seg button{font-size:13px;padding:7px 11px}
+.schedule-page .count{flex-basis:100%;font-size:13px;padding:0}
+.schedule-page .semesterstats{margin:0 0 10px}
+.schedule-page .gridwrap{border-radius:10px;max-height:75vh;box-shadow:0 4px 20px #2d2d2c06}
+.schedule-page .gridwrap table{table-layout:fixed;min-width:900px}
+.schedule-page thead th{background:#faf9f7;padding:15px 12px;font-size:12px;color:var(--ink)}
+.schedule-page td.cell{padding:10px;min-width:0}
+.schedule-page .clock-label{width:80px;font-size:13px;font-weight:500;
+  font-variant-numeric:tabular-nums;padding:15px 12px;background:#faf9f7;letter-spacing:0}
+.schedule-page .clock-empty{background:#fdfcfb}
+.course-stack{display:flex;flex-direction:column;gap:8px}
+.schedule-page .course-card{display:flex;flex-direction:column;align-items:flex-start;gap:4px;
+  width:100%;padding:12px;border-radius:7px;border:1px solid transparent;
+  border-left:4px solid var(--course-color);background:var(--course-wash);
+  font-family:inherit;text-align:left;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
+.course-card .card-course{font-size:15px;font-weight:700;color:var(--course-color)}
+.course-card .card-time{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.course-card .card-room{font-size:12px;color:var(--muted);margin-top:3px}
+.course-card .card-professor{font-size:11px;color:var(--muted)}
+.schedule-page .course-card:hover{border-color:var(--course-color)}
+.schedule-page .course-card.sel{outline:2px solid var(--course-color);outline-offset:1px}
+.schedule-page .course-card.pt{border-left-style:dashed}
+.schedule-page .detail{margin-top:16px;border-radius:8px;box-shadow:0 -4px 20px #2d2d2c0a}
+.schedule-page .legend{font-size:12px;gap:16px}
+.schedule-page .solver-details{margin-top:28px;font-size:13px;color:var(--muted)}
+.solver-details summary{cursor:pointer;font-size:14px;font-weight:600;padding:12px 0}
+.solver-details .panel{overflow:auto;padding:16px}
+@media(max-width:650px){
+  .schedule-page header{padding:20px}
+  .schedule-page .stat{padding:14px;flex-basis:33%}
+  .schedule-page .controls{gap:12px}
+  .schedule-page .seg button{padding:8px}
+  .schedule-page .detail{max-height:45vh;overflow:auto;gap:12px 24px}
+}
+@media print{
+  .schedule-page .controls,.schedule-page .solver-details,.schedule-page .detail{display:none}
+  .schedule-page .gridwrap{max-height:none;overflow:visible}
+  .schedule-page .gridwrap table{min-width:0}
+  .schedule-page .grp .chip.over{display:flex}
+  .schedule-page .more{display:none}
+}

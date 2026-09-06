@@ -17,9 +17,15 @@ def test_nonpreferred_courses_can_be_required_for_a_legal_timetable(qualificatio
     payload = config.loads(
         f"""
 semesters: [Fall]
-meeting_times:
-  - {{id: AM, days: {{Mon: '09:00'}}, duration_minutes: 90, time_of_day: Morning}}
-  - {{id: PM, days: {{Mon: '13:00'}}, duration_minutes: 90, time_of_day: Afternoon}}
+meeting_patterns:
+  morning:
+    time_of_day: Morning
+    custom:
+      AM: [{{day: Mon, start: '09:00', minutes: 90}}]
+  afternoon:
+    time_of_day: Afternoon
+    custom:
+      PM: [{{day: Mon, start: '13:00', minutes: 90}}]
 classrooms: {{R1: 30, R2: 30}}
 professors:
   p1: {{{qualification} teaching_load: 2, course_ranks: {{C1: 5, C2: 4}}}}

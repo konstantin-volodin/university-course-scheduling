@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, Literal
 
 from ..backends import DEFAULT_BACKEND
 
@@ -30,12 +30,20 @@ class Assignment:
 
 @dataclass(frozen=True, slots=True)
 class Stage:
-    """The result and duration of one lexicographic solve stage."""
+    """The result and duration of one lexicographic solve stage.
+
+    ``proven`` records backend-reported optimality under the configured gap and
+    numerical tolerances, not necessarily an exact mathematical optimum, or an
+    attained objective lower bound. ``optimality_source`` distinguishes them.
+    """
 
     name: str
     value: float
     seconds: float
     proven: bool
+    optimality_source: Literal["backend", "lower_bound"] = "backend"
+    best_bound: float | None = None
+    relative_gap: float | None = None
 
 
 @dataclass(frozen=True, slots=True)

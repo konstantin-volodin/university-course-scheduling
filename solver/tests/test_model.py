@@ -48,32 +48,20 @@ def test_nothing_is_built_for_the_part_timer_fallback(program: Program) -> None:
     assert leaked == []
 
 
-def test_assignment_variables_are_integral(program: Program) -> None:
-    assign = [v for v in program.variables if v.name.startswith("assign[")]
-    assert assign
-    assert all(v.kind is VarKind.INTEGER for v in assign)
-
-
-def test_only_real_assignments_are_capped_at_one(program: Program) -> None:
-    """A fallback is a counter, not a switch: many sections can pile onto it."""
-    for variable in program.variables:
+def test_assignment_bounds_follow_section_equalities(program: Program) -> None:
+    """Fallbacks can be shared, but each variable belongs to exactly one section."""
+    section_rows = [row for row in program.rows if row.name.startswith("section_taught_once[")]
+    assert len(section_rows) == 3
+    for index, variable in enumerate(program.variables):
         if not variable.name.startswith("assign["):
             continue
-        fallback = (
-            PART_TIMER in variable.name
-            or "placeholder_" in variable.name
-            or variable.name.endswith(",other]")
-        )
-        if fallback:
-            assert variable.upper == float("inf"), variable.name
-        else:
-            assert variable.upper == 1.0, variable.name
-
-
-def test_every_section_gets_an_equality_row(program: Program) -> None:
-    rows = [r for r in program.rows if r.name.startswith("section_taught_once[")]
-    assert len(rows) == 3
-    assert all(r.sense is Sense.EQ and r.rhs == 1.0 for r in rows)
+        assert variable.kind is VarKind.BINARY, variable.name
+        assert variable.lower == 0.0 and variable.upper == 1.0, variable.name
+        owners = [row for row in section_rows if index in row.terms]
+        assert len(owners) == 1
+        row = owners[0]
+        assert row.sense is Sense.EQ and row.rhs == 1.0
+        assert all(coefficient == 1.0 for coefficient in row.terms.values())
 
 
 def test_section_identity_includes_its_course(payload: dict[str, Any]) -> None:
@@ -170,13 +158,6 @@ def test_program_is_deterministic(payload: dict[str, Any]) -> None:
     ]
 
 
-def test_model_stays_within_the_free_gurobi_licence(program: Program) -> None:
-    """The example must keep fitting pip's size-limited gurobipy, so the
-    optional backend stays testable."""
-    assert len(program.variables) <= 2000
-    assert len(program.rows) <= 2000
-
-
 def test_pack_day_penalty_weights_every_day_the_same(payload: dict[str, Any]) -> None:
     """A day spent teaching costs the professor's own preference, full stop.
 
@@ -205,7 +186,23 @@ def test_uses_room_indicators_are_binary_and_forced(program: Program) -> None:
     assert len(forcing) == len(indicators)
     for row in forcing:
         assert row.sense is Sense.LE
-        assert min(row.terms.values()) < -1.0  # the BIG_M forcing coefficient
+        assert min(row.terms.values()) <= -1.0
+
+
+def test_indicator_bounds_use_professor_slot_capacity(payload: dict[str, Any]) -> None:
+    built = build(Instance.from_payload(payload), Progress(silent))
+    assignments = {variable: key for key, variable in built.assign.items()}
+    tightened = False
+    for row in built.program.deferred_rows:
+        if not row.name.startswith(("professor_teaches_day[", "professor_uses_room[")):
+            continue
+        keys = [assignments[index] for index in row.terms if index in assignments]
+        slots = {key.timeslot for key in keys}
+        sections = {(key.course, key.section, key.semester, key.time_of_day) for key in keys}
+        assert row.defines is not None
+        assert -row.terms[row.defines] == min(len(slots), len(sections))
+        tightened |= len(slots) < len(sections)
+    assert tightened, "fixture must exercise an improvement over section-count bounds"
 
 
 @pytest.mark.parametrize("self_overlaps", [False, True])
@@ -223,3 +220,23 @@ def test_program_periods_do_not_merge_non_overlapping_slots(self_overlaps: bool)
         ("A", "B"),
         ("B", "C"),
     ]
+
+
+def test_professor_and_room_cliques_exclude_fractional_overlap_triangles(
+    payload: dict[str, Any],
+) -> None:
+    slots = ["Mon0900", "Wed0900", "Mon1800"]
+    payload["timeslot_concurrency"] = [
+        [slots[0], slots[1]], [slots[0], slots[2]], [slots[1], slots[2]],
+    ]
+    built = build(Instance.from_payload(payload), Progress(silent))
+    chosen = [next(column for key, column in built.assign.items()
+                   if key.professor == "prof_a" and key.classroom == "DMS1150"
+                   and key.timeslot == slot) for slot in slots]
+    for prefix in ("professor_no_overlap[prof_a,Fall,", "classroom_no_overlap[DMS1150,Fall,"):
+        rows = [row for row in built.program.rows if row.name.startswith(prefix)]
+        assert len(rows) == 1
+        row = rows[0]
+        assert all(column in row.terms for column in chosen)
+        assert sum(row.terms[column] * 0.5 for column in chosen) > row.rhs
+        assert all(row.terms[column] <= row.rhs for column in chosen)

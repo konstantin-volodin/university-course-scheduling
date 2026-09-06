@@ -22,7 +22,8 @@ def test_schedule_filter_controls_are_labeled_and_self_contained() -> None:
     assert "src=" not in page
 
 
-def test_schedule_filters_keep_unscheduled_sections_inspectable() -> None:
+@pytest.mark.parametrize("with_clocks", [False, True])
+def test_schedule_filters_keep_unscheduled_sections_inspectable(with_clocks: bool) -> None:
     node = shutil.which("node")
     if node is None:
         pytest.skip("Node.js is needed to exercise the report JavaScript")
@@ -50,8 +51,19 @@ def test_schedule_filters_keep_unscheduled_sections_inspectable() -> None:
         "semesters": ["Fall"],
         "rooms": {"R1": 40},
         "summary": {"total": 2, "namedPct": 50, "bySemester": []},
-        "stages": [],
+        "stages": [
+            {"name": "load", "value": 0, "seconds": 0, "proven": True,
+             "optimality_source": "lower_bound"},
+            {"name": "rooms", "value": 1, "seconds": 1, "proven": True,
+             "best_bound": 0.95, "relative_gap": 0.05},
+            {"name": "preferences", "value": 2, "seconds": 30, "proven": False},
+        ],
     }
+    if with_clocks:
+        data["assignments"][0]["meetings"] = [
+            {"day": "Mon", "time": "13:00\u201314:15"},
+            {"day": "Mon", "time": "09:00\u201309:50"},
+        ]
     harness = r"""
 const assert=require('node:assert/strict');
 const elements={}, listeners={};
@@ -71,6 +83,14 @@ function filter(key,value){
 }
 """
     assertions = r"""
+assert.match(elements.stagetable.innerHTML,/bound certified/);
+assert.match(elements.stagetable.innerHTML,/no backend search was needed/);
+assert.match(elements.stagetable.innerHTML,/backend optimal/);
+assert.match(elements.stagetable.innerHTML,/stopped early/);
+assert.match(elements.stagetable.innerHTML,/>Bound</);
+assert.match(elements.stagetable.innerHTML,/>0.95</);
+assert.match(elements.stagetable.innerHTML,/>5.0%</);
+assert.match(elements.stagetable.innerHTML,/>—</);
 assert.equal(elements.unscheduled.hidden,false);
 assert.match(elements.unscheduledrows.innerHTML,/ADM-1/);
 filter('scheduled','no');
@@ -93,6 +113,13 @@ filter('room','on');
 assert.equal(elements.unscheduled.hidden,true);
 assert.equal(elements.gridwrap.hidden,false);
 assert.match(elements.body.innerHTML,/ADM-0/);
+"""
+    if with_clocks:
+        assertions += r"""
+assert.match(elements.body.innerHTML,/course-card/);
+assert.ok(elements.body.innerHTML.indexOf('09:00') < elements.body.innerHTML.indexOf('13:00'));
+assert.match(elements.body.innerHTML,/Faculty/);
+assert.match(elements.body.innerHTML,/R1/);
 """
     completed = subprocess.run(
         [node, "-e", "const DATA=" + json.dumps(data) + ";" + harness + script + assertions],

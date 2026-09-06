@@ -95,6 +95,7 @@ def test_placeholder_timeslot_id_is_rejected(payload: dict[str, Any]) -> None:
 
 def test_unknown_block_type_is_rejected(payload: dict[str, Any]) -> None:
     """A block with no weight would silently contribute nothing to balance."""
+    payload.pop("meeting_pattern_data", None)
     payload["block_type_set"].append("7.0")
     assert any("7.0" in p and "weight" in p for p in problems_from(payload))
 
