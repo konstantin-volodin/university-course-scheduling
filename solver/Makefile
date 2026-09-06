@@ -12,8 +12,8 @@ help:
 	@echo "make solve    solve YAML=<file> and write the JSON + both HTML pages"
 	@echo "make report   re-render the HTML pages from an existing result (no re-solve)"
 	@echo ""
-	@echo "  make solve                                    the real 2026 instance (~30 min)"
-	@echo "  make solve YAML=../instances/medium LIMIT=60       medium example (~1 min)"
+	@echo "  make solve                                    Telfer (900 seconds per stage)"
+	@echo "  make solve YAML=../instances/medium LIMIT=60       medium (60 seconds per stage)"
 
 check: lint types test
 
@@ -30,7 +30,7 @@ fmt:
 	$(PY) -m ruff check --fix .
 
 example:
-	$(PY) -m scheduler solve ../instances/tiny
+	$(PY) -m scheduler solve ../instances/tiny --time-limit 30
 
 # One instance, one place to say which. Override any of these on the command
 # line:  make solve YAML=../instances/medium LIMIT=60
@@ -41,7 +41,7 @@ DIR   := $(if $(wildcard $(YAML)/.),$(YAML),$(patsubst %/,%,$(dir $(YAML))))
 OUT   ?= $(DIR)/results
 
 # Solve, then write the schedule page and the inputs page beside the result.
-# LIMIT is per stage, and stage 4 always uses all of it -- budget 4x LIMIT.
+# LIMIT is per stage -- budget up to 10x LIMIT, plus preprocessing and reports.
 solve:
 	$(PY) -m scheduler solve $(YAML) --time-limit $(LIMIT)
 

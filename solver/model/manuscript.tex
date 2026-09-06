@@ -6,6 +6,8 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{multicol}
+\usepackage{booktabs}
+\usepackage{array}
 
 %SetFonts
 
@@ -23,15 +25,23 @@
 %%%%%%%%%%%%%%%%
 \section{Description}
 \subsection{Intro}
-The goal for this project is to create a course schedule. The schedule must incorporate professors, courses, time blocks, semesters, and classrooms. Meaning, each section (of the course) must be scheduled at a specific time (time block and semester combination) to a specific professor in a specific classroom.
+The goal of this project is to create a course schedule. The schedule must
+assign every course section to a professor, a semester, a time, and a
+classroom. A section is therefore identified by its course, section number,
+and semester, and its assignment also records the professor, timeslot, and
+classroom.
 
-In addition to creating a schedule, a web application will be developed with a functional back-end database and front-end user interface. This is done for the demonstration purposes and to make it easier to integrate with existing Telfer web structure.
+The model has two kinds of requirements. Hard requirements describe what a
+valid schedule must satisfy. Soft requirements describe desirable qualities,
+such as respecting professor preferences or avoiding room changes. Because a
+real instance may not satisfy every hard requirement, the solver handles the
+requirements hierarchically: it first minimizes unavoidable violations, then
+optimizes the softer qualities within those limits.
 
-\subsection{Solution Approach}
-%For the web application 
-
-
-%Additionally, the formulation of the problem as an optimization model requires existence of an ob- jective function and some constraints. In this problem those two are very clearly defined. Objective function is given by professor preferences. The schedule that maximizes overall satisfaction would be preferred. Of course the issue with having that as an objective function is that it may be difficult to ob- jectively convert preferences into a numerical scale without making the model erroneous. Furthermore it is difficult to measure the accuracy of numerical approximation of professor preferences without feedback after full implementation. Therefore, the preferences will be represented fairly simplistically with a three point scale in hopes of minimizing the chances of biases.
+Professor preferences are represented on a simple three-point numerical scale.
+This keeps the input understandable and limits the amount of subjective
+weighting introduced by the model. The scale can be refined later using
+feedback from the people who use the resulting schedules.
 %Faculty requirements naturally lend themselves to be constraints in the mathematical formulation. In addition to faculty requirements some implicit constraints need to be formulated. Faculty requirement constraints include section requirements for each course, professor qualifications, attendance and ca- pacity matching, etc. Implicit constraints include things like each professor can only teach once per time block, classroom can only be occupied once per time block, etc.
 
 
@@ -74,6 +84,16 @@ In addition to creating a schedule, a web application will be developed with a f
 	$TTD_{t,td}$ - timeslots to times of day \\
 	$TDW_{t,dw}$ - timeslots to days of week \\
 	$TBL_{t,bl}$ - timeslots to blocks
+\end{multicols}
+
+For readability the equations below use the derived index sets these subsets
+induce, rather than restating the membership test inside every summation:
+
+\begin{multicols}{2}
+	$T_{td} = \{ t : [t,td] \in TTD \}$ \\
+	$T_{dw} = \{ t : [t,dw] \in TDW \}$ \\
+	$T_{bl} = \{ t : [t,bl] \in TBL \}$ \\
+	$P^{*} = P \setminus \{ \text{part-timer} \}$
 \end{multicols}
 
 
@@ -154,6 +174,8 @@ $KCount_{k}$ - Counts total sections assigned to each classrooms $k$ \\
 $CBLPen_{c,bl}$ - Counts the number of violations of block preference $bl$ per course $c$   \\
 $CFNPen_{c}$ - Counts the number of violations of blocks scheduled to Friday night 3 hour block \\
 $PDayT_{p,s,dw}$ - Indicates if a professor $p$ is teaching during day of the week $dw$, semeseter $s$ \\ 
+$PRoomU_{p,s,dw,k}$ - Indicates if a professor $p$ uses classroom $k$ during day of the week $dw$, semester $s$ \\
+$RoomExtra_{p,s,dw}$ - Counts the classrooms a professor uses on a day past the first one \\
 $ProfBBV_{}$ - Counts the number of back to back occurences for professor $p$ 
 
 
@@ -190,12 +212,24 @@ Professors must teach a required number of sections
 
 Professors can only teach courses they are qualified to teach (removed by $XV$)
 \begin{equation}
-	\sum_{istk} X_{pcistk} <= pt_{p} * pq_{pc}  \quad \forall \quad P,C, [pcistk] \in \{ XV \}
+	\sum_{istk} X_{pcistk} \le pt_{p} \, pq_{pc}  \quad \forall \quad P,C, [pcistk] \in \{ XV \}
 \end{equation}
 
 Counts the maximum number of days a professor is teaching per each semester
 \begin{equation}
-	\sum_{\substack{citk \\ [t,dw] \in \{TDW\}}} X_{pcistk} <= M * PDayT_{p,s,dw} \quad \forall P, S, DW, [pcistk] \in \{ XV \}
+	\sum_{c,i,k,\, t \in T_{dw}} X_{pcistk} \le M \, PDayT_{p,s,dw} \quad \forall P, S, DW, [pcistk] \in \{ XV \}
+\end{equation}
+
+Counts the classrooms a professor uses per day, so room-hopping within a
+teaching day can be penalised: the first room of the day is free, every
+further room adds to $RoomExtra_{p,s,dw}$.
+\begin{equation}
+	\sum_{c,i,\, t \in T_{dw}} X_{pcistk} \le M \, PRoomU_{p,s,dw,k} 
+	\quad \forall P, S, DW, K, [pcistk] \in \{ XV \}, k \not \in \{ \text{other} \}
+\end{equation}
+\begin{equation}
+	\sum_{k} PRoomU_{p,s,dw,k} \le PDayT_{p,s,dw} + RoomExtra_{p,s,dw} 
+	\quad \forall P, S, DW, k \not \in \{ \text{other} \}
 \end{equation}
 
 Counts the number of occurences a professor has back to back classes (in different classrooms)
@@ -207,11 +241,11 @@ Counts the number of occurences a professor has back to back classes (in differe
 \subsubsection{Time of Day Constraints}
 Counts the maximum and minimum number of sections offered over different times of day.
 \begin{equation}
-	\sum_{\substack{pcitk \\ [t,td] \in \{TTD\}}} X_{pcistk} \le TimeMax_{s} \quad \forall \quad S, TD, [pcistk] \in \{ XV \}
+	\sum_{p,c,i,k,\, t \in T_{td}} X_{pcistk} \le TimeMax_{s} \quad \forall \quad S, TD, [pcistk] \in \{ XV \}
 \end{equation}
 
 \begin{equation}
-	\sum_{\substack{pcitk \\ [t,td] \in \{TTD\}}} X_{pcistk} \ge TimeMin_{s} \quad \forall \quad S, TD, [pcistk] \in \{ XV \}
+	\sum_{p,c,i,k,\, t \in T_{td}} X_{pcistk} \ge TimeMin_{s} \quad \forall \quad S, TD, [pcistk] \in \{ XV \}
 \end{equation}
 
 
@@ -219,12 +253,12 @@ Counts the maximum and minimum number of sections offered over different times o
 Counts the maximum and minimum number of sections offered over different days of week. Since 1.5 hour blocks are distributed between 2 days, while 3 hour blocks distributed over 1 day. 
 
 \begin{equation}
-	\sum_{\substack{pcitk,bl \\ [t,dw] \in \{ TDW \}, [t,bl] \in \{ TBL \}}} X_{pcistk} * tbw_{bl} 
+	\sum_{p,c,i,k,bl,\, t \in T_{dw} \cap T_{bl}} X_{pcistk} \, tbw_{bl} 
 	\le DayMax_{s} \quad \forall \quad S, DW, [pcistk] \in \{ XV \}
 \end{equation}
 
 \begin{equation}
-	\sum_{\substack{ pcitk,bl \\ [t,dw] \in \{ TDW \}, [t,bl] \in \{ TBL \}}} X_{pcistk} * tbw_{bl} 
+	\sum_{p,c,i,k,bl,\, t \in T_{dw} \cap T_{bl}} X_{pcistk} \, tbw_{bl} 
 	\ge DayMin_{s} \quad \forall \quad S, DW, [pcistk] \in \{ XV \}
 \end{equation}
 
@@ -244,7 +278,7 @@ Each classroom can only be occupied once per period and the time slots that shar
 Classroom capacities must be respected. The section attendance cannot be higher than the classroom
 capacity and must be higher than at least 80 percent of the classroom capacity. (removed by $XV$)
 \begin{equation}
-	\sum_{\substack{pt,td \\ [t,td] \in \{TTD\}}} X_{pcistk} = 0 \quad \forall \quad C,I,S,K,  0.8 kc_{k} 
+	\sum_{p,td,\, t \in T_{td}} X_{pcistk} = 0 \quad \forall \quad C,I,S,K,  0.8 kc_{k} 
 	\le csa_{cis} \le kc_{k}, [pcistk] \in \{ XV \}, k \not \in \{ \text{other} \}
 \end{equation}
 
@@ -264,18 +298,18 @@ For each course section, there must be scheduled a required number of sections p
 
 Three hour courses with more than 75 students can only be scheduled at night. (removed by $XV$)
 \begin{equation}
-	\sum_{pkt, TTD \ne 0, TBL = 1} X_{pcistk} = 0 \quad \forall \quad CS_{cis,td} \text{ where } csa_{cis} >= 75, TD \not \in \{night \},  BL \in \{ 3hour \}
+	\sum_{pkt, TTD \ne 0, TBL = 1} X_{pcistk} = 0 \quad \forall \quad CS_{cis,td} \text{ where } csa_{cis} \ge 75, TD \not \in \{night \},  BL \in \{ 3hour \}
 \end{equation}
 
 Some courses are restricted to either 1.5 or 3 hour blocks.
 \begin{equation}
-	\sum_{\substack{pistk \\ [t,bl] \in \{ TBL \}}} X_{pcistk} = 0 + CBLPen_{c,bl} \quad \forall \quad C, BL, 
+	\sum_{p,i,s,k,\, t \in T_{bl}} X_{pcistk} = 0 + CBLPen_{c,bl} \quad \forall \quad C, BL, 
 	[pcistk] \in \{ XV \}, [c,bl] \in \{ cb \}
 \end{equation}
 
 Some courses should not be scheduled on the 3 hour Friday night block.
 \begin{equation}
-	\sum_{\substack{pistk \\ [t, \text{Fri}] \in \{TDW\} \\ [t,Night] \in \{TTD\}}} X_{pcistk} = 0 + CFNPen_{c} 
+	\sum_{p,i,s,k,\, t \in T_{\text{Fri}} \cap T_{\text{Night}}} X_{pcistk} = 0 + CFNPen_{c} 
 	\quad \forall \quad C, [pcistk] \in \{ XV \}, c \in \{ cf \}
 \end{equation}
 
@@ -283,23 +317,23 @@ Some courses should not be scheduled on the 3 hour Friday night block.
 \subsubsection{Concurrency Constraints}
 Sections of same courses must not be scheduled together
 \begin{equation}
-	\sum_{\substack{pik \\ p \not \in \{ \text{part-timer} \}}} X_{pcistk} 
+	\sum_{p \in P^{*},i,k} X_{pcistk} 
 	\le 1 + ConcI_{cst} \quad \forall \quad C,S,T, 
 	[pcistk] \in \{ XV \}, t \not \in \{\text{placeholder}\}
 \end{equation}
 
 Some concurrent courses must be scheduled together ($[pcistk] \in \{ XV \}$ and $[p,cc,istk] \in \{ XV \}$)
 \begin{equation}
-	\sum_{\substack{pik \\ p \not \in \{ \text{part-timer} \}}} X_{pcistk} 
-	= \sum_{\substack{pik \\ p \not \in \{ \text{part-timer} \}}} X_{p,cc,istk} + ConcT_{c,cc,st} 
+	\sum_{p \in P^{*},i,k} X_{pcistk} 
+	= \sum_{p \in P^{*},i,k} X_{p,cc,istk} + ConcT_{c,cc,st} 
 	\quad \forall \quad C,CC,S,T, 
 	t \not \in \{\text{placeholder}\}, [c,cc] \in \{ cct \}
 \end{equation}
 
 Some concurrent courses cannot be scheduled together ($[pcistk] \in \{ XV \}$ and $[p,cc,istk] \in \{ XV \}$)
 \begin{equation}
-	\sum_{\substack{pik \\ p \not \in \{ \text{part-timer} \}}} X_{pcistk} 
-	+ \sum_{\substack{pik \\ p \not \in \{ \text{part-timer} \}}} X_{p,cc,istk} 
+	\sum_{p \in P^{*},i,k} X_{pcistk} 
+	+ \sum_{p \in P^{*},i,k} X_{p,cc,istk} 
 	\le 1  + ConcN_{c,cc,st} \quad \forall \quad C,CC,S,T, 
 	t \not \in \{\text{placeholder}\}, [c,cc] \in \{ ccn \}
 \end{equation}
@@ -308,19 +342,28 @@ Some concurrent courses cannot be scheduled together ($[pcistk] \in \{ XV \}$ an
 %%%%%%%%%%%%%%%%
 %%% Objective Function
 %%%%%%%%%%%%%%%%
-\subsection{Objective Function}
-The model is solved in a hierarchical manner, where each hard constraint is evaluated and then bounded. Then each soft objective is solved and bounded.
+\subsubsection{Program Constraints}
+Let $Q$ be the maximal sets of pairwise-overlapping real timeslots. At most one
+required course may occupy a conflict period for each program and semester.
+This is a hard constraint; an impossible placement uses a placeholder.
+\begin{equation}
+\sum_{\substack{c:[g,s,c]\in gr\\t\in q\\p,i,k}} X_{pcistk}
+\le 1
+\quad \forall\ g,s,\ q\in Q
+\end{equation}
 
-a few notes: (1) there is no need to minimize part-timers, because 1st step ensures we provide all possible courses to full-time profs first. (2) since concurrencies and time placeholders are linked, they are minimized together
+\subsection{Objective Function}
+Each stage is optimized and bounded before the next begins. Later preferences
+cannot worsen an earlier result.
 \begin{enumerate}
 
-	\item Identify the number of professor teachings violation
+	\item \textbf{Teaching load.}
 		\begin{equation} 
 			min \sum ProfTV_{p} \quad \Rightarrow \quad 
 			\sum ProfTV_{p} \le \text{ value of } \sum ProfTV_{p}
 		\end{equation}
 		
-	\item Identify the number of course concurrency violations and  placeholder times
+	\item \textbf{Conflicts and unscheduled sections.}
 		\begin{equation}
 		\begin{aligned}
 			& min \sum (ConcI + ConcT + ConcN) +  \sum_{t\in\{\text{placeholder}\}} X & \Rightarrow \\
@@ -329,28 +372,59 @@ a few notes: (1) there is no need to minimize part-timers, because 1st step ensu
 		\end{aligned}
 		\end{equation}
 
-	\item Minimize DMS classrooms
+	\item \textbf{Off-campus assignments.}
 		\begin{equation}
 			\min \sum_{k\in\{\text{other}\}} X \Rightarrow 
 			\sum_{k\in\{\text{other}\}} X \le \text{ value of } \sum_{k\in\{\text{other}\}} X
 		\end{equation}
 
-	\item Final mixed objective
+	\item \textbf{Part-timer room use.} Prefer physical rooms for named faculty.
+
+	\item \textbf{Schedule balance.}
 		\begin{equation}
 		\begin{aligned}
-			max \quad & - 10\sum_s (TimeMax_s - TimeMin_s)	\\
-					 & - 10 \sum_s (DayMax_s - DayMin_s) \\
-					 & - 3 \sum_{c,bl} CBLPen_{c,bl} 	& [c,bl] \in \{ cb \} \\
-					 & - 3 \sum_c CFNPen_c \\ 
-					 & + 1 \sum_{pcistk} X * pcp_{pc} 		& [pcistk] \in XV, pcp_{pc} > 0 \\
-					 & + 1 \sum_{pcistk,td} X * ptp_{ps,td} & [pcistk] \in XV, [t,td] \in \{ TTD \}, ptp_{ps,td} > 0 \\
-					 & + 1 \sum_{pcistk,bl} X 				& [pcistk] \in XV, [t,bl] \in \{ TBL \}, pc \in \{ pbp \} \\ 
-					 & - 1 \sum_{s,p,dw} PDayT_{p,s,dw} * ppp_{p} 	& [t,dw] \in \{ TDW \}, p \notin \{ \text{Part-Timer} \}
+		\min\quad & \sum_s (TimeMax_s-TimeMin_s)\\
+		           & + \sum_s (DayMax_s-DayMin_s)
 		\end{aligned}
+		\end{equation}
+
+	\item \textbf{Soft penalties.}
+			\begin{equation}
+			\begin{aligned}
+			\min\quad & \sum_{c,bl} CBLPen_{c,bl} \\
+			\min\quad & \sum_c CFNPen_c \\
+			\min\quad & \sum_{p,s,dw} RoomExtra_{p,s,dw} \\
+			\min\quad & \sum_{s,p,dw} PDayT_{p,s,dw}\,ppp_p
+			\end{aligned}
+			\end{equation}
+
+	\item \textbf{Preference rewards.}
+			\begin{equation}
+			\begin{aligned}
+						 & + 1 \sum_{pcistk} X \, pcp_{pc} 		& [pcistk] \in XV, pcp_{pc} > 0 \\
+						 & + 1 \sum_{pcistk,td} X \, ptp_{ps,td} & [pcistk] \in XV, [t,td] \in \{ TTD \}, ptp_{ps,td} > 0 \\
+						 & + 1 \sum_{pcistk,bl} X 				& [pcistk] \in XV, [t,bl] \in \{ TBL \}, pc \in \{ pbp \} \\ 
+			\end{aligned}
 		\end{equation}
 		
 \end{enumerate}
 
-
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.38\textwidth}r p{0.42\textwidth}}
+\toprule
+\textbf{Component} & \textbf{Weight} & \textbf{What it measures} \\
+\midrule
+Time-of-day spread & $-10$ & Uneven distribution across times of day \\
+Day-of-week spread & $-10$ & Uneven distribution across days \\
+Course block violation & $-3$ & Assignment to a non-preferred block \\
+Friday-night penalty & $-3$ & Penalized course assigned to Friday night \\
+Room spread & $-3$ & Additional rooms used by one professor in one day \\
+Course reward & $+1$ & Professor--course preference points \\
+Time reward & $+1$ & Professor--time-of-day preference points \\
+Block reward & $+1$ & Professor--block preference points \\
+Packed-day penalty & $-1$ & Professor teaching on additional days \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \end{document}  

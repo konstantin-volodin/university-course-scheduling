@@ -1,6 +1,6 @@
 """The staged solve, and the public :func:`solve` entry point.
 
-The program is solved four times, not once. Each stage optimises one objective,
+The program is solved in ten stages. Each stage optimises one objective,
 then freezes the result as a row before the next stage runs. That keeps the
 ordering honest: a later stage can improve preferences only within the
 compromises the earlier stages already proved were necessary.
@@ -14,16 +14,16 @@ don't ask them to.
 from __future__ import annotations
 
 import math
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
-from .. import model as model_module
 from ..backends import DEFAULT_BACKEND, Backend, SolutionStatus, open_backend
-from ..config import OFF_CAMPUS, PART_TIMER, Instance, is_placeholder
+from ..config import OFF_CAMPUS, PART_TIMER, Instance, is_placeholder, placeholder_for
 from ..errors import SolveError
-from ..model.program import LinearExpr, Sense
+from ..model import AssignmentKey, BuiltModel, Objectives, build
+from ..model.program import LinearExpr, Program, Row, Sense, VarKind
 from ..progress import Progress, ProgressCallback
-from .result import Assignment, Result, Stage
+from .result import Assignment, ObjectiveBreakdown, ObjectiveTerm, Result, Stage
 from .room_seed import seed_physical_rooms
 
 __all__ = ["Assignment", "Result", "Stage", "solve", "solve_instance"]
@@ -38,7 +38,11 @@ GOOD_ENOUGH = 0.05
 
 #: Fixed so repeated runs of the same instance return the same schedule. Any
 #: parallel MIP solver is only deterministic at a fixed thread count.
-THREADS = 4
+# HiGHS' parallel MIP path can return ``Not Set`` on the large default-qualified
+# instance even when its single-threaded path solves the same model immediately.
+# A deterministic single-threaded run is preferable to reporting a false
+# no-solution result; the instance is still bounded by the caller's time limit.
+THREADS = 1
 SEED = 0
 
 #: Solver values are floating point; anything below this is a zero that drifted.
@@ -48,8 +52,15 @@ TOLERANCE = 0.01
 class _StagedSolve:
     """Runs the stages, carrying the winning solution forward."""
 
-    def __init__(self, backend: Backend, progress: Progress, time_limit: float | None) -> None:
+    def __init__(
+        self,
+        backend: Backend,
+        progress: Progress,
+        time_limit: float | None,
+        program: Program | None = None,
+    ) -> None:
         self.backend = backend
+        self.program = program if program is not None else Program()
         self.progress = progress
         self.time_limit = time_limit
         self.stages: list[Stage] = []
@@ -73,30 +84,35 @@ class _StagedSolve:
         )
         return outcome.objective
 
-    def _minimise_then_cap(self, name: str, objective: LinearExpr, gap: float) -> None:
+    def _minimise_then_cap(
+        self, name: str, objective: LinearExpr, gap: float, *, integral: bool = True,
+    ) -> None:
         """Minimise, then hold the result as a ceiling for every later stage.
 
-        Rounded up: these count whole violations, and a fractional bound would
-        let a later stage exploit numerical slop to slip past an integer limit.
+        Count objectives use an integer ceiling. Balance contains fractional
+        teaching-hour units, so it retains its attained value within tolerance.
         """
         value = self._optimise(name, objective, maximise=False, gap=gap)
-        self.backend.add_row(
+        self.backend.add_rows([Row(
             f"cap_{name.replace(' ', '_')}",
             dict(objective.terms),
             Sense.LE,
-            math.ceil(value - 1e-6),
-        )
+            math.ceil(value - 1e-6) if integral else value + 1e-6,
+        )])
 
     def run(
         self,
-        objectives: model_module.Objectives,
+        objectives: Objectives,
         room_seed: Callable[[list[float]], list[float]] | None = None,
+        deferred: Sequence[Row] = (),
     ) -> float:
         self._minimise_then_cap(
-            "minimise teaching load violations", objectives.teaching_load, EXACT
+            "assign named professors to required sections",
+            objectives.teaching_load,
+            EXACT,
         )
         self._minimise_then_cap(
-            "minimise concurrency and unscheduled sections",
+            "minimise timetable conflicts and unscheduled sections",
             objectives.concurrency + objectives.placeholder_use,
             EXACT,
         )
@@ -105,14 +121,126 @@ class _StagedSolve:
         self._minimise_then_cap(
             "minimise off-campus teaching", objectives.off_campus_use, GOOD_ENOUGH
         )
-        # Everything above is capped now, so this can only trade preferences
-        # against each other, inside what is already known to be achievable.
-        return self._optimise(
-            "maximise preferences", objectives.preference_score(), True, GOOD_ENOUGH
+        self._minimise_then_cap(
+            "minimise part-timer use of physical rooms",
+            objectives.part_timer_room_use,
+            EXACT,
+        )
+        # The preference rows come in only now. None of them can rule out a
+        # solution -- each one just pins a variable the preference objective
+        # reads -- so carrying them through the violation stages above would
+        # have doubled the matrix those stages search for no gain at all.
+        if deferred:
+            with self.progress.step("solving", "adding preference rows") as done:
+                self.backend.add_rows(deferred)
+                self.values = _repair(self.program, self.values, deferred)
+                done(f"{len(deferred):,} rows")
+
+        # Balance is deliberately its own stage. Once capped, the model has a
+        # smaller and clearer remaining objective: all other preferences can
+        # trade against each other without undoing the best distribution.
+        self._minimise_then_cap(
+            "optimise time-of-day and day-of-week balance",
+            objectives.time_of_day_spread + objectives.day_of_week_spread,
+            EXACT,
+            integral=False,
+        )
+        self._minimise_then_cap(
+            "minimise course block violations", objectives.block_violation, EXACT
+        )
+        self._minimise_then_cap(
+            "minimise Friday-night penalties", objectives.friday_night, EXACT
+        )
+        # The preceding objectives do not read room-use auxiliaries, so a MIP
+        # incumbent may leave them at arbitrary feasible values. Reconstruct
+        # every deferred definition before this stage to offer the actual room
+        # count as the incumbent instead of asking the solver to rediscover it.
+        if deferred:
+            self.values = _repair(
+                self.program,
+                self.values,
+                deferred,
+                reset_prefixes=("uses_room[", "uses_physical_room_day["),
+            )
+        self._minimise_then_cap(
+            "minimise room changes", objectives.room_changes, GOOD_ENOUGH
+        )
+        self._minimise_then_cap(
+            "minimise additional teaching days", objectives.pack_day_penalty, EXACT
+        )
+        self._optimise(
+            "maximise course, time, and block preference rewards",
+            objectives.remaining_preference_score(),
+            True,
+            GOOD_ENOUGH,
+        )
+        return sum(
+            component.weight
+            * sum(
+                coefficient * self.values[index]
+                for index, coefficient in component.expression.terms.items()
+            )
+            for component in objectives.preference_components()
         )
 
 
-def _extract(built: model_module.BuiltModel, values: list[float]) -> list[Assignment]:
+def _repair(
+    program: Program,
+    values: list[float],
+    rows: Sequence[Row],
+    *,
+    reset_prefixes: tuple[str, ...] = (),
+) -> list[float]:
+    """Give the deferred rows' variables the values those rows demand.
+
+    The violation stages run without these rows, so the solver never had a
+    reason to set the variables they define and hands them back at zero. Fed
+    straight into the preference stage that point is infeasible, the warm start
+    is rejected, and a model this size then finds nothing at all inside its time
+    limit -- which reads as an impossible instance and is nothing of the kind.
+
+    Every deferred row pins exactly one variable in terms of assignments already
+    decided, and the rows come in the order those definitions were built, so one
+    pass settles all of them. Each variable is moved the least the row allows,
+    which keeps the rest of the solution exactly as it was found.
+    """
+    if not values:
+        return values
+    repaired = list(values)
+    if reset_prefixes:
+        for row in rows:
+            if (
+                row.defines is not None
+                and program.variables[row.defines].name.startswith(reset_prefixes)
+            ):
+                repaired[row.defines] = program.variables[row.defines].lower
+    for row in rows:
+        target = row.defines
+        if target is None:
+            continue
+        coefficient = row.terms.get(target)
+        if not coefficient:
+            continue
+        rest = sum(
+            factor * repaired[index]
+            for index, factor in row.terms.items()
+            if index != target
+        )
+        needed = (row.rhs - rest) / coefficient
+        variable = program.variables[target]
+        integral = variable.kind in (VarKind.INTEGER, VarKind.BINARY)
+        if row.sense is Sense.EQ:
+            value = math.ceil(needed - 1e-9) if integral else needed
+        elif (row.sense is Sense.LE) == (coefficient > 0):
+            # The row caps this variable; only lower it if it sits above.
+            value = min(repaired[target], math.floor(needed + 1e-9) if integral else needed)
+        else:
+            value = max(repaired[target], math.ceil(needed - 1e-9) if integral else needed)
+        repaired[target] = min(max(value, variable.lower), variable.upper)
+    return repaired
+
+
+def _extract(built: BuiltModel, values: list[float]) -> list[Assignment]:
     assignments: list[Assignment] = []
     for key, index in built.assign.items():
         value = values[index]
@@ -142,6 +270,89 @@ def _extract(built: model_module.BuiltModel, values: list[float]) -> list[Assign
     return assignments
 
 
+def _preference_breakdown(
+    objectives: Objectives, values: list[float], variable_names: Sequence[str]
+) -> list[ObjectiveBreakdown]:
+    """Evaluate each named component, retaining its active terms for audit."""
+    breakdown = []
+    for component in objectives.preference_components():
+        terms = [
+            ObjectiveTerm(
+                variable=variable_names[index],
+                coefficient=coefficient,
+                value=values[index],
+                contribution=coefficient * values[index],
+            )
+            for index, coefficient in sorted(component.expression.terms.items())
+            if abs(values[index]) > TOLERANCE
+        ]
+        # Keep the scalar exact even though the audit list omits numerical
+        # noise and inactive terms.
+        raw_value = sum(
+            coefficient * values[index]
+            for index, coefficient in component.expression.terms.items()
+        )
+        breakdown.append(
+            ObjectiveBreakdown(
+                name=component.name,
+                label=component.label,
+                description=component.description,
+                raw_value=raw_value,
+                weight=component.weight,
+                contribution=component.weight * raw_value,
+                terms=terms,
+            )
+        )
+    return breakdown
+
+
+def _placeholder_seed(built: BuiltModel) -> list[float]:
+    """Build an integral, always-scheduled incumbent for the first stage.
+
+    A warm start needs an integral assignment across declared qualifications; otherwise
+    HiGHS may spend the whole first stage searching for its first incumbent.
+    Placeholder slots make this matching independent of rooms and timetable
+    clashes; those are deliberately handled by later stages.
+    """
+    inst = built.instance
+    sections = sorted(inst.section_keys)
+    owner: dict[tuple[str, str, str, str], str] = {}
+
+    def take(professor: str, seen: set[tuple[str, str, str, str]]) -> bool:
+        candidates = (
+            key for key in sections
+            if key not in seen
+            and (professor, key[0]) in inst.qualifications
+            and AssignmentKey(
+                professor, key[0], key[1], key[2], key[3], placeholder_for(key[3]), OFF_CAMPUS
+            ) in built.assign
+        )
+        for key in candidates:
+            seen.add(key)
+            previous = owner.get(key)
+            if previous is None or take(previous, seen):
+                owner[key] = professor
+                return True
+        return False
+
+    for professor in sorted(inst.real_professors):
+        for _ in range(inst.teaching_load[professor]):
+            if not take(professor, set()):
+                return []
+
+    values = [0.0] * len(built.program.variables)
+    for key in sections:
+        professor = owner.get(key, PART_TIMER)
+        assignment = AssignmentKey(
+            professor, key[0], key[1], key[2], key[3], placeholder_for(key[3]), OFF_CAMPUS
+        )
+        variable = built.assign.get(assignment)
+        if variable is None:
+            return []
+        values[variable] = 1.0
+    return values
+
+
 def solve_instance(
     inst: Instance,
     progress: ProgressCallback | None = None,
@@ -156,23 +367,27 @@ def solve_instance(
         error, provided a solution was found.
     :param solver: which backend to use; see :data:`scheduler.backends.BACKENDS`.
     """
-    if time_limit is not None and time_limit <= 0:
-        raise ValueError("time_limit must be positive")
+    if time_limit is not None and (not math.isfinite(time_limit) or time_limit <= 0):
+        raise ValueError("time_limit must be positive and finite")
 
     reporter = Progress(progress)
     reporter(inst.summary())
 
-    built = model_module.build(inst, reporter)
+    # Preferences rank legal assignments; they do not revoke qualifications.
+    # Even a load-feasible subset can exclude the only conflict-free timetable.
+    built = build(inst, reporter)
 
     backend = open_backend(solver, threads=THREADS, seed=SEED)
     try:
         with reporter.step("solving", f"loading into {backend.name}"):
             backend.load(built.program)
 
-        staged = _StagedSolve(backend, reporter, time_limit)
+        staged = _StagedSolve(backend, reporter, time_limit, built.program)
+        staged.values = _placeholder_seed(built)
         objective = staged.run(
             built.objectives,
             room_seed=lambda values: seed_physical_rooms(built, values),
+            deferred=built.program.deferred_rows,
         )
 
         with reporter.step("exporting", "reading solution") as done:
@@ -197,6 +412,9 @@ def solve_instance(
         assignments=assignments,
         solver=backend.name,
         stages=staged.stages,
+        preference_breakdown=_preference_breakdown(
+            built.objectives, staged.values, [variable.name for variable in built.program.variables]
+        ),
     )
 
 

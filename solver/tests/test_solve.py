@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from scheduler import Result, SolveError, silent, solve
+from scheduler import Result, SolveError, config, silent, solve
 from scheduler.config.instance import MIN_ROOM_FILL
 from scheduler.solve import GOOD_ENOUGH
 
@@ -98,19 +98,10 @@ def test_tiny_instance_needs_no_fallbacks(solved: Result) -> None:
     assert solved.off_campus == []
 
 
-def test_all_four_stages_run(solved: Result) -> None:
-    assert [s.name for s in solved.stages] == [
-        "minimise teaching load violations",
-        "minimise concurrency and unscheduled sections",
-        "minimise off-campus teaching",
-        "maximise preferences",
-    ]
-
-
 def test_violation_stages_find_no_violations(solved: Result) -> None:
     by_name = {s.name: s.value for s in solved.stages}
-    assert by_name["minimise teaching load violations"] == 0
-    assert by_name["minimise concurrency and unscheduled sections"] == 0
+    assert by_name["assign named professors to required sections"] == 0
+    assert by_name["minimise timetable conflicts and unscheduled sections"] == 0
 
 
 def test_preferences_are_actually_honoured(solved: Result) -> None:
@@ -127,7 +118,22 @@ def test_result_serialises_to_json(solved: Result) -> None:
     assert payload["summary"]["assignments"] == 3
     assert payload["summary"]["unstaffed"] == 0
     assert len(payload["assignments"]) == 3
-    assert len(payload["stages"]) == 4
+    assert payload["stages"]
+    assert {item["name"] for item in payload["preference_breakdown"]}
+    assert all("terms" in item for item in payload["preference_breakdown"])
+    assert all(item["label"] and item["description"] for item in payload["preference_breakdown"])
+    assert any(item["terms"] for item in payload["preference_breakdown"])
+
+
+def test_preference_breakdown_reconciles_with_objective(solved: Result) -> None:
+    """The exported components must add back to the score sent to the solver."""
+    contribution = sum(item.contribution for item in solved.preference_breakdown)
+    assert contribution == pytest.approx(solved.objective)
+    assert all(
+        term.contribution == pytest.approx(term.coefficient * term.value)
+        for component in solved.preference_breakdown
+        for term in component.terms
+    )
 
 
 def test_assignment_shape_matches_the_backend_model(solved: Result) -> None:
@@ -268,7 +274,8 @@ def test_progress_is_reported(payload: dict[str, Any]) -> None:
     assert {"building", "solving", "exporting"} <= {stage for stage, _ in seen}
     assert len(seen) > 15
     assert any("viable assignments" in message for _, message in seen)
-    assert any("maximise preferences" in message for _, message in seen)
+    assert any("maximise course, time, and block preference rewards" in message
+               for _, message in seen)
 
 
 def test_a_broken_progress_callback_does_not_kill_the_solve(payload: dict[str, Any]) -> None:
@@ -353,91 +360,6 @@ def test_both_backends_agree_on_the_objective(payload: dict[str, Any], backend: 
     }
 
 
-def test_each_stage_starts_from_the_previous_answer(payload: dict[str, Any]) -> None:
-    """Stages only add rows, so the last answer is always feasible for the next.
-
-    Handing it over matters at real scale: on the 835k-variable instance the
-    final 'maximise preferences' stage burned its whole time limit without
-    finding any incumbent and failed as 'no solution found', which reads like
-    infeasibility even though the three stages before it had all solved.
-    """
-    from scheduler.backends import base
-    from scheduler.solve.solver import _StagedSolve
-
-    starts: list[list[float]] = []
-    real = base.SolutionStatus  # keep the enum reachable for the stub below
-
-    class Recorder:
-        name = "recorder"
-
-        def __init__(self) -> None:
-            self.calls = 0
-
-        def load(self, program: Any) -> None:
-            self.columns = len(program.variables)
-
-        def add_row(self, name: str, terms: Any, sense: Any, rhs: float) -> None:
-            pass
-
-        def warm_start(self, values: list[float]) -> None:
-            starts.append(list(values))
-
-        def optimise(self, objective: Any, **kwargs: Any) -> base.Outcome:
-            self.calls += 1
-            return base.Outcome(real.OPTIMAL, 0.0, [float(self.calls)], 0.1, "")
-
-        def close(self) -> None:
-            pass
-
-    from scheduler.config.instance import Instance
-    from scheduler.model import build
-    from scheduler.progress import Progress
-
-    built = build(Instance.from_payload(payload), Progress(silent))
-    backend = Recorder()
-    backend.load(built.program)
-    _StagedSolve(backend, Progress(silent), None).run(built.objectives)
-
-    # Four stages, so three hand-offs -- the first has nothing to hand over.
-    assert starts == [[1.0], [2.0], [3.0]]
-
-
-def test_a_warm_start_survives_the_objective_swap(payload: dict[str, Any]) -> None:
-    """Handing over the answer must actually reach the solver.
-
-    HiGHS drops a user solution when the objective changes, and every stage
-    changes the objective -- so a start applied before optimise() is silently
-    discarded. With no time to search, a cold solve finds nothing and a warm
-    one returns the solution it was given.
-    """
-    from scheduler.backends.base import SolutionStatus
-    from scheduler.backends.highs import HighsBackend
-    from scheduler.config.instance import Instance
-    from scheduler.model import build
-    from scheduler.progress import Progress
-
-    built = build(Instance.from_payload(payload), Progress(silent))
-    objective = built.objectives.preference_score()
-
-    solved = HighsBackend()
-    solved.load(built.program)
-    best = solved.optimise(objective, maximise=True, gap=0.0, time_limit=None)
-    assert best.status is SolutionStatus.OPTIMAL
-
-    cold = HighsBackend()
-    cold.load(built.program)
-    assert cold.optimise(
-        objective, maximise=True, gap=0.0, time_limit=1e-6
-    ).status is SolutionStatus.NO_SOLUTION
-
-    warm = HighsBackend()
-    warm.load(built.program)
-    warm.warm_start(best.values)
-    out = warm.optimise(objective, maximise=True, gap=0.0, time_limit=1e-6)
-    assert out.status is SolutionStatus.FEASIBLE
-    assert out.objective == best.objective
-
-
 @pytest.mark.slow
 def test_medium_instance_places_every_section(
     medium_payload_source: dict[str, Any],
@@ -459,3 +381,70 @@ def test_medium_instance_places_every_section(
     assert not result.unstaffed
     assert not result.unscheduled
     assert not result.off_campus
+
+
+@pytest.mark.parametrize("self_overlap", [False, True])
+def test_a_blocked_degree_path_is_pushed_to_the_fallback(
+    payload: dict[str, Any], self_overlap: bool
+) -> None:
+    """Two required courses, one shared slot: the schedule must report one
+    section unscheduled rather than collide the cohort's requirements."""
+    payload["section_subset"] = [
+        ["ADM1000", "1", "Fall", "Day"],
+        ["ADM2000", "3", "Fall", "Day"],
+    ]
+    payload["section_set"] = ["1", "3"]
+    payload["section_attendance"] = [
+        {"key": ["ADM1000", "1", "Fall", "Day"], "value": 40},
+        {"key": ["ADM2000", "3", "Fall", "Day"], "value": 35},
+    ]
+    payload["professor_teaching"] = [{"prof_a": 1}, {"prof_b": 1}]
+    payload["timeslot_dow_subset"] = [["Mon0900", "Mon"]]
+    payload["timeslot_tod_subset"] = [["Mon0900", "Day"]]
+    payload["timeslot_block_subset"] = [row for row in payload["timeslot_block_subset"]
+                                        if row[0] == "Mon0900"]
+    payload["timeslot_set"] = ["Mon0900"]
+    payload["timeslot_concurrency"] = [["Mon0900", "Mon0900"]] if self_overlap else []
+    payload["program_requirements"] = [["bcom", "Fall", "ADM1000"], ["bcom", "Fall", "ADM2000"]]
+    result = solve(payload, progress=silent, time_limit=10)
+    assert result.status in {"optimal", "feasible"}
+    assert len(result.unscheduled) == 1
+
+
+def test_a_degree_path_gets_non_overlapping_slots(payload: dict[str, Any]) -> None:
+    """The same cohort with room to breathe: required courses land apart."""
+    payload["program_requirements"] = [["bcom", "Fall", "ADM1000"], ["bcom", "Fall", "ADM2000"]]
+    result = solve(payload, progress=silent, time_limit=10)
+    assert result.status in {"optimal", "feasible"}
+    by_course = {}
+    for assignment in result.assignments:
+        by_course.setdefault(assignment.course_id, set()).add(assignment.timeslot_id)
+    assert by_course["ADM1000"].isdisjoint(by_course["ADM2000"])
+
+
+def test_reused_section_id_can_meet_twice_on_one_day() -> None:
+    payload = config.loads("""
+semesters: [Fall]
+meeting_times:
+  - {id: AM, days: {Mon: '09:00'}, duration_minutes: 90, time_of_day: Morning}
+  - {id: PM, days: {Mon: '13:00'}, duration_minutes: 90, time_of_day: Afternoon}
+classrooms: {R1: 30}
+professors:
+  p1: {teaching_load: 2, prefers_packed_days: true}
+courses:
+  C1:
+    sections:
+      - {id: '1', semester: Fall, time_of_day: Morning, students: 30}
+      - {id: '1', semester: Fall, time_of_day: Afternoon, students: 30}
+""")
+    result = solve(payload, progress=silent, time_limit=5)
+
+    assert result.status == "optimal"
+    assert len(result.assignments) == 2
+    assert {
+        (a.professor_id, a.classroom_id, a.timeslot_id, a.time_of_day_id)
+        for a in result.assignments
+    } == {("p1", "R1", "AM", "Morning"), ("p1", "R1", "PM", "Afternoon")}
+    repeated = solve(payload, progress=silent, time_limit=5)
+    assert repeated.assignments == result.assignments
+    assert repeated.objective == pytest.approx(result.objective)

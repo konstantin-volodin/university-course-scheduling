@@ -21,18 +21,18 @@ See [../instances/README.md](../instances/README.md) for the YAML fields.
 ## Commands
 
 ```bash
-scheduler solve ../instances/tiny
+scheduler solve ../instances/tiny --time-limit 30
 scheduler solve ../instances/tiny --check
 scheduler solve ../instances/medium --time-limit 60
 scheduler solve ../instances/telfer --solver gurobi --time-limit 600
 scheduler report ../instances/medium -o instance.html
-cat ../instances/tiny/instance.yaml | scheduler solve -
+cat ../instances/tiny/instance.yaml | scheduler solve - --time-limit 30
 ```
 
-A file-backed solve writes three files to the instance folder's `results/`
-directory: `result.json`, `schedule.html`, and `instance.html`.
+A file-backed solve writes `result.json`, `schedule.html`, `instance.html`,
+`objective.md`, and `solve.log` to the instance folder's `results/` directory.
 A split instance directory is itself the instance folder. Use `-o` to
-override the JSON path; the two HTML pages are written beside it. A solve read
+override the JSON path; the reports and log are written beside it. A solve read
 from stdin continues to write JSON to stdout. Progress goes to stderr.
 
 Exit codes:
@@ -57,21 +57,18 @@ The free Gurobi license is too small for medium and full instances.
 
 ```text
 src/scheduler/
-  config.py      YAML loading
-  instance.py    payload validation
-  model.py       scheduling model
-  program.py     solver-neutral MIP types
-  solve.py       staged solve orchestration
-  result.py      result types and JSON serialization
-  _room_seed.py  physical-room warm-start heuristic
-  backends/      HiGHS and Gurobi adapters
-  report.py      report data preparation
-  report_assets/ HTML, CSS, and JavaScript embedded in reports
-  cli.py         command line
+  config/    YAML loading and payload validation
+  model/     scheduling formulation and solver-neutral MIP types
+  solve/     staged solving, results, and room seeding
+  backends/  HiGHS and Gurobi adapters
+  report/    report rendering and frontend assets
+  cli.py     command line
 tests/
 ```
 
-Dependency direction: `config → instance → model → program`.
+Dependency direction: `cli → solve → model → config`, with `backends` and
+`report` as leaves. Every `__init__.py` is re-exports only; cross-package
+imports go through them rather than reaching into a submodule.
 
 ## Input formats
 
@@ -136,9 +133,18 @@ Summary fields:
 1. Minimize teaching-load violations.
 2. Minimize concurrency conflicts and unscheduled sections.
 3. Minimize off-campus assignments.
-4. Maximize preferences.
+4. Minimize part-timer use of physical rooms.
+5. Balance time-of-day and day-of-week use.
+6. Minimize course block violations.
+7. Minimize Friday-night penalties.
+8. Minimize room changes.
+9. Minimize additional teaching days.
+10. Maximize course, time, and block preference rewards.
 
-Stages 1–2 use an exact gap. Stages 3–4 use a 5% gap.
+Stages 3, 8, and 10 use a 5% gap; the others use an exact gap.
+Each minimization stage caps its result before the next stage starts.
+Budget up to ten times the per-stage time limit, plus preprocessing and report
+generation. A 900-second limit allows up to 2.5 hours across the ten stages.
 
 ## Development
 
