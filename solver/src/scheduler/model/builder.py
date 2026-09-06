@@ -165,13 +165,11 @@ class _Index:
 
     professors: list[str]
     real_professors: list[str]
-    courses: list[str]
     semesters: list[str]
     rooms: list[str]
     real_slots: list[str]
     days: list[str]
     times_of_day: list[str]
-    blocks: list[str]
 
     slots_at: dict[str, list[str]]        # time of day -> real timeslots
     days_of: dict[str, list[str]]         # timeslot -> days of week
@@ -220,13 +218,11 @@ class _Index:
         return cls(
             professors=sorted(inst.professors),
             real_professors=sorted(inst.real_professors),
-            courses=sorted(inst.courses),
             semesters=sorted(inst.semesters),
             rooms=sorted(inst.classrooms),
             real_slots=sorted(inst.real_timeslots),
             days=sorted(inst.days_of_week),
             times_of_day=sorted(inst.times_of_day),
-            blocks=sorted(inst.block_types),
             slots_at=dict(slots_at),
             days_of=dict(days_of),
             times_of=dict(times_of),

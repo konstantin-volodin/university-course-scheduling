@@ -88,6 +88,16 @@ Reserved IDs:
 
 Reserved IDs are returned as `null` assignments.
 
+Declared qualifications are preserved throughout solving, including
+`qualified_for: all` and its default. Course ranks reward preferred assignments;
+they never remove non-preferred courses from a professor's qualifications.
+Instances with broad qualifications can therefore build larger models.
+
+The optional top-level `minimum_room_fill` policy accepts a fraction from `0` to
+`1` and defaults to `0.8`. For example, `minimum_room_fill: 0` allows underfilled
+rooms; room capacity remains a hard upper bound. The setting works in single YAML
+files and split-instance manifests.
+
 ## Output
 
 ```json
@@ -156,3 +166,38 @@ make types
 make fmt
 make example
 ```
+
+GitHub Actions runs `make check` on Python 3.13 and 3.14 using locked dependencies.
+It validates all three public instances and solves the tiny example with a
+30-second limit per stage. Each successful job provides downloadable JSON and
+HTML reports plus the objective audit. Full Telfer solves remain manual.
+
+See [TASKS.md](TASKS.md) for the current improvement pass and verification status.
+The longer-term research and product goals are tracked in [ROADMAP.md](ROADMAP.md).
+
+## Reproducible experiments
+
+```bash
+uv run python -m scheduler.benchmark ../instances/tiny ../instances/medium \
+  --time-limit 10 --repeat 2 --output ../instances/results/research/baseline.json
+```
+
+The JSON report records canonical input snapshots and SHA256 digests, software
+versions, Git revision and dirty state, solver settings, complete results, elapsed
+time, independent hard-rule audit findings, and isolated failures. A failed run
+does not discard successful repetitions;
+the command exits nonzero if any run fails. Elapsed time includes input loading,
+validation, model construction, solving and auditing; it excludes environment collection and
+final report writing. The time limit is still per stage, not a total deadline.
+
+Use a fresh output filename for each experiment. Benchmark outputs must be outside
+input directories (including the directory of a split `instance.yaml` manifest).
+Reports contain the full input data; share only instances you intend to disclose.
+These runs support reproducibility, not a claim of benchmark compatibility or
+institutional effectiveness. See [research/RELATED_WORK.md](research/RELATED_WORK.md).
+
+The independent auditor checks exported assignments directly against the instance,
+without generating model rows: section completeness, qualifications, permissions,
+room capacity/fill, teaching loads, and professor/room/program overlaps. It does
+not certify preference scores, soft course-concurrency penalties, or optimality.
+An audit failure retains the returned result for diagnosis and marks the run failed.

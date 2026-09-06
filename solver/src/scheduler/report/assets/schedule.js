@@ -6,11 +6,9 @@
   }
   var R=DATA.assignments, DAYS=DATA.days, TODS=DATA.timesOfDay;
   var SEMS=DATA.semesters, ROOMS=DATA.rooms;
-  var state={sem:SEMS[0],staff:"all",room:"all",pick:null};
+  var state={sem:SEMS[0],staff:"all",room:"all",scheduled:"all",pick:null};
   var CAP=6;  // chips shown per slot group before it has to be opened
 
-  var totalPT=R.filter(function(r){return r.professor===null}).length;
-  var profs={}; R.forEach(function(r){ if(r.professor!==null) profs[r.professor]=1; });
   function pct(value){return Number(value||0).toFixed(1)+"%";}
   [["",DATA.summary.total,"total sections"],
    ["",pct(DATA.summary.namedPct),"named faculty"],
@@ -49,10 +47,21 @@
     if(state.staff==="fac" && r.professor===null) return false;
     if(state.staff==="pt" && r.professor!==null) return false;
     if(state.room==="on" && r.room===null) return false;
+    if(state.room==="off" && r.room!==null) return false;
+    if(state.scheduled==="yes" && !r.slot) return false;
+    if(state.scheduled==="no" && r.slot) return false;
     return true;
   }
   function render(){
     var rows=R.filter(visible), byCell={};
+    var unscheduled=rows.filter(function(r){return !r.slot});
+    document.getElementById("emptyresults").hidden=rows.length!==0;
+    document.getElementById("gridwrap").hidden=!rows.some(function(r){return r.slot});
+    document.getElementById("unscheduled").hidden=unscheduled.length===0;
+    document.getElementById("unscheduledrows").innerHTML=unscheduled.map(function(r){
+      return '<button class="chip'+(r.professor===null?' pt':'')+'" data-row="'+r.id+
+        '">'+esc(r.label)+'</button>';
+    }).join("");
     rows.forEach(function(r){ r.days.forEach(function(d){
       var k=d+"|"+r.timeOfDay; (byCell[k]=byCell[k]||[]).push(r);
     }); });
@@ -90,7 +99,8 @@
     }).join("");
     var pt=rows.filter(function(r){return r.professor===null}).length;
     document.getElementById("count").innerHTML='<b>'+rows.length+'</b> sections shown \u00b7 <b>'+
-      (rows.length-pt)+'</b> faculty \u00b7 <b>'+pt+'</b> part-time';
+      (rows.length-pt)+'</b> faculty \u00b7 <b>'+pt+'</b> part-time \u00b7 <b>'+
+      unscheduled.length+'</b> unscheduled';
     if(state.pick && !rows.some(function(r){return String(r.id)===state.pick})) hideDetail();
     else if(state.pick) markPick();
   }
@@ -114,8 +124,8 @@
     state.pick=rowId;
     var f=[["Course",r.course],["Section",r.section],
       ["Professor",r.professor===null?"part-timer":r.professor],
-      ["Meets",r.days.join(" + ")+" \u00b7 "+r.timeOfDay],
-      ["Slot",r.slot+" ("+r.length+")"],
+      ["Meets",r.slot?r.days.join(" + ")+" \u00b7 "+r.timeOfDay:"Unscheduled"],
+      ["Slot",r.slot?r.slot+" ("+r.length+")":"Not assigned"],
       ["Room",r.room?r.room+" \u00b7 "+ROOMS[r.room]+" seats":"off campus"],
       ["Students",r.students===null?"\u2014":r.students]];
     var d=document.getElementById("detail");
@@ -135,7 +145,7 @@
     }
     var chip=e.target.closest?e.target.closest(".chip"):null;
     if(chip){ chip.classList.contains("sel")?hideDetail():showDetail(chip.dataset.row); return; }
-    var b=e.target.closest?e.target.closest("#semseg button,#staffseg button,#roomseg button"):null;
+    var b=e.target.closest?e.target.closest("#semseg button,#staffseg button,#roomseg button,#scheduledseg button"):null;
     if(!b) return;
     Array.prototype.forEach.call(b.parentNode.children,function(x){
       x.setAttribute("aria-pressed",String(x===b));
@@ -143,6 +153,7 @@
     if(b.dataset.sem) state.sem=b.dataset.sem;
     if(b.dataset.staff) state.staff=b.dataset.staff;
     if(b.dataset.room) state.room=b.dataset.room;
+    if(b.dataset.scheduled) state.scheduled=b.dataset.scheduled;
     render();
   });
   document.addEventListener("keydown",function(e){ if(e.key==="Escape") hideDetail(); });

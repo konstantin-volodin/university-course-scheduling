@@ -24,10 +24,6 @@ __all__ = ["instance_page", "objective_markdown", "schedule_page"]
 def _asset(name: str) -> str:
     return resources.files("scheduler.report.assets").joinpath(name).read_text(encoding="utf-8")
 
-_DISPLAY = '"Helvetica Neue",Arial,sans-serif'
-_SANS = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif'
-_MONO = 'ui-monospace,SFMono-Regular,Menlo,Consolas,monospace'
-
 _CSS = _asset("base.css")
 
 
@@ -195,10 +191,6 @@ def objective_markdown(result: Any, *, title: str = "Objective Audit") -> str:
                 f"| {coefficient:.2f} | {count} | {value:.2f} | {contribution:.2f} |"
                 for coefficient, count, value, contribution in _term_groups(omitted)
             )
-        if shown_total >= _MAX_AUDIT_TERMS_TOTAL:
-            # Keep later components' counts visible, but avoid rendering more
-            # term tables once the document-wide budget has been used.
-            shown_total = _MAX_AUDIT_TERMS_TOTAL
     return "\n".join(lines) + "\n"
 
 

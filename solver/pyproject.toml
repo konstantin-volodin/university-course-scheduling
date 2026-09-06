@@ -7,7 +7,7 @@ name = "workload-scheduler"
 version = "1.0.0"
 description = "Course workload allocation solver: a YAML config in, a packaged schedule out."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 license = { text = "MIT" }
 dependencies = ["highspy>=1.15", "pyyaml>=6.0.3"]
 
@@ -38,7 +38,7 @@ ignore = ["N818"]
 "tests/*" = ["ARG"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 files = ["src"]
 strict = true
 warn_unreachable = true

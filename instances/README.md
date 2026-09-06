@@ -72,7 +72,13 @@ SCI-201: 80
 LIB-100: 160
 ```
 
-Rooms must fit the section and be at least 80% full. `other` is reserved.
+Rooms must fit the section. By default they must also be at least 80% full.
+Set top-level `minimum_room_fill` in `instance.yaml` to a fraction from 0 to 1
+to change that institutional policy; `minimum_room_fill: 0` disables only the
+minimum-fill rule, not the capacity upper bound. The setting also works in a
+single-file instance.
+
+`other` is reserved.
 
 ## Professors
 
@@ -141,9 +147,13 @@ Optional concurrency rules:
 - {courses: [BIO101, BIO205, BIO305], must_run: apart}
 ```
 
-`apart` prevents overlap. `together` requires the same meeting time and takes
-exactly two courses. Omit `semester` (or pass a list) to cover every semester;
-listing more than two courses under `apart` keeps every pair apart.
+`apart` penalizes overlap, including distinct meeting IDs that overlap on the
+clock. `together` penalizes unequal section counts at the same meeting ID and
+takes exactly two courses. These are soft rules for named-faculty assignments;
+part-timer and unscheduled fallbacks are exempt. Violations are minimized before
+preferences, but a returned schedule can still contain violations. Omit
+`semester` (or pass a list) to cover every semester; listing more than two
+courses under `apart` applies the rule to every pair.
 
 ## Programs
 
