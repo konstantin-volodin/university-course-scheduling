@@ -16,13 +16,13 @@ from collections import Counter, defaultdict
 from importlib import resources
 from typing import Any
 
-from .instance import OFF_CAMPUS, PART_TIMER
+from ..config import OFF_CAMPUS, PART_TIMER
 
 __all__ = ["instance_page", "schedule_page"]
 
 
 def _asset(name: str) -> str:
-    return resources.files("scheduler.report_assets").joinpath(name).read_text(encoding="utf-8")
+    return resources.files("scheduler.report.assets").joinpath(name).read_text(encoding="utf-8")
 
 _DISPLAY = '"Helvetica Neue",Arial,sans-serif'
 _SANS = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif'

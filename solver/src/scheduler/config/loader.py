@@ -8,7 +8,7 @@ from difflib import get_close_matches
 from pathlib import Path
 from typing import Any
 
-from .errors import InvalidInstanceError, SchedulerError
+from ..errors import InvalidInstanceError, SchedulerError
 
 __all__ = ["load", "loads"]
 

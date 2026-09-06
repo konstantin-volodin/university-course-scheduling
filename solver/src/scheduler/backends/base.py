@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Protocol, runtime_checkable
 
-from ..program import LinearExpr, Program, Sense
+from ..model.program import LinearExpr, Program, Sense
 
 __all__ = ["Backend", "Outcome", "SolutionStatus"]
 

@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from scheduler import Result, SolveError, silent, solve
-from scheduler.instance import MIN_ROOM_FILL
+from scheduler.config.instance import MIN_ROOM_FILL
 from scheduler.solve import GOOD_ENOUGH
 
 
@@ -183,10 +183,10 @@ def test_courses_with_the_same_section_id_can_run_together(payload: dict[str, An
 
 
 def test_room_stage_gets_a_physical_room_seed(payload: dict[str, Any]) -> None:
-    from scheduler._room_seed import seed_physical_rooms
-    from scheduler.instance import OFF_CAMPUS, Instance, is_placeholder
+    from scheduler.config.instance import OFF_CAMPUS, Instance, is_placeholder
     from scheduler.model import build
     from scheduler.progress import Progress
+    from scheduler.solve.room_seed import seed_physical_rooms
 
     # Make off-campus variables available for the named faculty, then imitate
     # the all-off-campus incumbent produced before room use is optimised.
@@ -362,7 +362,7 @@ def test_each_stage_starts_from_the_previous_answer(payload: dict[str, Any]) -> 
     infeasibility even though the three stages before it had all solved.
     """
     from scheduler.backends import base
-    from scheduler.solve import _StagedSolve
+    from scheduler.solve.solver import _StagedSolve
 
     starts: list[list[float]] = []
     real = base.SolutionStatus  # keep the enum reachable for the stub below
@@ -389,7 +389,7 @@ def test_each_stage_starts_from_the_previous_answer(payload: dict[str, Any]) -> 
         def close(self) -> None:
             pass
 
-    from scheduler.instance import Instance
+    from scheduler.config.instance import Instance
     from scheduler.model import build
     from scheduler.progress import Progress
 
@@ -412,7 +412,7 @@ def test_a_warm_start_survives_the_objective_swap(payload: dict[str, Any]) -> No
     """
     from scheduler.backends.base import SolutionStatus
     from scheduler.backends.highs import HighsBackend
-    from scheduler.instance import Instance
+    from scheduler.config.instance import Instance
     from scheduler.model import build
     from scheduler.progress import Progress
 

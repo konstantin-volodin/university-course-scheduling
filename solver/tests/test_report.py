@@ -10,8 +10,9 @@ from typing import Any
 
 import pytest
 
-from scheduler import config, report
+from scheduler import config
 from scheduler.cli import main
+from scheduler.report import renderer as report
 
 INSTANCES = Path(__file__).parents[2] / "instances"
 TINY = INSTANCES / "tiny"
@@ -25,7 +26,7 @@ def payload() -> dict[str, Any]:
 
 @pytest.fixture(scope="module")
 def result(payload: dict[str, Any]) -> dict[str, Any]:
-    from scheduler.instance import Instance
+    from scheduler.config.instance import Instance
     from scheduler.progress import silent
     from scheduler.solve import solve_instance
 

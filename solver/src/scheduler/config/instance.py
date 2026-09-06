@@ -16,7 +16,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Final
 
-from .errors import InvalidInstanceError
+from ..errors import InvalidInstanceError
 
 __all__ = [
     "OFF_CAMPUS",

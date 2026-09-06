@@ -17,14 +17,14 @@ import math
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from . import model as model_module
-from ._room_seed import seed_physical_rooms
-from .backends import DEFAULT_BACKEND, Backend, SolutionStatus, open_backend
-from .errors import SolveError
-from .instance import OFF_CAMPUS, PART_TIMER, Instance, is_placeholder
-from .program import LinearExpr, Sense
-from .progress import Progress, ProgressCallback
+from .. import model as model_module
+from ..backends import DEFAULT_BACKEND, Backend, SolutionStatus, open_backend
+from ..config import OFF_CAMPUS, PART_TIMER, Instance, is_placeholder
+from ..errors import SolveError
+from ..model.program import LinearExpr, Sense
+from ..progress import Progress, ProgressCallback
 from .result import Assignment, Result, Stage
+from .room_seed import seed_physical_rooms
 
 __all__ = ["Assignment", "Result", "Stage", "solve", "solve_instance"]
 
@@ -209,7 +209,7 @@ def solve(
     """Solve one workload-allocation instance.
 
     :param payload: one key per ``/OPTIM_data/`` endpoint. See
-        :data:`scheduler.instance.PAYLOAD_KEYS`.
+        :data:`scheduler.config.instance.PAYLOAD_KEYS`.
     :param progress: called as ``(stage, message)`` while the solve runs.
         Defaults to writing to stderr; pass :func:`scheduler.progress.silent`
         for nothing.

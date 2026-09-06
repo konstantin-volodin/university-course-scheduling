@@ -16,7 +16,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from ..errors import SolverError
-from ..program import LinearExpr, Program, Sense, VarKind
+from ..model.program import LinearExpr, Program, Sense, VarKind
 from .base import Outcome, SolutionStatus
 
 __all__ = ["GurobiBackend"]
@@ -25,7 +25,7 @@ _LICENCE_HINTS = ("size-limited", "license", "licence")
 
 
 class GurobiBackend:
-    """Solves a :class:`~scheduler.program.Program` with Gurobi."""
+    """Solves a :class:`~scheduler.model.program.Program` with Gurobi."""
 
     name = "gurobi"
 
