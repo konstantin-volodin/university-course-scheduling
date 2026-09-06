@@ -16,3 +16,5 @@ model/*.fls
 model/*.log
 model/*.fdb_latexmk
 model/*.synctex.gz
+
+model/*.pdf
