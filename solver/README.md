@@ -20,10 +20,22 @@ See [../instances/README.md](../instances/README.md) for the YAML fields.
 
 ## Commands
 
+Cold solves may run one preliminary restricted search to find a usable timetable.
+Its solver budget is at most 10 seconds (or the per-stage limit, if smaller), in
+addition to the normal stages and model-building overhead. The final model retains
+all declared qualifications. An explicit `--warm-start` skips this preliminary search.
+
+Solve output paths must be distinct and cannot refer to the input file, split
+manifest or declared fragments. Checks include existing symlink and hardlink aliases
+and run before the solver or log writer starts. Existing result files may still be
+replaced on a successful solve; use a fresh output directory to preserve earlier runs.
+
 ```bash
 scheduler solve ../instances/tiny --time-limit 30
 scheduler solve ../instances/tiny --check
 scheduler solve ../instances/medium --time-limit 60
+# Reuse a previously validated timetable (a hint, not fixed assignments):
+scheduler solve ../instances/medium --time-limit 60 --warm-start prior-result.json
 scheduler solve ../instances/telfer --solver gurobi --time-limit 600
 scheduler report ../instances/medium -o instance.html
 cat ../instances/tiny/instance.yaml | scheduler solve - --time-limit 30

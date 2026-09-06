@@ -16,11 +16,28 @@ from typing import Any
 import pytest
 
 from scheduler.cli import main
+from scheduler.solve import Assignment, Result
 
 INSTANCES = Path(__file__).parents[2] / "instances"
 TINY = INSTANCES / "tiny"
 TINY_FILE = TINY / "instance.yaml"
 MEDIUM = INSTANCES / "medium"
+
+
+def test_unscheduled_result_warns_even_when_quiet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    result = Result("feasible", 0.0, [Assignment(
+        professor_id=None, course_id="C", section_id="1", semester_id="Fall",
+        timeslot_id=None, classroom_id=None, time_of_day_id="Day", solution_value=1.0,
+    )])
+    monkeypatch.setattr("scheduler.cli.solve_instance", lambda *args, **kwargs: result)
+    output = tmp_path / "result.json"
+    assert main(["solve", str(TINY), "-o", str(output), "-q", "--time-limit", "1"]) == 0
+    captured = capsys.readouterr()
+    assert "incomplete timetable: 1 of 1 sections have no timeslot" in captured.err
+    assert captured.out == ""
+    assert json.loads(output.read_text())["status"] == "feasible"
 
 
 def test_solve_writes_json_to_a_file(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

@@ -7,15 +7,18 @@ import json
 import math
 import sys
 from collections.abc import Sequence
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 from . import __version__
+from .audit import audit_result
 from .backends import BACKENDS, DEFAULT_BACKEND
 from .config import Instance
 from .errors import InvalidInstanceError, SchedulerError
 from .progress import ProgressCallback, TeeProgress, TerminalProgress, silent, to_stderr
-from .solve import solve_instance
+from .solve import Result, solve_instance
+from .solve.warm_start import assignments_from_result, validate_initial_assignments
 
 __all__ = ["main"]
 
@@ -64,6 +67,31 @@ def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Pat
     schedule = Path(args.html) if args.html else result.with_name("schedule.html")
     instance = result.with_name("instance.html")
     objective = result.with_name("objective.md")
+    targets = [result, schedule, instance, objective, result.with_name("solve.log")]
+    resolved = [target.resolve() for target in targets]
+    if len(set(resolved)) != len(resolved) or any(
+        target.exists() and previous.exists() and target.samefile(previous)
+        for index, target in enumerate(targets) for previous in targets[:index]
+    ):
+        raise SchedulerError("solve output paths must be distinct, including solve.log")
+    if args.instance != "-":
+        source = Path(args.instance)
+        if source.is_dir():
+            source = source / "instance.yaml"
+        inputs = {source.resolve()}
+        if source.suffix.lower() in {".yaml", ".yml"}:
+            import yaml
+
+            manifest = yaml.safe_load(source.read_text(encoding="utf-8"))
+            if isinstance(manifest, dict) and isinstance(manifest.get("files"), dict):
+                for paths in manifest["files"].values():
+                    for path in [paths] if isinstance(paths, str) else paths:
+                        inputs.add((source.parent / path).resolve())
+        if inputs.intersection(resolved) or any(
+            target.exists() and source.exists() and target.samefile(source)
+            for target in targets for source in inputs
+        ):
+            raise SchedulerError("solve outputs must not overwrite the input instance")
     try:
         result.parent.mkdir(parents=True, exist_ok=True)
         schedule.parent.mkdir(parents=True, exist_ok=True)
@@ -103,6 +131,10 @@ def _cmd_solve(args: argparse.Namespace) -> int:
         print(f"instance is valid: {instance.summary()}", file=sys.stderr)
         return 0
 
+    initial = None
+    if args.warm_start is not None:
+        initial = assignments_from_result(_read_json(args.warm_start))
+        validate_initial_assignments(instance, initial)
     outputs = _solve_output_paths(args)
     live_reporter = silent if args.quiet else (
         TerminalProgress() if sys.stderr.isatty() else to_stderr
@@ -115,7 +147,8 @@ def _cmd_solve(args: argparse.Namespace) -> int:
         reporter = live_reporter
     try:
         result = solve_instance(
-            instance, reporter, time_limit=args.time_limit, solver=args.solver
+            instance, reporter, time_limit=args.time_limit, solver=args.solver,
+            initial_assignments=initial,
         )
     finally:
         if log_file is not None:
@@ -132,6 +165,13 @@ def _cmd_solve(args: argparse.Namespace) -> int:
         _write(instance_page(payload), instance_path)
         _write(objective_markdown(payload_result), objective_path)
 
+    if result.unscheduled:
+        print(
+            f"warning: incomplete timetable: {len(result.unscheduled)} of "
+            f"{len(result.assignments)} sections have no timeslot. Solver feasibility "
+            "allows unscheduled placeholders; it does not mean the timetable is ready to use.",
+            file=sys.stderr,
+        )
     if not args.quiet:
         print(
             f"\n{result.status} via {result.solver}: {len(result.assignments)} assignments "
@@ -155,6 +195,37 @@ def _cmd_report(args: argparse.Namespace) -> int:
         result = _read_json(args.result)
         _write(schedule_page(payload, result, title=args.title or "Solved Schedule"), args.output)
     return 0
+
+
+def _cmd_audit(args: argparse.Namespace) -> int:
+    """Check saved assignments without solving or trusting their saved scores."""
+    instance = Instance.from_payload(_read_instance(args.instance))
+    try:
+        assignments = assignments_from_result(_read_json(args.result))
+    except UnicodeError as exc:
+        raise SchedulerError(f"{args.result}: result must be UTF-8 text") from exc
+    except SchedulerError as exc:
+        raise SchedulerError(str(exc).replace("warm start:", "audit result:", 1)) from exc
+    # Stored solver status/objective are deliberately not interpreted or verified.
+    result = Result("feasible", 0.0, assignments)
+    issues = audit_result(instance, result)
+    unresolved = {
+        "unscheduled": len(result.unscheduled),
+        "unstaffed": len(result.unstaffed),
+        "off_campus": len(result.off_campus),
+    }
+    scheduling_gate_passed = not args.require_scheduled or not result.unscheduled
+    print(_as_json({
+        "hard_rules": {"passed": not issues, "issues": [asdict(issue) for issue in issues]},
+        "unresolved": unresolved,
+        "scheduling_gate": {
+            "required": args.require_scheduled, "passed": scheduling_gate_passed,
+        },
+        "scope": (
+            "Checks hard rules and missing timeslots, not optimality or operational readiness."
+        ),
+    }), end="")
+    return 0 if not issues and scheduling_gate_passed else 1
 
 
 def _positive_seconds(value: str) -> float:
@@ -195,6 +266,10 @@ def build_parser() -> argparse.ArgumentParser:
              "is still returned, with status 'feasible'",
     )
     solve_cmd.add_argument(
+        "--warm-start", metavar="RESULT_JSON",
+        help="start from a complete validated prior schedule without fixing its assignments",
+    )
+    solve_cmd.add_argument(
         "--html", metavar="PATH", help="override the schedule HTML path"
     )
     solve_cmd.set_defaults(handler=_cmd_solve)
@@ -211,6 +286,19 @@ def build_parser() -> argparse.ArgumentParser:
     report_cmd.add_argument("-o", "--output", required=True, help="write the HTML page here")
     report_cmd.add_argument("--title", help="page title (default depends on the page)")
     report_cmd.set_defaults(handler=_cmd_report)
+
+    audit_cmd = subcommands.add_parser(
+        "audit", help="check saved assignments against hard rules without solving or writing files",
+    )
+    audit_cmd.add_argument(
+        "instance", help="split-instance directory, YAML/JSON file, or - for stdin",
+    )
+    audit_cmd.add_argument("--result", required=True, metavar="RESULT_JSON")
+    audit_cmd.add_argument(
+        "--require-scheduled", action="store_true",
+        help="also fail when any assignment has no timeslot; this does not certify readiness",
+    )
+    audit_cmd.set_defaults(handler=_cmd_audit)
 
     return parser
 
