@@ -25,7 +25,7 @@ from ..errors import SolveError
 from ..model import AssignmentKey, BuiltModel, Objectives, build
 from ..model.program import LinearExpr, Program, Row, Sense, VarKind
 from ..progress import Progress, ProgressCallback
-from .neighborhood import NeighborhoodSearch
+from .neighborhood import NeighborhoodSearch, _satisfied
 from .result import Assignment, ObjectiveBreakdown, ObjectiveTerm, Result, Stage
 from .room_seed import seed_physical_rooms
 
@@ -142,6 +142,9 @@ class _StagedSolve:
                 and coefficient * self.values[index] == 0
                 for index, coefficient in objective.terms.items()
             )
+            # A repaired incumbent is only a hint. Capping at zero from an
+            # infeasible point would make the model itself infeasible.
+            and _feasible(self.program, self.active_rows, self.values)
         ):
             value = 0.0
             self._record(Stage(name, value, 0.0, True, "lower_bound", 0.0, 0.0))
@@ -237,6 +240,18 @@ class _StagedSolve:
             )
             for component in objectives.preference_components()
         )
+
+
+def _feasible(program: Program, rows: Sequence[Row], values: list[float]) -> bool:
+    """Whether a point meets every bound, integrality requirement and row."""
+    for variable, value in zip(program.variables, values, strict=True):
+        if not variable.lower - 1e-6 <= value <= variable.upper + 1e-6:
+            return False
+        if variable.kind is not VarKind.CONTINUOUS and abs(value - round(value)) > 1e-6:
+            return False
+    return all(
+        _satisfied(row, sum(c * values[i] for i, c in row.terms.items())) for row in rows
+    )
 
 
 def _repair(
