@@ -12,7 +12,7 @@ from dataclasses import replace
 from ..backends import open_backend
 from ..config import PART_TIMER
 from ..model import BuiltModel, build
-from ..model.program import Sense
+from ..model.program import Row, Sense
 from ..progress import Progress
 from .warm_start import validate_initial_assignments
 
@@ -55,10 +55,10 @@ def restricted_incumbent(
     backend = open_backend(solver, threads=THREADS, seed=SEED)
     try:
         backend.load(restricted.program)
-        backend.add_row(
+        backend.add_rows([Row(
             "restricted_zero_load_penalty", dict(restricted.objectives.teaching_load.terms),
             Sense.LE, 0.0,
-        )
+        )])
         backend.warm_start(seed)
         with progress.step("solving", "restricted incumbent search"):
             outcome = backend.optimise(
