@@ -1,6 +1,6 @@
 """The staged solve, and the public :func:`solve` entry point.
 
-The program is solved in ten stages. Each stage optimises one objective,
+The program is solved in stages, one per goal in :data:`STAGES`. Each optimises one objective,
 then freezes the result as a row before the next stage runs. That keeps the
 ordering honest: a later stage can improve preferences only within the
 objective ceilings reached by earlier stages. A time-limited stage may leave
@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import math
 import time
+from collections import defaultdict
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, replace
 from typing import Any
 
 from ..backends import DEFAULT_BACKEND, Backend, SolutionStatus, open_backend
@@ -25,18 +27,18 @@ from ..errors import SolveError
 from ..model import AssignmentKey, BuiltModel, Objectives, build
 from ..model.program import LinearExpr, Program, Row, Sense, VarKind
 from ..progress import Progress, ProgressCallback
-from .result import Assignment, ObjectiveBreakdown, ObjectiveTerm, Result, Stage
+from .result import Assignment, Result, Stage, StageItem
 from .room_seed import seed_physical_rooms
 
 __all__ = ["Assignment", "Result", "Stage", "solve", "solve_instance"]
 
-#: Optimality gap for the violation stages. These count whole violations, so
-#: the answer must be exact — "within 5%" of two violations is meaningless.
+#: Optimality gap for every stage. Each counts whole things -- sections, rooms,
+#: days -- so "within 5%" of the best count is not an answer anyone can use.
 EXACT = 0.0
 
-#: Optimality gap for the preference stages, where the last few percent costs
-#: far more time than it is worth.
-GOOD_ENOUGH = 0.05
+#: The most any stage may search, in seconds. A stage that runs out returns the
+#: best schedule found so far and reports that it was not proven best.
+MAX_TIME_LIMIT = 60.0
 
 #: Fixed so repeated runs of the same instance return the same schedule. Any
 #: parallel MIP solver is only deterministic at a fixed thread count.
@@ -49,6 +51,93 @@ SEED = 0
 
 #: Solver values are floating point; anything below this is a zero that drifted.
 TOLERANCE = 0.01
+
+
+@dataclass(frozen=True, slots=True)
+class StageSpec:
+    """One goal, in priority order, and what one point of it means."""
+
+    key: str
+    name: str
+    meaning: str
+    objective: Callable[[Objectives], LinearExpr]
+    maximise: bool = False
+    #: Balance is measured in fractional teaching hours; every other goal counts.
+    integral: bool = True
+
+
+#: The goals, highest priority first. Each is optimised, then held as a ceiling
+#: while the rest are optimised, so a lower goal never buys points from a higher one.
+STAGES: tuple[StageSpec, ...] = (
+    StageSpec(
+        "overload", "Keep professors within their agreed loads",
+        "One section a named professor teaches beyond their agreed load. "
+        "Teaching fewer sections than agreed is never allowed.",
+        lambda o: o.teaching_load,
+    ),
+    StageSpec(
+        "unscheduled", "Give every section a meeting time",
+        "One section left without a meeting time.",
+        lambda o: o.placeholder_use,
+    ),
+    StageSpec(
+        "course_clashes", "Respect course timing rules",
+        "One broken rule: two sections of a course meeting at once, courses that must "
+        "run apart overlapping, or courses that must run together meeting separately.",
+        lambda o: o.concurrency,
+    ),
+    StageSpec(
+        "program_clashes", "Let each program's students take every required course",
+        "One required course that a program's students cannot fit alongside the others "
+        "without a clash, including a course with no scheduled section. The solver picks "
+        "the sections that let students take the most required courses.",
+        lambda o: o.program_clash,
+    ),
+    StageSpec(
+        "off_campus", "Teach in our own rooms",
+        "One section taught off campus.",
+        lambda o: o.off_campus_use,
+    ),
+    StageSpec(
+        "part_timer_rooms", "Give our rooms to named professors first",
+        "One part-timer section using one of our rooms.",
+        lambda o: o.part_timer_room_use,
+    ),
+    StageSpec(
+        "balance", "Spread teaching across the week",
+        "For each semester, the gap between the busiest and quietest time of day plus the "
+        "gap between the busiest and quietest weekday, in weighted teaching hours.",
+        lambda o: o.time_of_day_spread + o.day_of_week_spread,
+        integral=False,
+    ),
+    StageSpec(
+        "meeting_length", "Use each course's preferred meeting length",
+        "One section meeting in a length its course does not prefer.",
+        lambda o: o.block_violation,
+    ),
+    StageSpec(
+        "friday_night", "Keep flagged courses off Friday night",
+        "One section of a flagged course on Friday night.",
+        lambda o: o.friday_night,
+    ),
+    StageSpec(
+        "room_changes", "Keep each professor in one room per day",
+        "One extra room a professor teaches in on the same day.",
+        lambda o: o.room_changes,
+    ),
+    StageSpec(
+        "teaching_days", "Pack teaching into fewer days where asked",
+        "One day on which a professor who asked for packed days teaches.",
+        lambda o: o.pack_day_penalty,
+    ),
+    StageSpec(
+        "preferences", "Match professors' preferences",
+        "Preference points earned: course ranks, time-of-day scores, and preferred "
+        "meeting lengths. Higher is better.",
+        lambda o: o.remaining_preference_score(),
+        maximise=True,
+    ),
+)
 
 
 class _StagedSolve:
@@ -74,24 +163,26 @@ class _StagedSolve:
         self.backend.add_rows([row])
         self.active_rows.append(row)
 
-    def _optimise(self, name: str, objective: LinearExpr, maximise: bool, gap: float) -> float:
+    def _optimise(self, spec: StageSpec, objective: LinearExpr) -> float:
         started = time.perf_counter()
         if self.values:
             self.backend.warm_start(self.values)
-        self.progress(f"{len(self.stages) + 1}/10 {name} | starting search", stage="solving")
+        self.progress(
+            f"{len(self.stages) + 1}/{len(STAGES)} {spec.name} | starting search", stage="solving"
+        )
         outcome = self.backend.optimise(
-            objective, maximise=maximise, gap=gap, time_limit=self.time_limit
+            objective, maximise=spec.maximise, gap=EXACT, time_limit=self.time_limit
         )
         if not outcome.usable:
-            raise SolveError(name, outcome.detail)
+            raise SolveError(spec.name, outcome.detail)
         self.values = outcome.values
-        proven = outcome.status is SolutionStatus.OPTIMAL
-
         self._record(
             Stage(
-                name=name, value=outcome.objective,
-                seconds=time.perf_counter() - started, proven=proven,
+                name=spec.name, value=outcome.objective,
+                seconds=time.perf_counter() - started,
+                proven=outcome.status is SolutionStatus.OPTIMAL,
                 best_bound=outcome.best_bound, relative_gap=outcome.relative_gap,
+                key=spec.key, meaning=spec.meaning, maximise=spec.maximise,
             )
         )
         return outcome.objective
@@ -105,14 +196,12 @@ class _StagedSolve:
         bound = "n/a" if stage.best_bound is None else f"{stage.best_bound:g}"
         gap = "n/a" if stage.relative_gap is None else f"{100 * stage.relative_gap:.2f}%"
         self.progress(
-            f"{len(self.stages)}/10 {stage.name} | objective={stage.value:g} "
+            f"{len(self.stages)}/{len(STAGES)} {stage.name} | objective={stage.value:g} "
             f"bound={bound} gap={gap} elapsed={stage.seconds:.2f}s status={status}",
             stage="stage",
         )
 
-    def _minimise_then_cap(
-        self, name: str, objective: LinearExpr, gap: float, *, integral: bool = True,
-    ) -> None:
+    def _minimise_then_cap(self, spec: StageSpec, objective: LinearExpr) -> None:
         """Minimise, then hold the result as a ceiling for every later stage.
 
         Count objectives use an integer ceiling. Balance contains fractional
@@ -135,14 +224,17 @@ class _StagedSolve:
             and _feasible(self.program, self.active_rows, self.values)
         ):
             value = 0.0
-            self._record(Stage(name, value, 0.0, True, "lower_bound", 0.0, 0.0))
+            self._record(Stage(
+                spec.name, value, 0.0, True, "lower_bound", 0.0, 0.0,
+                key=spec.key, meaning=spec.meaning,
+            ))
         else:
-            value = self._optimise(name, objective, maximise=False, gap=gap)
+            value = self._optimise(spec, objective)
         self._add_row(
-            f"cap_{name.replace(' ', '_')}",
+            f"cap_{spec.key}",
             dict(objective.terms),
             Sense.LE,
-            math.ceil(value - 1e-6) if integral else value + 1e-6,
+            math.ceil(value - 1e-6) if spec.integral else value + 1e-6,
         )
 
     def run(
@@ -150,84 +242,35 @@ class _StagedSolve:
         objectives: Objectives,
         room_seed: Callable[[list[float]], list[float]] | None = None,
         deferred: Sequence[Row] = (),
-    ) -> float:
-        self._minimise_then_cap(
-            "assign named professors to required sections",
-            objectives.teaching_load,
-            EXACT,
-        )
-        self._minimise_then_cap(
-            "minimise timetable conflicts and unscheduled sections",
-            objectives.concurrency + objectives.placeholder_use,
-            EXACT,
-        )
-        if room_seed is not None:
-            self.values = room_seed(self.values)
-        self._minimise_then_cap(
-            "minimise off-campus teaching", objectives.off_campus_use, GOOD_ENOUGH
-        )
-        self._minimise_then_cap(
-            "minimise part-timer use of physical rooms",
-            objectives.part_timer_room_use,
-            EXACT,
-        )
-        # The preference rows come in only now. None of them can rule out a
-        # solution -- each one just pins a variable the preference objective
-        # reads -- so carrying them through the violation stages above would
-        # have doubled the matrix those stages search for no gain at all.
-        if deferred:
-            with self.progress.step("solving", "adding preference rows") as done:
-                self.backend.add_rows(deferred)
-                self.active_rows.extend(deferred)
-                self.values = _repair(self.program, self.values, deferred)
-                done(f"{len(deferred):,} rows")
-
-        # Balance is deliberately its own stage. Once capped, the model has a
-        # smaller and clearer remaining objective: all other preferences can
-        # trade against each other without undoing the best distribution.
-        self._minimise_then_cap(
-            "optimise time-of-day and day-of-week balance",
-            objectives.time_of_day_spread + objectives.day_of_week_spread,
-            EXACT,
-            integral=False,
-        )
-        self._minimise_then_cap(
-            "minimise course block violations", objectives.block_violation, EXACT
-        )
-        self._minimise_then_cap(
-            "minimise Friday-night penalties", objectives.friday_night, EXACT
-        )
-        # The preceding objectives do not read room-use auxiliaries, so a MIP
-        # incumbent may leave them at arbitrary feasible values. Reconstruct
-        # every deferred definition before this stage to offer the actual room
-        # count as the incumbent instead of asking the solver to rediscover it.
-        if deferred:
-            self.values = _repair(
-                self.program,
-                self.values,
-                deferred,
-                reset_prefixes=("uses_room[", "uses_physical_room_day["),
-            )
-        self._minimise_then_cap(
-            "minimise room changes", objectives.room_changes, GOOD_ENOUGH
-        )
-        self._minimise_then_cap(
-            "minimise additional teaching days", objectives.pack_day_penalty, EXACT
-        )
-        self._optimise(
-            "maximise course, time, and block preference rewards",
-            objectives.remaining_preference_score(),
-            True,
-            GOOD_ENOUGH,
-        )
-        return sum(
-            component.weight
-            * sum(
-                coefficient * self.values[index]
-                for index, coefficient in component.expression.terms.items()
-            )
-            for component in objectives.preference_components()
-        )
+    ) -> None:
+        for spec in STAGES:
+            if spec.key == "off_campus" and room_seed is not None:
+                self.values = room_seed(self.values)
+            # The preference rows come in only now. None of them can rule out a
+            # solution -- each one just pins a variable a later goal reads -- so
+            # carrying them through the stages above would have doubled the
+            # matrix those stages search for no gain at all.
+            if spec.key == "balance" and deferred:
+                with self.progress.step("solving", "adding preference rows") as done:
+                    self.backend.add_rows(deferred)
+                    self.active_rows.extend(deferred)
+                    self.values = _repair(self.program, self.values, deferred)
+                    done(f"{len(deferred):,} rows")
+            # The goals before this one do not read room-use auxiliaries, so an
+            # incumbent may leave them at arbitrary feasible values. Rebuild them
+            # so the actual room count is offered instead of rediscovered.
+            if spec.key == "room_changes" and deferred:
+                self.values = _repair(
+                    self.program,
+                    self.values,
+                    deferred,
+                    reset_prefixes=("uses_room[", "uses_physical_room_day["),
+                )
+            objective = spec.objective(objectives)
+            if spec.maximise:
+                self._optimise(spec, objective)
+            else:
+                self._minimise_then_cap(spec, objective)
 
 
 def _satisfied(row: Row, lhs: float) -> bool:
@@ -336,40 +379,70 @@ def _extract(built: BuiltModel, values: list[float]) -> list[Assignment]:
     return assignments
 
 
-def _preference_breakdown(
-    objectives: Objectives, values: list[float], variable_names: Sequence[str]
-) -> list[ObjectiveBreakdown]:
-    """Evaluate each named component, retaining its active terms for audit."""
-    breakdown = []
-    for component in objectives.preference_components():
-        terms = [
-            ObjectiveTerm(
-                variable=variable_names[index],
-                coefficient=coefficient,
-                value=values[index],
-                contribution=coefficient * values[index],
-            )
-            for index, coefficient in sorted(component.expression.terms.items())
-            if abs(values[index]) > TOLERANCE
-        ]
-        # Keep the scalar exact even though the audit list omits numerical
-        # noise and inactive terms.
-        raw_value = sum(
-            coefficient * values[index]
-            for index, coefficient in component.expression.terms.items()
+_DESCRIPTIONS = {
+    "teaching_load_violation": "{0} teaches beyond their agreed load",
+    "concurrency_self_violation": "Two sections of {0} meet at {2} ({1})",
+    "concurrency_apart_violation": "{0} and {1} both meet at {3} ({2}) but must run apart",
+    "concurrency_apart_overlap_violation":
+        "{0} at {3} overlaps {1} at {4} ({2}) but they must run apart",
+    "concurrency_together_violation":
+        "{0} and {1} do not both meet at {3} ({2}) but must run together",
+    "program_missing_violation":
+        "{0} ({1}): students cannot fit {2} in without a clash or a scheduled section",
+    "time_of_day_max": "Busiest time of day ({0})",
+    "time_of_day_min": "Quietest time of day ({0})",
+    "day_of_week_max": "Busiest weekday ({0})",
+    "day_of_week_min": "Quietest weekday ({0})",
+    "friday_night_violation": "{0} meets on Friday night",
+    "teaches_day": "{0} teaches on {2} ({1})",
+}
+
+
+_WEEK = {day: index for index, day in enumerate(("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))}
+
+
+def _describe_assignment(inst: Instance, key: AssignmentKey) -> str:
+    who = "a part-timer" if key.professor == PART_TIMER else key.professor
+    when = "no meeting time" if is_placeholder(key.timeslot) else key.timeslot
+    pattern = inst.meeting_patterns.get(key.timeslot)
+    if pattern is not None:
+        # Generated bundle ids are hashes; say when it actually meets.
+        when = ", ".join(
+            f"{m.day} {m.start_minutes // 60:02d}:{m.start_minutes % 60:02d} "
+            f"({m.duration_minutes} min)"
+            for m in sorted(pattern.meetings, key=lambda m: (_WEEK.get(m.day, 7), m.start_minutes))
         )
-        breakdown.append(
-            ObjectiveBreakdown(
-                name=component.name,
-                label=component.label,
-                description=component.description,
-                raw_value=raw_value,
-                weight=component.weight,
-                contribution=component.weight * raw_value,
-                terms=terms,
-            )
-        )
-    return breakdown
+    where = "off campus" if key.classroom == OFF_CAMPUS else f"room {key.classroom}"
+    return f"{key.course} section {key.section} ({key.semester}): {who}, {when}, {where}"
+
+
+def _stage_items(
+    built: BuiltModel, objective: LinearExpr, values: list[float]
+) -> list[StageItem]:
+    """What adds to one goal's score in the final schedule, in plain words."""
+    assignment_of = {variable: key for key, variable in built.assign.items()}
+    items: dict[str, float] = defaultdict(float)
+    for index, coefficient in objective.terms.items():
+        amount = coefficient * values[index]
+        if abs(values[index]) <= TOLERANCE:
+            continue
+        name = built.program.variables[index].name
+        prefix, _, rest = name.partition("[")
+        parts = rest.removesuffix("]").split(",")
+        if index in assignment_of:
+            description = _describe_assignment(built.instance, assignment_of[index])
+        elif prefix in ("uses_room", "uses_physical_room_day"):
+            # Rooms used on a day, minus one: report the day, not the terms.
+            description = f"{parts[0]} changes rooms on {parts[2]} ({parts[1]})"
+        else:
+            template = _DESCRIPTIONS.get(prefix)
+            description = template.format(*parts) if template else name
+        items[description] += amount
+    return sorted(
+        (StageItem(description, amount) for description, amount in items.items()
+         if abs(amount) > TOLERANCE),
+        key=lambda item: (-abs(item.amount), item.description),
+    )
 
 
 def _placeholder_seed(built: BuiltModel) -> list[float]:
@@ -422,19 +495,20 @@ def _placeholder_seed(built: BuiltModel) -> list[float]:
 def solve_instance(
     inst: Instance,
     progress: ProgressCallback | None = None,
-    time_limit: float | None = None,
+    time_limit: float = MAX_TIME_LIMIT,
     solver: str = DEFAULT_BACKEND,
 ) -> Result:
     """Solve an already-validated instance.
 
-    :param time_limit: seconds, applied to each solve stage. Without one a hard
-        instance can run indefinitely, which is not something an HTTP service
-        can offer. Stopping early yields ``status="feasible"`` rather than an
-        error, provided a solution was found.
+    :param time_limit: seconds each stage may search, at most
+        :data:`MAX_TIME_LIMIT`. Stopping early yields ``status="feasible"``
+        rather than an error, provided a solution was found.
     :param solver: which backend to use; see :data:`scheduler.backends.BACKENDS`.
     """
-    if time_limit is not None and (not math.isfinite(time_limit) or time_limit <= 0):
-        raise ValueError("time_limit must be positive and finite")
+    if not math.isfinite(time_limit) or not 0 < time_limit <= MAX_TIME_LIMIT:
+        raise ValueError(
+            f"time_limit must be more than 0 and at most {MAX_TIME_LIMIT:g} seconds per stage"
+        )
 
     reporter = Progress(progress)
     reporter(inst.summary())
@@ -449,8 +523,14 @@ def solve_instance(
             backend.load(built.program)
 
         staged = _StagedSolve(backend, reporter, time_limit, built.program)
-        staged.values = _placeholder_seed(built)
-        objective = staged.run(
+        seed = _placeholder_seed(built)
+        # The seed places sections only; settle the rows that define a count
+        # from them (a program course with nothing to pick) so it stays feasible.
+        staged.values = _repair(
+            built.program, seed,
+            [row for row in built.program.core_rows if row.defines is not None],
+        )
+        staged.run(
             built.objectives,
             room_seed=lambda values: seed_physical_rooms(built, values),
             deferred=built.program.deferred_rows,
@@ -462,22 +542,24 @@ def solve_instance(
     finally:
         backend.close()
 
+    stages = []
+    for spec, stage in zip(STAGES, staged.stages, strict=True):
+        objective = spec.objective(built.objectives)
+        final = sum(c * staged.values[i] for i, c in objective.terms.items())
+        items = _stage_items(built, objective, staged.values)
+        stages.append(replace(stage, final=final, items=items))
     return Result(
-        status="optimal" if all(stage.proven for stage in staged.stages) else "feasible",
-        objective=objective,
+        status="optimal" if all(stage.proven for stage in stages) else "feasible",
         assignments=assignments,
         solver=backend.name,
-        stages=staged.stages,
-        preference_breakdown=_preference_breakdown(
-            built.objectives, staged.values, [variable.name for variable in built.program.variables]
-        ),
+        stages=stages,
     )
 
 
 def solve(
     payload: Mapping[str, Any],
     progress: ProgressCallback | None = None,
-    time_limit: float | None = None,
+    time_limit: float = MAX_TIME_LIMIT,
     solver: str = DEFAULT_BACKEND,
 ) -> Result:
     """Solve one workload-allocation instance.

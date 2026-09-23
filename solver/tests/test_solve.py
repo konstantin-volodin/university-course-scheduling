@@ -13,7 +13,7 @@ import pytest
 
 from scheduler import Result, SolveError, config, silent, solve
 from scheduler.config.instance import MIN_ROOM_FILL
-from scheduler.solve import GOOD_ENOUGH
+from scheduler.solve import STAGES
 
 
 @pytest.fixture(scope="module")
@@ -99,9 +99,10 @@ def test_tiny_instance_needs_no_fallbacks(solved: Result) -> None:
 
 
 def test_violation_stages_find_no_violations(solved: Result) -> None:
-    by_name = {s.name: s.value for s in solved.stages}
-    assert by_name["assign named professors to required sections"] == 0
-    assert by_name["minimise timetable conflicts and unscheduled sections"] == 0
+    by_key = {stage.key: stage.value for stage in solved.stages}
+    assert by_key["overload"] == 0
+    assert by_key["unscheduled"] == 0
+    assert by_key["course_clashes"] == 0
 
 
 def test_preferences_are_actually_honoured(solved: Result) -> None:
@@ -119,10 +120,11 @@ def test_result_serialises_to_json(solved: Result) -> None:
     assert payload["summary"]["unstaffed"] == 0
     assert len(payload["assignments"]) == 3
     assert payload["stages"]
-    assert {item["name"] for item in payload["preference_breakdown"]}
-    assert all("terms" in item for item in payload["preference_breakdown"])
-    assert all(item["label"] and item["description"] for item in payload["preference_breakdown"])
-    assert any(item["terms"] for item in payload["preference_breakdown"])
+    assert {stage["key"] for stage in payload["stages"]} == {
+        stage.key for stage in solved.stages
+    }
+    assert all(stage["meaning"] for stage in payload["stages"])
+    assert any(stage["items"] for stage in payload["stages"])
 
     expected = {
         "professor_id",
@@ -137,15 +139,10 @@ def test_result_serialises_to_json(solved: Result) -> None:
     assert set(payload["assignments"][0]) == expected
 
 
-def test_preference_breakdown_reconciles_with_objective(solved: Result) -> None:
-    """The exported components must add back to the score sent to the solver."""
-    contribution = sum(item.contribution for item in solved.preference_breakdown)
-    assert contribution == pytest.approx(solved.objective)
-    assert all(
-        term.contribution == pytest.approx(term.coefficient * term.value)
-        for component in solved.preference_breakdown
-        for term in component.terms
-    )
+def test_preference_items_reconcile_with_final_score(solved: Result) -> None:
+    preference = solved.stages[-1]
+    assert preference.key == "preferences"
+    assert sum(item.amount for item in preference.items) == pytest.approx(preference.final)
 
 
 # --------------------------------------------------------------------------- #
@@ -270,8 +267,8 @@ def test_progress_is_reported(payload: dict[str, Any]) -> None:
 
     assert {"building", "solving", "exporting"} <= {stage for stage, _ in seen}
     stages = [message for stage, message in seen if stage == "stage"]
-    assert [message.split()[0] for message in stages] == [f"{i}/10" for i in range(1, 11)]
-    assert any("maximise course, time, and block preference rewards" in message
+    assert [message.split()[0] for message in stages] == [f"{i}/12" for i in range(1, 13)]
+    assert any("Match professors' preferences" in message
                for _, message in seen)
 
 
@@ -294,7 +291,7 @@ def test_the_default_solver_handles_what_the_gurobi_licence_refuses(
 ) -> None:
     """The reason HiGHS is the default. This instance is past the 2000-column
     cap on the free Gurobi licence, and a real academic year is far past it."""
-    result = solve(oversized_payload, progress=silent, time_limit=120)
+    result = solve(oversized_payload, progress=silent, time_limit=60)
     assert result.solver == "highs"
     assert len(result.assignments) == 12
 
@@ -321,8 +318,8 @@ def test_unknown_solver_is_rejected(payload: dict[str, Any]) -> None:
         solve(payload, progress=silent, solver="cplex")
 
 
-OPTIMUM = -11.0
-"""The staged optimum of the tiny instance, proven at a zero gap."""
+PREFERENCE_OPTIMUM = 11.0
+"""The final preference score of the tiny instance, proven at a zero gap."""
 
 
 @pytest.mark.parametrize("backend", ["highs", "gurobi"])
@@ -330,12 +327,7 @@ def test_both_backends_agree_on_the_objective(payload: dict[str, Any], backend: 
     """Different solvers may pick different members of the optimal set, but
     they must agree on its value — that is what says the translation is right."""
     result = solve(payload, progress=silent, solver=backend)
-    # The final stage is solved to GOOD_ENOUGH, not to proven optimality, so
-    # the honest claim is "within that gap of the optimum" -- which is -17.0,
-    # confirmed by re-running the stages at a zero gap. Pinning one backend's
-    # particular answer only ever held by luck.
-    assert result.objective <= OPTIMUM + 1e-5
-    assert abs(result.objective - OPTIMUM) <= abs(OPTIMUM) * GOOD_ENOUGH
+    assert result.stages[-1].value == pytest.approx(PREFERENCE_OPTIMUM)
     assert result.solver == backend
     # The two ADM1000 sections and their day slots are interchangeable.
     schedule = {(a.course_id, a.timeslot_id) for a in result.assignments}
@@ -400,4 +392,63 @@ courses:
     } == {("p1", "R1", "AM", "Morning"), ("p1", "R1", "PM", "Afternoon")}
     repeated = solve(payload, progress=silent, time_limit=5)
     assert repeated.assignments == result.assignments
-    assert repeated.objective == pytest.approx(result.objective)
+    assert repeated.stages[-1].value == pytest.approx(result.stages[-1].value)
+
+
+PROGRAM_DEMO = """
+semesters: [Fall]
+meeting_patterns:
+  day:
+    custom:
+      A: [{day: Mon, start: '09:00', minutes: 90}]
+      B: [{day: Tue, start: '09:00', minutes: 90}]
+classrooms: {R1: 30, R2: 30}
+professors:
+  p1: {teaching_load: 2, qualified_for: all}
+  p2: {teaching_load: 1, qualified_for: all}
+course_defaults: {semester: Fall, meeting_patterns: [day]}
+courses:
+  CORE: {sections: [{id: '1', students: 30}, {id: '2', students: 30}]}
+  OTHER: {sections: [{id: '1', students: 30}]}
+programs:
+  bcom: {Fall: [CORE, OTHER]}
+"""
+
+
+def _stage(result: Result, key: str) -> Any:
+    return next(stage for stage in result.stages if stage.key == key)
+
+
+def test_program_needs_one_clash_free_section_per_course_not_every_section() -> None:
+    """Students take one section of each course: extra CORE sections may share a time."""
+    result = solve(config.loads(PROGRAM_DEMO), progress=silent, time_limit=10)
+    assert not result.unscheduled
+    assert _stage(result, "program_clashes").final == 0
+
+
+def test_an_impossible_program_is_counted_not_unscheduled() -> None:
+    """One meeting time for two required courses: both still meet, one problem is reported."""
+    payload = config.loads(PROGRAM_DEMO.replace(
+        "      B: [{day: Tue, start: '09:00', minutes: 90}]\n", ""
+    ).replace("  CORE: {sections: [{id: '1', students: 30}, {id: '2', students: 30}]}",
+              "  CORE: {sections: [{id: '1', students: 30}]}"))
+    payload["professor_teaching"] = [{"p1": 1}, {"p2": 1}]
+    result = solve(payload, progress=silent, time_limit=10)
+    assert not result.unscheduled
+    clashes = _stage(result, "program_clashes")
+    assert clashes.final == 1
+    [item] = clashes.items
+    assert item.description.startswith("bcom (Fall): students cannot fit ")
+
+
+def test_every_stage_is_explained(solved: Result) -> None:
+    assert [stage.key for stage in solved.stages] == [spec.key for spec in STAGES]
+    for stage in solved.stages:
+        assert stage.name and stage.meaning and stage.final is not None
+        assert stage.final == pytest.approx(sum(item.amount for item in stage.items), abs=0.02)
+
+
+@pytest.mark.parametrize("seconds", [0, 61, float("inf")])
+def test_stage_time_limit_is_capped_at_a_minute(seconds: float) -> None:
+    with pytest.raises(ValueError, match="at most 60 seconds"):
+        solve(config.loads(PROGRAM_DEMO), progress=silent, time_limit=seconds)

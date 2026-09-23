@@ -29,13 +29,14 @@ replaced on a successful solve; use a fresh output directory to preserve earlier
 scheduler solve ../instances/tiny --time-limit 30
 scheduler solve ../instances/tiny --check
 scheduler solve ../instances/medium --time-limit 60
-scheduler solve ../instances/telfer --solver gurobi --time-limit 600
+scheduler solve ../instances/telfer --solver gurobi --time-limit 60
 scheduler report ../instances/medium -o instance.html
 cat ../instances/tiny/instance.yaml | scheduler solve - --time-limit 30
 ```
 
-A file-backed solve writes `result.json`, `schedule.html`, `instance.html`,
-and `objective.md` to the instance folder's `results/` directory.
+A file-backed solve writes `result.json`, `schedule.html`, and `instance.html`
+to the instance folder's `results/` directory. `schedule.html` explains, in plain
+language, every goal the solver optimised, its score, and what added to it.
 A split instance directory is itself the instance folder. Use `-o` to
 override the JSON path; the reports are written beside it. A solve read
 from stdin continues to write JSON to stdout. Progress goes to stderr as timestamped `INFO` lines: model dimensions, search
@@ -124,7 +125,6 @@ files and split-instance manifests.
 {
   "status": "optimal",
   "solver": "highs",
-  "objective": -17.0,
   "assignments": [
     {
       "professor_id": "prof_a",
@@ -150,9 +150,7 @@ files and split-instance manifests.
 Status values:
 
 - `optimal`: every stage attained an objective lower bound or reported backend
-  optimality under its configured gap and numerical tolerances;
-  some stages permit a 5% relative gap, so this is not a
-  blanket claim of exact mathematical optimality
+  optimality within numerical tolerances
 - `feasible`: a solver-feasible result with at least one stage stopping without
   backend optimality or a lower-bound certificate; it may still contain unscheduled placeholders
 
@@ -190,9 +188,9 @@ Objective and warm-start setup count toward the HiGHS stage budget and duration.
 Reports include the full-stage backend's best bound and relative gap when
 available; unavailable values appear as an em dash.
 
-`make solve` defaults to 30 seconds per stage; override with `LIMIT=60` as needed.
-Budget up to ten times the per-stage time limit, plus preprocessing and report
-generation. A 30-second limit allows up to five minutes of stage search; backend
+`make solve` defaults to 60 seconds per stage; override with `LIMIT=30` as needed.
+Budget up to twelve times the per-stage time limit, plus preprocessing and report
+generation. A 60-second limit allows up to twelve minutes of stage search; backend
 overhead can exceed the requested limit, and a stage can finish without proving
 optimality. This is a search budget, not a guaranteed wall-clock deadline.
 
@@ -215,4 +213,4 @@ Report tests render a fixed schedule instead of solving another medium instance.
 GitHub Actions runs `make check` on Python 3.14 using locked dependencies.
 It validates all three public instances and solves the tiny example with a
 30-second limit per stage. Each successful job provides downloadable JSON and
-HTML reports plus the objective audit. Full Telfer solves remain manual.
+HTML reports. Full Telfer solves remain manual.

@@ -213,4 +213,4 @@ courses:
     )
     result = solve_instance(instance, time_limit=5)
     assert result.assignments[0].timeslot_id == "short"
-    assert result.stages[4].value == pytest.approx(50 / 180)
+    assert result.stages[6].value == pytest.approx(50 / 180)

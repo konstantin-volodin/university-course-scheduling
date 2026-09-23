@@ -1,15 +1,15 @@
 """Staged scheduling solver and result types."""
 
-from .result import Assignment, ObjectiveBreakdown, ObjectiveTerm, Result, Stage
-from .solver import GOOD_ENOUGH, solve, solve_instance
+from .result import Assignment, Result, Stage, StageItem
+from .solver import MAX_TIME_LIMIT, STAGES, solve, solve_instance
 
 __all__ = [
-    "GOOD_ENOUGH",
+    "MAX_TIME_LIMIT",
+    "STAGES",
     "Assignment",
-    "ObjectiveBreakdown",
-    "ObjectiveTerm",
     "Result",
     "Stage",
+    "StageItem",
     "solve",
     "solve_instance",
 ]

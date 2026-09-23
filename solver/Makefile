@@ -13,7 +13,7 @@ help:
 	@echo "make solve    solve YAML=<file> and write the JSON + both HTML pages"
 	@echo "make report   re-render the HTML pages from an existing result (no re-solve)"
 	@echo ""
-	@echo "  make solve                                    Telfer (30 seconds per stage)"
+	@echo "  make solve                                    Telfer (60 seconds per stage)"
 	@echo "  make solve YAML=../instances/medium LIMIT=60       medium (60 seconds per stage)"
 
 check: lint types test-all
@@ -39,13 +39,13 @@ example:
 # One instance, one place to say which. Override any of these on the command
 # line:  make solve YAML=../instances/medium LIMIT=60
 YAML  ?= ../instances/telfer
-LIMIT ?= 30
+LIMIT ?= 60
 # Outputs live in the instance folder's results/ -- the same place solve writes.
 DIR   := $(if $(wildcard $(YAML)/.),$(YAML),$(patsubst %/,%,$(dir $(YAML))))
 OUT   ?= $(DIR)/results
 
 # Solve, then write the schedule page and the inputs page beside the result.
-# LIMIT is per stage -- budget up to 10x LIMIT, plus preprocessing and reports.
+# LIMIT is per stage -- budget up to 12x LIMIT, plus preprocessing and reports.
 solve:
 	$(PY) -m scheduler solve $(YAML) --time-limit $(LIMIT)
 

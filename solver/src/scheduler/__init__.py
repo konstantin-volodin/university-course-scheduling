@@ -8,10 +8,9 @@ from .errors import InvalidInstanceError, SchedulerError, SolveError, SolverErro
 from .progress import Progress, silent, to_stderr
 from .solve import (
     Assignment,
-    ObjectiveBreakdown,
-    ObjectiveTerm,
     Result,
     Stage,
+    StageItem,
     solve,
     solve_instance,
 )
@@ -25,14 +24,13 @@ __all__ = [
     "Assignment",
     "Instance",
     "InvalidInstanceError",
-    "ObjectiveBreakdown",
-    "ObjectiveTerm",
     "Progress",
     "Result",
     "SchedulerError",
     "SolveError",
     "SolverError",
     "Stage",
+    "StageItem",
     "__version__",
     "silent",
     "solve",

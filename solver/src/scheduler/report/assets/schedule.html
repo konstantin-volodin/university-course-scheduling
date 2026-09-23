@@ -44,6 +44,14 @@
   <span class="key"><span class="sw p"></span> Part-time</span>
   <span class="key">Matching colors identify the same course · Times are meeting starts</span>
 </div>
+<section class="scoring panel" aria-labelledby="scoring-title">
+  <h2 id="scoring-title">How this schedule was scored</h2>
+  <p>The solver works through the goals below in order. It makes each goal as good as it can,
+  then locks that score in while it works on the next one, so a lower goal can never be
+  improved by making a higher one worse. Lower scores are better except where noted.
+  Each goal lists exactly what added to its score.</p>
+  <ol class="goals" id="scoring"></ol>
+</section>
 <details class="sect solver-details">
   <summary>Solver details</summary>
   <p>Backend optimality uses configured gap and numerical tolerances; it does not necessarily certify an exact optimum.</p>

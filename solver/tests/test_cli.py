@@ -46,8 +46,8 @@ def test_console_verbosity_and_optional_diagnostic_log(
     else:
         assert not log.exists()
         assert re.search(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} INFO", output.err)
-        assert "[stage] 1/10" in output.err
-        assert "[stage] 10/10" in output.err
+        assert "[stage] 1/12" in output.err
+        assert "[stage] 12/12" in output.err
         assert "professor constraints" in output.err
         assert "objective=" in output.err
         assert "bound=" in output.err
@@ -59,7 +59,7 @@ def test_console_verbosity_and_optional_diagnostic_log(
 def test_unscheduled_result_warns_even_when_quiet(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    result = Result("feasible", 0.0, [Assignment(
+    result = Result("feasible", [Assignment(
         professor_id=None, course_id="C", section_id="1", semester_id="Fall",
         timeslot_id=None, classroom_id=None, time_of_day_id="Day", solution_value=1.0,
     )])
@@ -174,7 +174,7 @@ def test_strict_flag_requires_operational_assignments(
 
     def capture(instance: Instance, *args: object, **kwargs: object) -> Result:
         assert instance.strict
-        return Result("feasible", 0.0, [])
+        return Result("feasible", [])
 
     monkeypatch.setattr("scheduler.cli.solve_instance", capture)
     assert main([

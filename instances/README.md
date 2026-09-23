@@ -259,7 +259,12 @@ programs:
     Winter: [BIO305]
 ```
 
-Programs are read and validated, but do not yet affect the schedule.
+Students in a program should be able to take one scheduled section of every
+required course without two of them overlapping. Extra sections of a course may
+share a time; only the sections the students would pick must fit together. This
+is a soft goal: each required course the students cannot fit in counts one point
+in the "Let each program's students take every required course" stage, and the
+schedule report names each one.
 
 ## Complete or partial schedules
 
@@ -276,7 +281,7 @@ Run from `solver/`:
 ```bash
 uv run scheduler solve ../instances/my-university --check --time-limit 30
 uv run scheduler report ../instances/my-university -o instance.html
-uv run scheduler solve ../instances/my-university --time-limit 600
+uv run scheduler solve ../instances/my-university --time-limit 60
 ```
 
 Result summary fields:

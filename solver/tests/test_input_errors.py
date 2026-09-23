@@ -21,14 +21,14 @@ def test_cli_rejects_invalid_limit_before_reading_instance(
         ])
     assert exc.value.code == 2
     captured = capsys.readouterr()
-    assert "finite, positive" in captured.err
+    assert "more than 0 and at most 60" in captured.err
     assert captured.out == ""
     assert not output.parent.exists()
 
 
 @pytest.mark.parametrize("limit", [0.0, -1.0, float("nan"), float("inf"), -float("inf")])
 def test_api_rejects_invalid_limit(payload: dict[str, Any], limit: float) -> None:
-    with pytest.raises(ValueError, match="positive and finite"):
+    with pytest.raises(ValueError, match="more than 0 and at most 60"):
         solve(payload, time_limit=limit)
 
 

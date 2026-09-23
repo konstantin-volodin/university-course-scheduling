@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 from ..backends import DEFAULT_BACKEND
 
-__all__ = ["Assignment", "ObjectiveBreakdown", "ObjectiveTerm", "Result", "Stage"]
+__all__ = ["Assignment", "Result", "Stage", "StageItem"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,12 +29,21 @@ class Assignment:
 
 
 @dataclass(frozen=True, slots=True)
+class StageItem:
+    """One thing that adds to a stage's score, described for a reader."""
+
+    description: str
+    amount: float
+
+
+@dataclass(frozen=True, slots=True)
 class Stage:
     """The result and duration of one lexicographic solve stage.
 
-    ``proven`` records backend-reported optimality under the configured gap and
-    numerical tolerances, not necessarily an exact mathematical optimum, or an
-    attained objective lower bound. ``optimality_source`` distinguishes them.
+    ``value`` is the score when the stage finished; ``final`` is the score in
+    the returned schedule, which later stages can only keep or improve.
+    ``proven`` records backend-reported optimality under numerical tolerances,
+    or an attained objective lower bound; ``optimality_source`` says which.
     """
 
     name: str
@@ -44,39 +53,19 @@ class Stage:
     optimality_source: Literal["backend", "lower_bound"] = "backend"
     best_bound: float | None = None
     relative_gap: float | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class ObjectiveTerm:
-    """One active model term contributing to a preference component."""
-
-    variable: str
-    coefficient: float
-    value: float
-    contribution: float
-
-
-@dataclass(frozen=True, slots=True)
-class ObjectiveBreakdown:
-    """Raw and weighted value of one final preference component."""
-
-    name: str
-    label: str
-    description: str
-    raw_value: float
-    weight: float
-    contribution: float
-    terms: list[ObjectiveTerm] = field(default_factory=list)
+    key: str = ""
+    meaning: str = ""
+    maximise: bool = False
+    final: float | None = None
+    items: list[StageItem] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)
 class Result:
     status: str
-    objective: float
     assignments: list[Assignment]
     solver: str = DEFAULT_BACKEND
     stages: list[Stage] = field(default_factory=list)
-    preference_breakdown: list[ObjectiveBreakdown] = field(default_factory=list)
 
     @property
     def unstaffed(self) -> list[Assignment]:
@@ -95,12 +84,8 @@ class Result:
         return {
             "status": self.status,
             "solver": self.solver,
-            "objective": self.objective,
             "assignments": [asdict(assignment) for assignment in self.assignments],
             "stages": [asdict(stage) for stage in self.stages],
-            "preference_breakdown": [
-                asdict(component) for component in self.preference_breakdown
-            ],
             "summary": {
                 "assignments": len(self.assignments),
                 "unstaffed": len(self.unstaffed),

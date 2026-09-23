@@ -18,7 +18,13 @@ from scheduler.model import Objectives, build
 from scheduler.model.program import LinearExpr, Program, Row, Sense, VarKind
 from scheduler.progress import Progress
 from scheduler.solve import solver
-from scheduler.solve.solver import EXACT, GOOD_ENOUGH, _repair, _StagedSolve
+from scheduler.solve.solver import (
+    EXACT,
+    STAGES,
+    StageSpec,
+    _repair,
+    _StagedSolve,
+)
 
 
 def test_repaired_room_hint_cannot_make_the_model_infeasible(
@@ -187,29 +193,18 @@ def test_stages_preserve_priorities_and_pass_feasible_warm_starts(payload: dict[
         staged = _StagedSolve(backend, Progress(silent), 5.0, built.program)
         staged.run(objective, deferred=built.program.deferred_rows)
 
-        expected = [
-            (objective.teaching_load, EXACT),
-            (objective.concurrency + objective.placeholder_use, EXACT),
-            (objective.off_campus_use, GOOD_ENOUGH),
-            (objective.part_timer_room_use, EXACT),
-            (objective.time_of_day_spread + objective.day_of_week_spread, EXACT),
-            (objective.block_violation, EXACT),
-            (objective.friday_night, EXACT),
-            (objective.room_changes, GOOD_ENOUGH),
-            (objective.pack_day_penalty, EXACT),
-            (objective.remaining_preference_score(), GOOD_ENOUGH),
-        ]
+        expected = [(spec, spec.objective(objective)) for spec in STAGES]
         assert backend.calls == [
-            (expression.terms, index == 9, gap, 5.0)
-            for index, (expression, gap) in enumerate(expected)
+            (expression.terms, spec.maximise, EXACT, 5.0)
+            for index, (spec, expression) in enumerate(expected)
             if staged.stages[index].optimality_source == "backend"
         ]
         assert backend.starts == len(backend.calls) - 1
         assert backend.deferred_after == [
-            sum(stage.optimality_source == "backend" for stage in staged.stages[:4])
+            sum(stage.optimality_source == "backend" for stage in staged.stages[:6])
         ]
-        assert len(staged.stages) == 10
-        for stage, (expression, _) in zip(staged.stages[:-1], expected, strict=False):
+        assert len(staged.stages) == len(STAGES)
+        for stage, (_, expression) in zip(staged.stages[:-1], expected, strict=False):
             final_value = sum(c * staged.values[i] for i, c in expression.terms.items())
             assert final_value <= stage.value + 1e-6, stage.name
     finally:
@@ -231,13 +226,16 @@ def test_lower_bound_shortcut_requires_an_attained_global_bound(
     try:
         staged = _StagedSolve(backend, Progress(silent), 5.0, program)
         staged.values = [initial]
-        staged._minimise_then_cap("first", LinearExpr({variable: coefficient}), EXACT)
+        first_objective = LinearExpr({variable: coefficient})
+        first_spec = StageSpec("first", "first", "", lambda _: first_objective)
+        staged._minimise_then_cap(first_spec, first_objective)
         first = staged.stages[0]
         assert (first.optimality_source == "lower_bound") is skipped
         assert len(backend.calls) == (0 if skipped else 1)
         assert first.proven
         # Even a skipped stage must constrain a later competing objective.
-        staged._optimise("competing", LinearExpr({variable: -coefficient}), False, EXACT)
+        competing = LinearExpr({variable: -coefficient})
+        staged._optimise(StageSpec("competing", "competing", "", lambda _: competing), competing)
         assert coefficient * staged.values[variable] <= first.value + 1e-6
         assert_feasible(program, backend.rows, staged.values)
     finally:
@@ -291,8 +289,12 @@ def test_fractional_stage_cap_preserves_attained_value() -> None:
     try:
         backend.load(program)
         staged = _StagedSolve(backend, Progress(silent), 5, program)
-        staged._minimise_then_cap("balance", objective, EXACT, integral=False)
-        staged._optimise("reward", objective, maximise=True, gap=EXACT)
+        staged._minimise_then_cap(
+            StageSpec("balance", "balance", "", lambda _: objective, integral=False), objective
+        )
+        staged._optimise(
+            StageSpec("reward", "reward", "", lambda _: objective, maximise=True), objective
+        )
         assert staged.values[variable] == pytest.approx(0.5, abs=2e-6)
     finally:
         backend.close()

@@ -17,7 +17,7 @@ from .backends import BACKENDS, DEFAULT_BACKEND
 from .config import Instance
 from .errors import InvalidInstanceError, SchedulerError
 from .progress import format_line, to_stderr
-from .solve import solve_instance
+from .solve import MAX_TIME_LIMIT, solve_instance
 
 __all__ = ["main"]
 
@@ -48,7 +48,7 @@ def _write(text: str, output: str | Path | None) -> None:
         raise SchedulerError(f"{output}: {exc.strerror}") from exc
 
 
-def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Path] | None:
+def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path] | None:
     """Return the result, schedule, and instance paths for a file-backed solve."""
     if args.instance == "-" and args.output is None:
         return None
@@ -64,8 +64,7 @@ def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Pat
     # would only repeat the folder: instance/results/instance-instance.html.
     schedule = Path(args.html) if args.html else result.with_name("schedule.html")
     instance = result.with_name("instance.html")
-    objective = result.with_name("objective.md")
-    targets = [result, schedule, instance, objective, result.with_name("solve.log")]
+    targets = [result, schedule, instance, result.with_name("solve.log")]
     resolved = [target.resolve() for target in targets]
     if len(set(resolved)) != len(resolved) or any(
         target.exists() and previous.exists() and target.samefile(previous)
@@ -94,10 +93,9 @@ def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Pat
         result.parent.mkdir(parents=True, exist_ok=True)
         schedule.parent.mkdir(parents=True, exist_ok=True)
         instance.parent.mkdir(parents=True, exist_ok=True)
-        objective.parent.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         raise SchedulerError(f"could not create the results directory: {exc}") from exc
-    return result, schedule, instance, objective
+    return result, schedule, instance
 
 
 def _as_json(payload: Any) -> str:
@@ -139,13 +137,12 @@ def _cmd_solve(args: argparse.Namespace) -> int:
     if outputs is None:
         _write(_as_json(payload_result), None)
     else:
-        from .report import instance_page, objective_markdown, schedule_page
+        from .report import instance_page, schedule_page
 
-        result_path, schedule_path, instance_path, objective_path = outputs
+        result_path, schedule_path, instance_path = outputs
         _write(_as_json(payload_result), result_path)
         _write(schedule_page(payload, payload_result), schedule_path)
         _write(instance_page(payload), instance_path)
-        _write(objective_markdown(payload_result), objective_path)
 
     if result.unscheduled:
         to_stderr(
@@ -185,10 +182,12 @@ def _cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
-def _positive_seconds(value: str) -> float:
+def _stage_seconds(value: str) -> float:
     seconds = float(value)
-    if not math.isfinite(seconds) or seconds <= 0:
-        raise argparse.ArgumentTypeError("must be a finite, positive number of seconds")
+    if not math.isfinite(seconds) or not 0 < seconds <= MAX_TIME_LIMIT:
+        raise argparse.ArgumentTypeError(
+            f"must be more than 0 and at most {MAX_TIME_LIMIT:g} seconds"
+        )
     return seconds
 
 
@@ -227,9 +226,10 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"which solver to use (default {DEFAULT_BACKEND}; gurobi needs a licence)",
     )
     solve_cmd.add_argument(
-        "--time-limit", type=_positive_seconds, metavar="SECONDS",
-        help="give up proving optimality after this long per stage; the result "
-             "is still returned, with status 'feasible'",
+        "--time-limit", type=_stage_seconds, default=MAX_TIME_LIMIT, metavar="SECONDS",
+        help=f"search at most this long per stage (default and maximum "
+             f"{MAX_TIME_LIMIT:g}); a stage that runs out returns its best schedule, "
+             "with status 'feasible'",
     )
     solve_cmd.add_argument(
         "--html", metavar="PATH", help="override the schedule HTML path"
