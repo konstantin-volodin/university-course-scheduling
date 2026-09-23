@@ -372,17 +372,23 @@ def test_medium_instance_places_every_section(
 def test_reused_section_id_can_meet_twice_on_one_day() -> None:
     payload = config.loads("""
 semesters: [Fall]
-meeting_times:
-  - {id: AM, days: {Mon: '09:00'}, duration_minutes: 90, time_of_day: Morning}
-  - {id: PM, days: {Mon: '13:00'}, duration_minutes: 90, time_of_day: Afternoon}
+meeting_patterns:
+  morning:
+    time_of_day: Morning
+    custom: {AM: [{day: Mon, start: '09:00', minutes: 90}]}
+  afternoon:
+    time_of_day: Afternoon
+    custom: {PM: [{day: Mon, start: '13:00', minutes: 90}]}
 classrooms: {R1: 30}
 professors:
   p1: {teaching_load: 2, prefers_packed_days: true}
 courses:
   C1:
+    semester: Fall
+    meeting_patterns: [morning, afternoon]
     sections:
-      - {id: '1', semester: Fall, time_of_day: Morning, students: 30}
-      - {id: '1', semester: Fall, time_of_day: Afternoon, students: 30}
+      - {id: '1', time_of_day: Morning, students: 30}
+      - {id: '1', time_of_day: Afternoon, students: 30}
 """)
     result = solve(payload, progress=silent, time_limit=5)
 
