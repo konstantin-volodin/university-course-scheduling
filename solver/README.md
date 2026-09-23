@@ -187,15 +187,8 @@ For HiGHS models with at least 100,000 columns, an incumbent, and a budget of
 30 seconds or less, presolve is disabled and 20% of the budget is reserved for
 solver completion overhead. Smaller models and longer searches retain presolve.
 Objective and warm-start setup count toward the HiGHS stage budget and duration.
-
-The initializer also improves room placement within its remaining search budget.
-Before full-model search, semester neighborhoods hold faculty ownership fixed
-and retain every active constraint and earlier objective cap. Their projection,
-search, and validation share at most 10 seconds (40% of a finite stage budget).
-Accepted candidates must improve the current objective and pass the full checks.
-Stage duration includes this work. Neighborhood optimality is never reported as
-a full-model proof. Reports include the full-stage backend's best bound and
-relative gap when available; unavailable values appear as an em dash.
+Reports include the full-stage backend's best bound and relative gap when
+available; unavailable values appear as an em dash.
 
 `make solve` defaults to 30 seconds per stage; override with `LIMIT=60` as needed.
 Budget up to ten times the per-stage time limit, plus preprocessing and report
@@ -204,10 +197,6 @@ overhead can exceed the requested limit, and a stage can finish without proving
 optimality. This is a search budget, not a guaranteed wall-clock deadline.
 
 ## Development
-
-The [CPSolver experiment results](research/CPSOLVER.md) matched the existing
-neighborhood's room use and took longer. Its unused adapter and Java setup were
-removed; this project has no Java dependency.
 
 ```bash
 make check

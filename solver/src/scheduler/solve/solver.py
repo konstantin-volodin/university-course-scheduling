@@ -25,7 +25,6 @@ from ..errors import SolveError
 from ..model import AssignmentKey, BuiltModel, Objectives, build
 from ..model.program import LinearExpr, Program, Row, Sense, VarKind
 from ..progress import Progress, ProgressCallback
-from .neighborhood import NeighborhoodSearch, _satisfied
 from .result import Assignment, ObjectiveBreakdown, ObjectiveTerm, Result, Stage
 from .room_seed import seed_physical_rooms
 
@@ -61,7 +60,6 @@ class _StagedSolve:
         progress: Progress,
         time_limit: float | None,
         program: Program | None = None,
-        neighborhood: NeighborhoodSearch | None = None,
     ) -> None:
         self.backend = backend
         self.program = program if program is not None else Program()
@@ -69,7 +67,6 @@ class _StagedSolve:
         self.time_limit = time_limit
         self.stages: list[Stage] = []
         self.values: list[float] = []
-        self.neighborhood = neighborhood
         self.active_rows = self.program.core_rows
 
     def _add_row(self, name: str, terms: dict[int, float], sense: Sense, rhs: float) -> None:
@@ -79,20 +76,11 @@ class _StagedSolve:
 
     def _optimise(self, name: str, objective: LinearExpr, maximise: bool, gap: float) -> float:
         started = time.perf_counter()
-        if self.neighborhood is not None and self.values:
-            allowance = 10.0 if self.time_limit is None else min(10.0, self.time_limit * 0.4)
-            self.values = self.neighborhood.improve(
-                self.values, self.active_rows, objective,
-                maximise=maximise, time_limit=allowance,
-            )
         if self.values:
             self.backend.warm_start(self.values)
-        remaining = self.time_limit
-        if remaining is not None and self.neighborhood is not None:
-            remaining = max(0.0, remaining - (time.perf_counter() - started))
         self.progress(f"{len(self.stages) + 1}/10 {name} | starting search", stage="solving")
         outcome = self.backend.optimise(
-            objective, maximise=maximise, gap=gap, time_limit=remaining
+            objective, maximise=maximise, gap=gap, time_limit=self.time_limit
         )
         if not outcome.usable:
             raise SolveError(name, outcome.detail)
@@ -240,6 +228,14 @@ class _StagedSolve:
             )
             for component in objectives.preference_components()
         )
+
+
+def _satisfied(row: Row, lhs: float) -> bool:
+    if row.sense is Sense.LE:
+        return lhs <= row.rhs + 1e-6
+    if row.sense is Sense.GE:
+        return lhs >= row.rhs - 1e-6
+    return abs(lhs - row.rhs) <= 1e-6
 
 
 def _feasible(program: Program, rows: Sequence[Row], values: list[float]) -> bool:
@@ -452,10 +448,7 @@ def solve_instance(
         with reporter.step("solving", f"loading into {backend.name}"):
             backend.load(built.program)
 
-        staged = _StagedSolve(
-            backend, reporter, time_limit, built.program,
-            NeighborhoodSearch(built, solver, reporter),
-        )
+        staged = _StagedSolve(backend, reporter, time_limit, built.program)
         staged.values = _placeholder_seed(built)
         objective = staged.run(
             built.objectives,

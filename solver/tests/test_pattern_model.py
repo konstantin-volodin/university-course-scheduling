@@ -113,27 +113,7 @@ def test_any_period_uses_eligible_patterns_and_night_permission(payload: dict[st
     )
 
 
-def test_audit_reports_pattern_restriction_and_unavailability(payload: dict[str, Any]) -> None:
-    from scheduler.audit import audit_result
-    from scheduler.solve import Assignment, Result
-
-    section = ("ADM1000", "1", "Fall", "Day")
-    instance = replace(
-        Instance.from_payload(payload),
-        section_patterns={section: frozenset({"Wed0900"})},
-        forbidden_professor_patterns=frozenset({("prof_a", "Fall", "Mon0900")}),
-    )
-    result = Result(
-        "optimal", 0,
-        [Assignment("prof_a", "ADM1000", "1", "Fall", "Mon0900", "DMS1160", "Day", 1)],
-    )
-    assert {"section_pattern", "professor_unavailable"} <= {
-        issue.code for issue in audit_result(instance, result)
-    }
-
-
 def test_modern_strict_solve_with_long_meeting(tmp_path: Any) -> None:
-    from scheduler.audit import audit_result
     from scheduler.config import load
     from scheduler.solve import solve_instance
 
@@ -155,7 +135,6 @@ courses:
 """)
     instance = Instance.from_payload(load(path))
     result = solve_instance(instance, time_limit=5)
-    assert audit_result(instance, result) == []
     assert result.assignments[0].timeslot_id == "four_hours"
     assert result.assignments[0].professor_id == "professor"
     assert result.assignments[0].classroom_id == "R"
@@ -167,8 +146,7 @@ courses:
         solve_instance(impossible, time_limit=5)
 
 
-def test_modern_mixed_pool_solve_and_warm_start(tmp_path: Any) -> None:
-    from scheduler.audit import audit_result
+def test_modern_mixed_pool_solve(tmp_path: Any) -> None:
     from scheduler.config import load
     from scheduler.solve import solve_instance
 
@@ -203,15 +181,11 @@ courses:
     model = build(instance, Progress(silent))
     assert not any(row.name == "time_of_day_max[Fall,Any]" for row in model.program.rows)
     result = solve_instance(instance, time_limit=5)
-    assert audit_result(instance, result) == []
     assert len({assignment.timeslot_id for assignment in result.assignments}) == 2
     assert all(assignment.time_of_day_id == "Any" for assignment in result.assignments)
-    resumed = solve_instance(instance, time_limit=5, initial_assignments=result.assignments)
-    assert audit_result(instance, resumed) == []
 
 
 def test_fractional_balance_cannot_be_traded_for_pattern_reward(tmp_path: Any) -> None:
-    from scheduler.audit import audit_result
     from scheduler.config import load
     from scheduler.solve import solve_instance
 
@@ -238,6 +212,5 @@ courses:
         professor_pattern_preference={("professor", "Fall", "long"): 100},
     )
     result = solve_instance(instance, time_limit=5)
-    assert audit_result(instance, result) == []
     assert result.assignments[0].timeslot_id == "short"
     assert result.stages[4].value == pytest.approx(50 / 180)

@@ -8,7 +8,7 @@ import math
 import sys
 from collections.abc import Sequence
 from contextlib import nullcontext
-from dataclasses import asdict, replace
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +17,7 @@ from .backends import BACKENDS, DEFAULT_BACKEND
 from .config import Instance
 from .errors import InvalidInstanceError, SchedulerError
 from .progress import format_line, to_stderr
-from .solve import Result, solve_instance
+from .solve import solve_instance
 
 __all__ = ["main"]
 

@@ -18,7 +18,6 @@ from scheduler.model import Objectives, build
 from scheduler.model.program import LinearExpr, Program, Row, Sense, VarKind
 from scheduler.progress import Progress
 from scheduler.solve import solver
-from scheduler.solve.result import Stage
 from scheduler.solve.solver import EXACT, GOOD_ENOUGH, _repair, _StagedSolve
 
 
@@ -145,33 +144,6 @@ def test_highs_reports_full_model_bound_and_gap(maximise: bool) -> None:
 @pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf"), 1e100, -1e100])
 def test_unavailable_bounds_are_not_exported_as_numbers(value: float) -> None:
     assert finite_or_none(value, 1e100) is None
-
-
-def test_neighborhood_time_is_charged_to_stage_budget(monkeypatch: pytest.MonkeyPatch) -> None:
-    program = Program()
-    x = program.add_variable("x", upper=1, kind=VarKind.BINARY)
-    program.add_row("required", {x: 1}, Sense.EQ, 1)
-    backend = CheckedHighs(program)
-    seen = []
-
-    def improve(values: list[float], rows: Sequence[Row], objective: LinearExpr, **kwargs: Any):
-        seen.append(kwargs["time_limit"])
-        return values
-
-    clock = iter([100.0, 106.0, 108.0])
-    monkeypatch.setattr(solver, "time", SimpleNamespace(perf_counter=lambda: next(clock)))
-    try:
-        staged = _StagedSolve(
-            backend, Progress(silent), 30, program, SimpleNamespace(improve=improve),
-        )
-        staged.values = [1]
-        staged._optimise("stage", LinearExpr({x: 1}), False, EXACT)
-        assert seen == [10]
-        assert backend.calls[0][-1] == 24
-        assert staged.stages[0].seconds == 8
-        assert staged.stages[0].best_bound == 1
-    finally:
-        backend.close()
 
 
 class CheckedHighs(HighsBackend):
