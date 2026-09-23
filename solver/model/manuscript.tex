@@ -342,16 +342,6 @@ Some concurrent courses cannot be scheduled together ($[pcistk] \in \{ XV \}$ an
 %%%%%%%%%%%%%%%%
 %%% Objective Function
 %%%%%%%%%%%%%%%%
-\subsubsection{Program Constraints}
-Let $Q$ be the maximal sets of pairwise-overlapping real timeslots. At most one
-required course may occupy a conflict period for each program and semester.
-This is a hard constraint; an impossible placement uses a placeholder.
-\begin{equation}
-\sum_{\substack{c:[g,s,c]\in gr\\t\in q\\p,i,k}} X_{pcistk}
-\le 1
-\quad \forall\ g,s,\ q\in Q
-\end{equation}
-
 \subsection{Objective Function}
 Each stage is optimized and bounded before the next begins. Later preferences
 cannot worsen an earlier result.

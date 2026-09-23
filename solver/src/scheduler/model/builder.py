@@ -689,32 +689,6 @@ class _Builder:
 
         return violation
 
-    def add_program_constraints(self) -> None:
-        """Limit each degree path to one required course per conflict period."""
-        inst, ix = self.inst, self.ix
-        courses_by_program: dict[tuple[str, str], set[str]] = defaultdict(set)
-        for program, semester, course in inst.program_requirements:
-            courses_by_program[(program, semester)].add(course)
-
-        assignments_at: dict[tuple[str, str, str], Terms] = defaultdict(dict)
-        for key, variable in self.assign.items():
-            if not is_placeholder(key.timeslot):
-                assignments_at[(key.semester, key.timeslot, key.course)][variable] = 1.0
-
-        rows: dict[tuple[str, ...], Terms] = defaultdict(dict)
-        cliques = _maximal_slot_cliques(ix.real_slots, ix.overlap_pairs_of)
-        for (program, semester), courses in sorted(courses_by_program.items()):
-            if len(courses) < 2:
-                continue
-            for clique in cliques:
-                row: Terms = {}
-                for slot in clique:
-                    for course in courses:
-                        row.update(assignments_at.get((semester, slot, course), {}))
-                if row:
-                    rows[(program, semester, *clique)] = row
-        self._emit("program_period", rows, Sense.LE, 1.0)
-
     # -- objective terms -------------------------------------------------- #
 
     def preference_terms(self) -> tuple[LinearExpr, LinearExpr, LinearExpr]:
@@ -848,10 +822,6 @@ def build(inst: Instance, progress: Progress) -> BuiltModel:
     before_rows = len(builder.program.rows)
     with progress.step("building", "concurrency constraints") as done:
         concurrency = builder.add_concurrency_constraints()
-        done(f"{len(builder.program.rows) - before_rows:,} rows")
-    before_rows = len(builder.program.rows)
-    with progress.step("building", "program constraints") as done:
-        builder.add_program_constraints()
         done(f"{len(builder.program.rows) - before_rows:,} rows")
 
     with progress.step("building", "objective terms") as done:

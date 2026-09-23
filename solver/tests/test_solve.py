@@ -383,45 +383,6 @@ def test_medium_instance_places_every_section(
     assert not result.off_campus
 
 
-@pytest.mark.parametrize("self_overlap", [False, True])
-def test_a_blocked_degree_path_is_pushed_to_the_fallback(
-    payload: dict[str, Any], self_overlap: bool
-) -> None:
-    """Two required courses, one shared slot: the schedule must report one
-    section unscheduled rather than collide the cohort's requirements."""
-    payload["section_subset"] = [
-        ["ADM1000", "1", "Fall", "Day"],
-        ["ADM2000", "3", "Fall", "Day"],
-    ]
-    payload["section_set"] = ["1", "3"]
-    payload["section_attendance"] = [
-        {"key": ["ADM1000", "1", "Fall", "Day"], "value": 40},
-        {"key": ["ADM2000", "3", "Fall", "Day"], "value": 35},
-    ]
-    payload["professor_teaching"] = [{"prof_a": 1}, {"prof_b": 1}]
-    payload["timeslot_dow_subset"] = [["Mon0900", "Mon"]]
-    payload["timeslot_tod_subset"] = [["Mon0900", "Day"]]
-    payload["timeslot_block_subset"] = [row for row in payload["timeslot_block_subset"]
-                                        if row[0] == "Mon0900"]
-    payload["timeslot_set"] = ["Mon0900"]
-    payload["timeslot_concurrency"] = [["Mon0900", "Mon0900"]] if self_overlap else []
-    payload["program_requirements"] = [["bcom", "Fall", "ADM1000"], ["bcom", "Fall", "ADM2000"]]
-    result = solve(payload, progress=silent, time_limit=10)
-    assert result.status in {"optimal", "feasible"}
-    assert len(result.unscheduled) == 1
-
-
-def test_a_degree_path_gets_non_overlapping_slots(payload: dict[str, Any]) -> None:
-    """The same cohort with room to breathe: required courses land apart."""
-    payload["program_requirements"] = [["bcom", "Fall", "ADM1000"], ["bcom", "Fall", "ADM2000"]]
-    result = solve(payload, progress=silent, time_limit=10)
-    assert result.status in {"optimal", "feasible"}
-    by_course = {}
-    for assignment in result.assignments:
-        by_course.setdefault(assignment.course_id, set()).add(assignment.timeslot_id)
-    assert by_course["ADM1000"].isdisjoint(by_course["ADM2000"])
-
-
 def test_reused_section_id_can_meet_twice_on_one_day() -> None:
     payload = config.loads("""
 semesters: [Fall]

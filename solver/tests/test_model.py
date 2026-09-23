@@ -208,18 +208,6 @@ def test_uses_room_indicators_are_binary_and_forced(program: Program) -> None:
         assert min(row.terms.values()) < -1.0  # the BIG_M forcing coefficient
 
 
-def test_program_period_rows_are_hard(payload: dict[str, Any]) -> None:
-    """A blocked degree path fails loudly: occupancy rows carry no slack."""
-    payload["program_requirements"] = [["bcom", "Fall", "ADM1000"], ["bcom", "Fall", "ADM2000"]]
-    program = build(Instance.from_payload(payload), Progress(silent)).program
-    rows = [row for row in program.rows if row.name.startswith("program_period")]
-    assert rows
-    for row in rows:
-        assert row.sense is Sense.LE
-        assert row.rhs == 1.0
-        assert all(coefficient == 1.0 for coefficient in row.terms.values())
-
-
 @pytest.mark.parametrize("self_overlaps", [False, True])
 def test_program_periods_do_not_merge_non_overlapping_slots(self_overlaps: bool) -> None:
     """A-B and B-C overlap does not imply that A and C overlap."""

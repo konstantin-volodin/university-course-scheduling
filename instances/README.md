@@ -156,9 +156,7 @@ programs:
     Winter: [BIO305]
 ```
 
-Two required courses of the same program never land on overlapping meeting
-times — a hard rule with one honest escape: if both cannot be offered, the
-section goes to the unscheduled list in the result instead of colliding.
+Programs are read and validated, but do not yet affect the schedule.
 
 ## Commands
 
