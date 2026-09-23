@@ -1,8 +1,7 @@
 """Same instance in, same schedule out.
 
-This is not a nicety. The preference stages stop at the first solution within
-GOOD_ENOUGH of optimal, so the answer depends on the order the model was built
-in — and Python randomises string hashing per process, which reorders any
+The answer depends on the order the model was built, and Python randomises
+string hashing per process, which reorders any
 iteration over a set. Before the sorting and the fixed thread count went in,
 running the same instance twice returned different schedules with different
 objective values. A scheduling tool that does that cannot be trusted or
@@ -24,7 +23,7 @@ import json, sys
 from scheduler import config, solve, silent
 result = solve(config.load(sys.argv[1]), progress=silent)
 print(json.dumps({
-    "objective": result.objective,
+    "stages": [(stage.key, stage.value) for stage in result.stages],
     "assignments": [
         [a.professor_id, a.course_id, a.section_id, a.timeslot_id, a.classroom_id]
         for a in result.assignments
@@ -48,7 +47,7 @@ def test_identical_across_processes_with_different_hash_seeds() -> None:
     runs = [solve_in_subprocess(seed) for seed in ("0", "1", "12345")]
     first = runs[0]
     for other in runs[1:]:
-        assert other["objective"] == first["objective"]
+        assert other["stages"] == first["stages"]
         assert other["assignments"] == first["assignments"]
 
 
@@ -63,5 +62,7 @@ def test_repeated_solves_are_deterministic_and_preserve_input() -> None:
     assert payload == before
     second = solve(payload, progress=silent, time_limit=10)
     assert payload == before
-    assert first.objective == second.objective
+    assert [(stage.key, stage.value) for stage in first.stages] == [
+        (stage.key, stage.value) for stage in second.stages
+    ]
     assert first.assignments == second.assignments

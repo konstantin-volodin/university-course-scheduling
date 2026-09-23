@@ -35,6 +35,24 @@
       '<td class="v" title="Full-stage objective bound under earlier stage caps">'+(s.best_bound==null?'—':s.best_bound.toFixed(2))+'</td>'+
       '<td class="v">'+(s.relative_gap==null?'—':pct(100*s.relative_gap))+'</td></tr>';
   }).join("")+'</tbody>';
+  var ITEMCAP=50;  // items listed per goal; result.json always has all of them
+  document.getElementById("scoring").innerHTML=DATA.stages.map(function(s){
+    var score=s.final==null?s.value:s.final;
+    var status=s.optimality_source==="lower_bound"?"best possible: nothing left to improve":
+      s.proven?"best possible":"best found within the time limit, not proven best";
+    var items=s.items||[];
+    var list=items.slice(0,ITEMCAP).map(function(item){
+      return '<li><span class="amt">'+(+item.amount.toFixed(2))+'</span> '+esc(item.description)+'</li>';
+    }).join("");
+    var more=items.length>ITEMCAP?'<li class="more">and '+(items.length-ITEMCAP)+
+      ' more; result.json lists all of them</li>':'';
+    return '<li class="goal"><h3>'+esc(s.name)+'</h3>'+
+      '<p class="meaning">'+(s.maximise?'Higher is better. ':'One point: ')+esc(s.meaning)+'</p>'+
+      '<p class="score"><b>'+(+score.toFixed(2))+'</b> · '+status+'</p>'+
+      (items.length?'<details><summary>What added to this score ('+items.length+')</summary>'+
+        '<ul class="items">'+list+more+'</ul></details>':'<p class="none">Nothing added to this score.</p>')+
+      '</li>';
+  }).join("");
   document.getElementById("semesterstats").innerHTML=DATA.summary.bySemester.map(function(s){
     return '<div class="semesterstat"><span>'+esc(s.semester)+'</span><b>'+s.total+
       '</b> sections · <b>'+s.named+'</b> named faculty · <b>'+s.onCampus+'</b> on campus</div>';

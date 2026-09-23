@@ -18,7 +18,7 @@ from typing import Any
 
 from ..config import OFF_CAMPUS, PART_TIMER
 
-__all__ = ["instance_page", "objective_markdown", "schedule_page"]
+__all__ = ["instance_page", "schedule_page"]
 
 
 def _asset(name: str) -> str:
@@ -135,114 +135,6 @@ def _order(payload: Any, key: str, fallback: list[str]) -> list[str]:
 
 _DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 _TODS = ["Morning", "Afternoon", "Evening", "Night"]
-
-# The JSON result is the canonical, complete audit.  Markdown is intended for
-# a quick review and should remain useful when a model has tens of thousands
-# of active objective variables.
-_MAX_AUDIT_TERMS_PER_COMPONENT = 12
-_MAX_AUDIT_TERMS_TOTAL = 60
-
-
-def _audit_term_key(term: Any) -> tuple[float, str]:
-    """Put the largest objective effects first, with a stable tie-breaker."""
-    return (-abs(float(term.get("contribution", 0))), str(term.get("variable", "")))
-
-
-def _term_groups(terms: list[Any]) -> list[tuple[float, int, float, float]]:
-    """Summarize omitted terms by coefficient.
-
-    Grouping by coefficient keeps the summary meaningful for binary reward or
-    penalty terms while still exposing the omitted terms' aggregate effect.
-    """
-    groups: dict[float, list[float]] = defaultdict(list)
-    for term in terms:
-        coefficient = float(term.get("coefficient", 0))
-        groups.setdefault(coefficient, []).append(float(term.get("value", 0)))
-    return sorted(
-        (
-            coefficient,
-            len(values),
-            sum(values),
-            coefficient * sum(values),
-        )
-        for coefficient, values in groups.items()
-    )
-
-
-def objective_markdown(result: Any, *, title: str = "Objective Audit") -> str:
-    """Render a portable, diff-friendly audit of a solved objective."""
-    lines = [
-        f"# {title}", "",
-        f"- Status: `{result.get('status', 'n/a')}`",
-        f"- Solver: `{result.get('solver', 'n/a')}`",
-        f"- Objective: `{float(result.get('objective', 0)):.2f}`", "",
-        "## Solve stages", "",
-        "Backend optimality is evaluated under configured gap and numerical tolerances;",
-        "it does not necessarily certify an exact mathematical optimum.", "",
-        "A lower-bound certificate means the feasible incumbent attained a nonnegative",
-        "objective's zero lower bound, so that stage needed no backend search.", "",
-        "Bounds apply to the full stage model with earlier objective caps.",
-        "Unavailable bounds/gaps show an em dash.",
-        "",
-        "| Stage | Value | Time (s) | Backend optimality / bound certificate | Best bound | Gap |",
-        "|---|---:|---:|:---:|---:|---:|",
-    ]
-    for stage in result.get("stages") or []:
-        optimality = (
-            "lower bound attained" if stage.get("optimality_source") == "lower_bound"
-            else "yes" if stage["proven"] else "no"
-        )
-        bound = stage.get("best_bound")
-        relative_gap = stage.get("relative_gap")
-        bound_text = "—" if bound is None else f"{float(bound):.2f}"
-        gap_text = "—" if relative_gap is None else f"{100 * float(relative_gap):.1f}%"
-        lines.append(
-            f"| {stage['name']} | {float(stage['value']):.2f} | "
-            f"{float(stage['seconds']):.2f} | {optimality} | {bound_text} | {gap_text} |"
-        )
-    lines += ["", "## Preference components", "",
-              "| Component | Meaning | Raw value | Weight | Contribution |",
-              "|---|---|---:|---:|---:|"]
-    components = result.get("preference_breakdown") or []
-    for component in components:
-        lines.append(
-            f"| {component.get('label', component['name'])} | {component.get('description', '')} | "
-            f"{float(component['raw_value']):.2f} | {float(component['weight']):.2f} | "
-            f"{float(component['contribution']):.2f} |"
-        )
-    lines += [
-        "",
-        "The component table is complete. Active-term detail below is capped for readability;",
-        "the complete term-level audit remains in [result.json](result.json).",
-    ]
-    shown_total = 0
-    for component in components:
-        terms = component.get("terms") or []
-        if not terms:
-            continue
-        ranked = sorted(terms, key=_audit_term_key)
-        remaining = max(0, _MAX_AUDIT_TERMS_TOTAL - shown_total)
-        shown = ranked[: min(_MAX_AUDIT_TERMS_PER_COMPONENT, remaining)]
-        omitted = ranked[len(shown):]
-        shown_total += len(shown)
-        lines += ["", f"### {component.get('label', component['name'])}", "",
-                  f"Active terms: {len(terms)}; showing {len(shown)}; omitted {len(omitted)}.",
-                  "Largest absolute contributions are shown first.", "",
-                  "| Active term | Coefficient | Value | Contribution |", "|---|---:|---:|---:|"]
-        lines.extend(
-            f"| `{term['variable']}` | {float(term['coefficient']):.2f} | "
-            f"{float(term['value']):.2f} | {float(term['contribution']):.2f} |"
-            for term in shown
-        )
-        if omitted:
-            lines += ["", "Omitted-term summary:", "",
-                      "| Coefficient | Terms | Total value | Total contribution |",
-                      "|---:|---:|---:|---:|"]
-            lines.extend(
-                f"| {coefficient:.2f} | {count} | {value:.2f} | {contribution:.2f} |"
-                for coefficient, count, value, contribution in _term_groups(omitted)
-            )
-    return "\n".join(lines) + "\n"
 
 
 # --------------------------------------------------------------------------- #

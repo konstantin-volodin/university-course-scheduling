@@ -392,98 +392,48 @@ count of distinct conflicting section pairs.
 %%%%%%%%%%%%%%%%
 %%% Objective Function
 %%%%%%%%%%%%%%%%
+\subsubsection{Program Constraints}
+For each program $g$ and semester $s$, binary $Y_{g,i}$ picks at most one section
+$i$ of each required course $c$, and only a section with a real meeting time:
+$Y_{g,i}\le\sum_{t\text{ real}}X_{\cdot i t\cdot}$. The unpicked slack satisfies
+$\sum_{i\in c}Y_{g,i}+ProgM_{g,s,c}=1$. For each maximal set $q\in Q$ of pairwise
+overlapping real timeslots, picked sections of different courses may not meet
+together: $A_{g,c,q}\ge\sum_{t\in q}X_{\cdot i t\cdot}+Y_{g,i}-1$ and
+$\sum_c A_{g,c,q}\le 1$. Extra sections of a course are unconstrained.
+
 \subsection{Objective Function}
-The solver runs the following ten stages in order. Each of the first nine
-minimizes a measure $f_j$ and adds the cap
-$f_j(X)\le\lceil z_j-10^{-6}\rceil$, where $z_j$ is the returned incumbent
-value. Thus later stages preserve the rounded cap, rather than re-optimizing
-the preceding priority. The second stage caps its combined measure, not its
-conflict and placeholder components separately.
+The solver runs the following twelve stages in order. Each stage but the last
+minimizes a measure $f_j$ and adds the cap $f_j(X)\le\lceil z_j-10^{-6}\rceil$,
+where $z_j$ is the returned incumbent value; the balance stage, measured in
+fractional teaching hours, keeps $f_j(X)\le z_j+10^{-6}$. Later stages therefore
+preserve each earlier score and can only trade within it.
 \begin{enumerate}
-
-	\item \textbf{Teaching load.}
-		\begin{equation} 
-			min \sum ProfTV_{p} \quad \Rightarrow \quad 
-			\sum ProfTV_{p} \le \text{ value of } \sum ProfTV_{p}
-		\end{equation}
-		
-	\item \textbf{Conflicts and unscheduled sections.}
-		\begin{equation}
-			\min f_2(X)=\sum ConcI+\sum ConcT+\sum ConcN+\sum ConcO
-			+\sum_{t\in\{\text{placeholder}\}}X.
-		\end{equation}
-
-	\item \textbf{Off-campus assignments.} Count only assignments with real meeting
-		times; unscheduled placeholders are already counted in stage 2.
-		\begin{equation}
-			\min f_3(X)=\sum_{\substack{p,c,i,s,\,t\text{ real}\\k=\text{other}}} X_{pcistk}
-			\quad\Rightarrow\quad f_3(X)\le\lceil z_3-10^{-6}\rceil.
-		\end{equation}
-
+	\item \textbf{Teaching load.} Minimize $\sum_p ProfTV_p$, sections taught
+		beyond an agreed load.
+	\item \textbf{Unscheduled sections.} Minimize
+		$\sum_{t\in\{\text{placeholder}\}}X$.
+	\item \textbf{Course timing rules.} Minimize
+		$\sum ConcI+\sum ConcT+\sum ConcN+\sum ConcO$.
+	\item \textbf{Program requirements.} Minimize $\sum_{g,s,c} ProgM_{g,s,c}$
+		(Program Constraints above).
+	\item \textbf{Off-campus assignments} with real meeting times.
 	\item \textbf{Part-timer room use.} Prefer physical rooms for named faculty.
-
-	\item \textbf{Schedule balance.}
-		\begin{equation}
-		\begin{aligned}
-		\min\quad & \sum_s (TimeMax_s-TimeMin_s)\\
-		           & + \sum_s (DayMax_s-DayMin_s)
-		\end{aligned}
-		\end{equation}
-
+	\item \textbf{Schedule balance.} Minimize
+		$\sum_s (TimeMax_s-TimeMin_s)+\sum_s (DayMax_s-DayMin_s)$.
 	\item \textbf{Course block violations.} Minimize $\sum_{c,bl}CBLPen_{c,bl}$.
-
 	\item \textbf{Friday-night penalties.} Minimize $\sum_c CFNPen_c$.
-
 	\item \textbf{Room changes.} Minimize $\sum_{p,s,dw}RoomExtra_{p,s,dw}$.
-
 	\item \textbf{Teaching days.} Minimize $\sum_{s,p,dw}PDayT_{p,s,dw}\,ppp_p$.
-
-	\item \textbf{Preference rewards.} Maximize the sum of the following rewards:
-			\begin{equation}
-			\begin{aligned}
-						 & + 1 \sum_{pcistk} X \, pcp_{pc} 		& [pcistk] \in XV, pcp_{pc} > 0 \\
-						 & + 1 \sum_{pcistk,td} X \, ptp_{ps,td} & [pcistk] \in XV, [t,td] \in \{ TTD \}, ptp_{ps,td} > 0 \\
-						 & + 1 \sum_{pcistk,bl} X 				& [pcistk] \in XV, [t,bl] \in \{ TBL \}, pc \in \{ pbp \} \\ 
-			\end{aligned}
-		\end{equation}
-		
+	\item \textbf{Preference rewards.} Maximize course, time-of-day, and block
+		preference rewards.
 \end{enumerate}
 
-Stages 1, 2, 4, 5, 6, 7, and 9 request a zero relative MIP gap. Stages 3,
-8, and 10 allow a 5\% relative gap. A zero requested gap does not guarantee
-that a time-limited run proves its optimum. Conversely, a solver's successful
-termination with a positive requested gap does not establish exact mathematical
-optimality. Exact lexicographic optimality requires proving every relevant
-preceding optimum; this manuscript makes no such claim for a general run.
-
-The configured time limit applies separately to each stage. Ten stages can
-therefore consume approximately ten times that limit, plus model construction,
-incumbent repair, and other overhead. Preference-definition rows are added
-after stage 4. Their auxiliary values are repaired before offering the incumbent
-to the next stage; room-use indicators are reconstructed again before stage 8.
-These implementation choices have not been established here to improve runtime.
-
-The following weighted breakdown is an explanatory score computed from the
-final solution. It is not the single objective optimized by all ten stages;
-only course, time, and block rewards enter the final maximization.
-
-\begin{center}
-\begin{tabular}{>{\raggedright\arraybackslash}p{0.38\textwidth}r p{0.42\textwidth}}
-\toprule
-\textbf{Component} & \textbf{Weight} & \textbf{What it measures} \\
-\midrule
-Time-of-day spread & $-10$ & Uneven distribution across times of day \\
-Day-of-week spread & $-10$ & Uneven distribution across days \\
-Course block violation & $-3$ & Assignment to a non-preferred block \\
-Friday-night penalty & $-3$ & Penalized course assigned to Friday night \\
-Room spread & $-3$ & Additional rooms used by one professor in one day \\
-Course reward & $+1$ & Professor--course preference points \\
-Time reward & $+1$ & Professor--time-of-day preference points \\
-Block reward & $+1$ & Professor--block preference points \\
-Packed-day penalty & $-1$ & Professor teaching on additional days \\
-\bottomrule
-\end{tabular}
-\end{center}
+Every stage requests a zero relative MIP gap and may search for at most 60
+seconds. A stage that reaches its limit returns its best incumbent unproven.
+Preference-definition rows are added before the balance stage and their
+auxiliary values repaired; room-use indicators are reconstructed again before
+the room-change stage. The schedule report lists, for each stage, its score in
+the final solution and every term that contributes to it.
 
 \section{Scope, Limitations, and Evaluation Status}
 This formulation describes an institutional faculty-allocation and course

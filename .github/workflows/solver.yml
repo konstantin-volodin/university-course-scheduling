@@ -50,6 +50,5 @@ jobs:
             solver/ci-results/result.json
             solver/ci-results/schedule.html
             solver/ci-results/instance.html
-            solver/ci-results/objective.md
           if-no-files-found: error
           retention-days: 7

@@ -27,7 +27,7 @@ def payload() -> dict[str, Any]:
 @pytest.fixture(scope="module")
 def result() -> dict[str, Any]:
     """Known tiny schedule: renderer tests do not need an optimization run."""
-    return Result("feasible", 0, [
+    return Result("feasible", [
         Assignment("prof_a", "ADM1000", 1, "Fall", "Mon0900", "DMS1150", "Day", 1),
         Assignment("prof_b", "ADM1000", 2, "Fall", "Wed0900", "DMS1150", "Day", 1),
         Assignment("prof_a", "ADM2000", 3, "Fall", "Mon1800", "DMS1150", "Night", 1),
@@ -53,90 +53,19 @@ def test_schedule_page_is_a_self_contained_document(payload, result) -> None:
     _is_a_document(report.schedule_page(payload, result))
 
 
-def test_objective_audit_distinguishes_lower_bound_certificate() -> None:
-    audit = report.objective_markdown({"stages": [
-        {"name": "load", "value": 0, "seconds": 0, "proven": True,
-         "optimality_source": "lower_bound"},
-    ]})
-    assert "| load | 0.00 | 0.00 | lower bound attained |" in audit
-    assert "needed no backend search" in audit
-
-
-def test_objective_audit_reports_bounds_gaps_and_unknown_values() -> None:
-    audit = report.objective_markdown({"stages": [
-        {"name": "rooms", "value": 10, "seconds": 5, "proven": False,
-         "best_bound": 8, "relative_gap": 0.2},
-        {"name": "legacy", "value": 2, "seconds": 1, "proven": False},
-    ]})
-    assert "| rooms | 10.00 | 5.00 | no | 8.00 | 20.0% |" in audit
-    assert "| legacy | 2.00 | 1.00 | no | — | — |" in audit
-
-
-def test_schedule_page_keeps_objective_details_out_of_the_schedule(payload, result) -> None:
-    page = report.schedule_page(payload, result)
-    assert "Preference breakdown" not in page
-    assert "preferenceBreakdown" not in _embedded(page)
-
-
-def test_objective_audit_caps_large_term_detail_without_changing_result() -> None:
-    terms = [
-        {
-            "variable": f"x_{index}",
-            "coefficient": 1 if index % 2 else -3,
-            "value": 1,
-            "contribution": 1 if index % 2 else -3,
-        }
-        for index in range(100)
-    ]
-    result = {
-        "status": "optimal",
-        "solver": "test",
-        "objective": -100,
-        "stages": [],
-        "preference_breakdown": [
-            {
-                "name": "example",
-                "label": "Example preference",
-                "description": "A test component",
-                "raw_value": 100,
-                "weight": -1,
-                "contribution": -100,
-                "terms": terms,
-            }
-        ],
-    }
-
-    markdown = report.objective_markdown(result)
-
-    assert "| Example preference | A test component | 100.00 | -1.00 | -100.00 |" in markdown
-    assert "Active terms: 100; showing 12; omitted 88." in markdown
-    assert "[result.json](result.json)" in markdown
-    assert "| -3.00 | 38 | 38.00 | -114.00 |" in markdown
-    assert "| 1.00 | 50 | 50.00 | 50.00 |" in markdown
-    assert "`x_0`" in markdown
-    assert "`x_99`" not in markdown
-    assert len(markdown) < 4_000
-
-
-def test_objective_audit_preserves_component_rows_and_does_not_mutate_result() -> None:
-    result = {
-        "preference_breakdown": [
-            {
-                "name": "empty",
-                "label": "Empty component",
-                "description": "No active terms",
-                "raw_value": 0,
-                "weight": 2,
-                "contribution": 0,
-            }
-        ]
-    }
-    before = json.dumps(result, sort_keys=True)
-
-    markdown = report.objective_markdown(result)
-
-    assert "| Empty component | No active terms | 0.00 | 2.00 | 0.00 |" in markdown
-    assert json.dumps(result, sort_keys=True) == before
+def test_schedule_page_explains_every_goal_and_what_added_to_it(payload, result) -> None:
+    scored = dict(result, stages=[{
+        "name": "Give every section a meeting time", "key": "unscheduled",
+        "meaning": "One section left without a meeting time.", "maximise": False,
+        "value": 1, "final": 1, "seconds": 0.1, "proven": True,
+        "items": [{"description": "ADM1000 section 1 (Fall): prof_a, no meeting time",
+                   "amount": 1}],
+    }])
+    page = report.schedule_page(payload, scored)
+    assert "How this schedule was scored" in page
+    embedded = _embedded(page)["stages"][0]
+    assert embedded["meaning"] == "One section left without a meeting time."
+    assert embedded["items"][0]["description"].startswith("ADM1000 section 1")
 
 
 @pytest.mark.parametrize("kind", ["schedule", "instance"])
@@ -281,16 +210,6 @@ def test_solve_html_flag_writes_the_same_page(tmp_path: Path) -> None:
                  "--time-limit", "20", "--html", str(page)]) == 0
     _is_a_document(page.read_text())
     assert _embedded(page.read_text())["assignments"]
-
-
-def test_objective_report_qualifies_backend_optimality() -> None:
-    document = report.objective_markdown({"status": "optimal", "stages": [
-        {"name": "preference", "value": 1.0, "seconds": 0.1, "proven": True},
-    ]})
-    assert "Backend optimality" in document
-    assert "configured gap and numerical tolerances" in document
-    assert "| Proven |" not in document
-    assert "| preference | 1.00 | 0.10 | yes |" in document
 
 
 def test_html_report_qualifies_backend_optimality() -> None:

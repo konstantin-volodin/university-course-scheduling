@@ -30,13 +30,14 @@ from ..config import (
     OFF_CAMPUS,
     PART_TIMER,
     Instance,
+    SectionKey,
     is_placeholder,
     placeholder_for,
 )
 from ..progress import Progress
 from .program import LinearExpr, Program, Sense, VarKind
 
-__all__ = ["AssignmentKey", "BuiltModel", "ObjectiveComponent", "Objectives", "build"]
+__all__ = ["AssignmentKey", "BuiltModel", "Objectives", "build"]
 
 class AssignmentKey(NamedTuple):
     """The complete identity of an assignment decision variable."""
@@ -54,17 +55,6 @@ Terms = dict[int, float]
 
 
 @dataclass(frozen=True, slots=True)
-class ObjectiveComponent:
-    """One named contribution to the final preference objective."""
-
-    name: str
-    expression: LinearExpr
-    weight: float
-    label: str
-    description: str
-
-
-@dataclass(frozen=True, slots=True)
 class Objectives:
     """The expressions the solve stages optimise, in priority order.
 
@@ -78,6 +68,7 @@ class Objectives:
     teaching_load: LinearExpr
     concurrency: LinearExpr
     placeholder_use: LinearExpr
+    program_clash: LinearExpr
     off_campus_use: LinearExpr
     part_timer_room_use: LinearExpr
 
@@ -97,51 +88,6 @@ class Objectives:
     def remaining_preference_score(self) -> LinearExpr:
         """Positive preference rewards after all penalties have been capped."""
         return self.course_reward + self.time_reward + self.block_reward
-
-    def preference_components(self) -> tuple[ObjectiveComponent, ...]:
-        """Return the final objective's named, weighted components."""
-        return (
-            ObjectiveComponent(
-                "time_of_day_spread", self.time_of_day_spread, -10.0,
-                "Time-of-day spread", "Difference between the busiest and quietest times of day.",
-            ),
-            ObjectiveComponent(
-                "day_of_week_spread", self.day_of_week_spread, -10.0,
-                "Day-of-week spread", "Difference between the busiest and quietest days.",
-            ),
-            ObjectiveComponent(
-                "block_violation", self.block_violation, -3.0,
-                "Course block violations", "Assignments using a block a course does not prefer.",
-            ),
-            ObjectiveComponent(
-                "friday_night", self.friday_night, -3.0,
-                "Friday-night penalties", "Penalized courses assigned to Friday night.",
-            ),
-            ObjectiveComponent(
-                "room_changes", self.room_changes, -3.0,
-                "Room changes", "Additional rooms used by one professor on one day.",
-            ),
-            ObjectiveComponent(
-                "course_reward", self.course_reward, 1.0,
-                "Course preference rewards",
-                "Points for assigning a professor to a preferred course.",
-            ),
-            ObjectiveComponent(
-                "time_reward", self.time_reward, 1.0,
-                "Time preference rewards",
-                "Points for assigning a professor to a preferred time of day.",
-            ),
-            ObjectiveComponent(
-                "block_reward", self.block_reward, 1.0,
-                "Block preference rewards",
-                "Points for assigning a professor to a preferred block.",
-            ),
-            ObjectiveComponent(
-                "pack_day_penalty", self.pack_day_penalty, -1.0,
-                "Additional teaching days",
-                "Penalty for each extra day on which a professor teaches.",
-            ),
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -721,6 +667,80 @@ class _Builder:
 
         return violation
 
+    def add_program_constraints(self) -> LinearExpr:
+        """Each program's cohort can take one scheduled section of every required course.
+
+        For every program and semester the model picks at most one section per
+        required course -- only a section with a real timeslot can be picked --
+        and picked sections may not meet in one conflict period (a set of
+        pairwise overlapping timeslots). Each required course left unpicked is
+        one violation, so an impossible program is reported rather than making
+        the instance infeasible.
+        """
+        inst, ix = self.inst, self.ix
+        courses_of: dict[tuple[str, str], set[str]] = defaultdict(set)
+        for program, semester, course in inst.program_requirements:
+            courses_of[(program, semester)].add(course)
+        sections_of: dict[tuple[str, str], list[SectionKey]] = defaultdict(list)
+        for section in sorted(inst.section_keys):
+            sections_of[(section[0], section[2])].append(section)
+
+        cliques_at: dict[str, list[str]] = defaultdict(list)
+        for slots in ix.conflict_cliques:
+            for slot in slots:
+                cliques_at[slot].append("+".join(slots))
+        scheduled: dict[SectionKey, Terms] = defaultdict(dict)
+        meets: dict[tuple[SectionKey, str], Terms] = defaultdict(dict)
+        cliques_of: dict[SectionKey, set[str]] = defaultdict(set)
+        for key, variable in self.assign.items():
+            if is_placeholder(key.timeslot):
+                continue
+            section = (key.course, key.section, key.semester, key.time_of_day)
+            scheduled[section][variable] = 1.0
+            for clique in cliques_at[key.timeslot]:
+                meets[(section, clique)][variable] = 1.0
+                cliques_of[section].add(clique)
+
+        pick: dict[tuple[str, str, str], Terms] = {}
+        missing: dict[tuple[str, str, str], int] = {}
+        pickable: dict[tuple[str, ...], Terms] = {}
+        attends: dict[tuple[str, ...], Terms] = {}
+        clash: dict[tuple[str, str, str], Terms] = defaultdict(dict)
+        violation = LinearExpr()
+        for (program, semester), courses in sorted(courses_of.items()):
+            for course in sorted(courses):
+                pick_key = (program, semester, course)
+                pick[pick_key] = {}
+                attended: dict[str, int] = {}
+                for section in sections_of[(course, semester)]:
+                    chosen = self.program.add_variable(
+                        f"program_pick[{_label((program, *section))}]",
+                        upper=1.0, kind=VarKind.BINARY,
+                    )
+                    pick[pick_key][chosen] = 1.0
+                    pickable[(program, *section)] = {
+                        chosen: 1.0, **{v: -c for v, c in scheduled[section].items()}
+                    }
+                    for clique in sorted(cliques_of[section]):
+                        if clique not in attended:
+                            attended[clique] = self.program.add_variable(
+                                f"program_attends[{_label((*pick_key, clique))}]", upper=1.0
+                            )
+                            clash[(program, semester, clique)][attended[clique]] = 1.0
+                        attends[(program, *section, clique)] = {
+                            **meets[(section, clique)], chosen: 1.0, attended[clique]: -1.0
+                        }
+                missing[pick_key] = self._slack("program_missing_violation", pick_key)
+                pick[pick_key][missing[pick_key]] = 1.0
+                violation.add(missing[pick_key])
+        clash = {key: terms for key, terms in clash.items() if len(terms) > 1}
+
+        self._emit("program_pick", pick, Sense.EQ, 1.0, defines=missing)
+        self._emit("program_pick_is_scheduled", pickable, Sense.LE, 0.0)
+        self._emit("program_attends", attends, Sense.LE, 1.0)
+        self._emit("program_clash", clash, Sense.LE, 1.0)
+        return violation
+
     # -- objective terms -------------------------------------------------- #
 
     def preference_terms(self) -> tuple[LinearExpr, LinearExpr, LinearExpr]:
@@ -860,6 +880,10 @@ def build(inst: Instance, progress: Progress) -> BuiltModel:
     with progress.step("building", "concurrency constraints") as done:
         concurrency = builder.add_concurrency_constraints()
         done(f"{len(builder.program.rows) - before_rows:,} rows")
+    before_rows = len(builder.program.rows)
+    with progress.step("building", "program constraints") as done:
+        program_clash = builder.add_program_constraints()
+        done(f"{len(builder.program.rows) - before_rows:,} rows")
 
     with progress.step("building", "objective terms") as done:
         course_reward, time_reward, block_reward = builder.preference_terms()
@@ -874,6 +898,7 @@ def build(inst: Instance, progress: Progress) -> BuiltModel:
         teaching_load=teaching_load,
         concurrency=concurrency,
         placeholder_use=placeholder_use,
+        program_clash=program_clash,
         off_campus_use=off_campus_use,
         part_timer_room_use=part_timer_room_use,
         time_of_day_spread=time_spread,

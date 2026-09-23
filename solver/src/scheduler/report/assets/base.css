@@ -223,6 +223,17 @@ td.cell.empty{background:repeating-linear-gradient(135deg,transparent 0 7px,#EDE
 .schedule-page .course-card.pt{border-left-style:dashed}
 .schedule-page .detail{margin-top:16px;border-radius:8px;box-shadow:0 -4px 20px #2d2d2c0a}
 .schedule-page .legend{font-size:12px;gap:16px}
+.scoring{margin-top:28px}
+.scoring h2{margin:0 0 8px}
+.scoring>p{max-width:72ch;color:var(--muted)}
+.goals{padding-left:1.4em;margin:16px 0 0}
+.goal{margin:0 0 18px}
+.goal h3{margin:0;font-size:1rem}
+.goal .meaning,.goal .none{margin:2px 0;color:var(--muted);max-width:72ch}
+.goal .score{margin:4px 0}
+.goal summary{cursor:pointer}
+.goal .items{margin:6px 0;padding-left:1.2em;font-size:.875rem}
+.goal .amt{display:inline-block;min-width:3.5em;font-variant-numeric:tabular-nums}
 .schedule-page .solver-details{margin-top:28px;font-size:13px;color:var(--muted)}
 .solver-details summary{cursor:pointer;font-size:14px;font-weight:600;padding:12px 0}
 .solver-details .panel{overflow:auto;padding:16px}

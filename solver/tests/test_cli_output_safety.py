@@ -9,7 +9,7 @@ from scheduler import cli
 
 
 @pytest.mark.parametrize(
-    "filename", ["schedule.html", "instance.html", "objective.md", "solve.log"],
+    "filename", ["schedule.html", "instance.html", "solve.log"],
 )
 def test_reserved_output_name_rejected(tmp_path: Path, filename: str) -> None:
     args = cli.build_parser().parse_args([
