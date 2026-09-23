@@ -4,7 +4,7 @@
   --grey-warm:#80746C; --grey-light:#ACA39A;
   --charcoal:#2D2D2C; --polar:#F2F2F2; --sage:#67796C; --white:#FFFFFF;
   /* roles */
-  --ground:var(--polar); --surface:var(--white); --sunk:var(--polar);
+  --ground:var(--polar); --surface:var(--white);
   --ink:var(--charcoal); --muted:#5C554F; --faint:var(--grey-warm);
   --line:#DEDAD5; --line-strong:#C6BFB8; --focus:var(--garnet);
   /* semantic -- one meaning per colour, on both pages */
@@ -12,7 +12,7 @@
   --satisfied:var(--grey-warm); /* the quantities that already exist */
   --ok:var(--sage);             /* passing checks only */
   /* space */
-  --s1:4px; --s2:8px; --s3:12px; --s4:16px;
+  --s2:8px; --s3:12px; --s4:16px;
   --s5:24px; --s6:32px; --s7:48px; --s8:72px;
 }
 *{box-sizing:border-box}
@@ -68,6 +68,10 @@ h1{font-family:"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:clamp
 .gridwrap{overflow:auto;max-height:min(78vh,900px);border:1px solid var(--line);
   background:var(--surface)}
 .gridwrap:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.unscheduled{margin-top:var(--s5)}
+.unscheduled h2{margin:0;font-size:1.25rem}
+.unscheduled p{color:var(--muted);margin:var(--s2) 0 var(--s4)}
+.unscheduled .grp-c{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
 table{border-collapse:collapse;width:100%;min-width:1100px}
 th,td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:top}
 th:last-child,td:last-child{border-right:0}
@@ -88,7 +92,7 @@ td.cell.empty{background:repeating-linear-gradient(135deg,transparent 0 7px,#EDE
 /* a cell mixes 2-3 timeslots; the slot is the real event, so group by it */
 .grp-h{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.6875rem;letter-spacing:.04em;
   color:var(--muted);margin-bottom:4px}
-.grp-h .dbl{color:var(--garnet-deep)}
+.grp-h.dbl{color:var(--garnet-deep)}
 /* one column rhythm, so chips line up down the cell instead of ragging */
 .grp-c{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:4px}
 /* Night carries 175 of the 426 sections, so a cell there runs 15 rows deep and
@@ -135,15 +139,6 @@ td.cell.empty{background:repeating-linear-gradient(135deg,transparent 0 7px,#EDE
 .stages td.v{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;
   color:var(--ink);font-weight:500;text-align:right}
 .stages td.st{font-size:.6875rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
-.stages th{font-size:.6875rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:left;padding:0 14px 5px 0}
-.objective-label{display:block;color:var(--ink);font-weight:600}
-.objective-description{display:block;color:var(--muted);font-size:.8125rem;margin-top:2px;max-width:470px}
-.stages details{margin-top:5px;color:var(--muted);font-size:.75rem}
-.stages summary{cursor:pointer}
-.terms{border-collapse:collapse;margin-top:4px;font-size:.75rem}
-.terms th,.terms td{padding:2px 8px 2px 0;border:0;color:var(--muted);font-weight:400}
-.terms th{font-size:.625rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
-.terms td.term{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:nowrap}
 .ok{color:var(--ok)}
 .early{color:var(--deficit)}
 /* instance page */

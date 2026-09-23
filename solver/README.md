@@ -88,6 +88,16 @@ Reserved IDs:
 
 Reserved IDs are returned as `null` assignments.
 
+Declared qualifications are preserved throughout solving, including
+`qualified_for: all` and its default. Course ranks reward preferred assignments;
+they never remove non-preferred courses from a professor's qualifications.
+Instances with broad qualifications can therefore build larger models.
+
+The optional top-level `minimum_room_fill` policy accepts a fraction from `0` to
+`1` and defaults to `0.8`. For example, `minimum_room_fill: 0` allows underfilled
+rooms; room capacity remains a hard upper bound. The setting works in single YAML
+files and split-instance manifests.
+
 ## Output
 
 ```json
@@ -156,3 +166,8 @@ make types
 make fmt
 make example
 ```
+
+GitHub Actions runs `make check` on Python 3.14 using locked dependencies.
+It validates all three public instances and solves the tiny example with a
+30-second limit per stage. Each successful job provides downloadable JSON and
+HTML reports plus the objective audit. Full Telfer solves remain manual.

@@ -27,16 +27,19 @@
 \subsection{Intro}
 The goal of this project is to create a course schedule. The schedule must
 assign every course section to a professor, a semester, a time, and a
-classroom. A section is therefore identified by its course, section number,
-and semester, and its assignment also records the professor, timeslot, and
-classroom.
+classroom. The implementation identifies a declared section by its course,
+section number, semester, and time-of-day category. Its assignment also records
+the professor, timeslot, and classroom. The notation $X_{pcistk}$ below suppresses
+the declared time-of-day index for readability; all section-indexed constraints
+are applied separately to each declared $(c,i,s,td)$ key.
 
 The model has two kinds of requirements. Hard requirements describe what a
 valid schedule must satisfy. Soft requirements describe desirable qualities,
 such as respecting professor preferences or avoiding room changes. Because a
 real instance may not satisfy every hard requirement, the solver handles the
-requirements hierarchically: it first minimizes unavoidable violations, then
-optimizes the softer qualities within those limits.
+requirements hierarchically: it first minimizes selected violation measures, then
+optimizes the softer qualities within the resulting limits. A violation is not
+proved unavoidable merely because a time-limited solve retains it.
 
 Professor preferences are represented on a simple three-point numerical scale.
 This keeps the input understandable and limits the amount of subjective
@@ -124,7 +127,9 @@ $ppp_{p}$ - Professor preference for a packed day
 
 
 \subsubsection{Classroom Data}
-$kc_{k}$ - Classroom capacity
+$kc_{k}$ - Classroom capacity\\
+$\rho\in[0,1]$ - Minimum physical-room fill fraction, configured by
+\texttt{minimum\_room\_fill}; the default is $0.8$
 
 
 \subsubsection{Course \& Section Data}
@@ -152,11 +157,18 @@ A viable set of X, denoted $XV$, is defined by a following combination:
 \begin{itemize}
 	\item where $CS$ exists
 	\item where $pq$ exists
-	\item where section attendance is between 80\% and 100\% of classroom capacity
+	\item where physical-room attendance satisfies $\rho kc_k\le csa_{cis}\le kc_k$
 	\item where 3 hour blocks with more than 75 students must be at night only
 	\item where combinations of professors who can't teach at night and night blocks are removed
 	\item where combinations of professors who can't teach outside of DMS and 'other' classrooms are removed
 \end{itemize}
+
+All declared professor--course qualifications are retained when constructing
+$XV$. Course preferences rank eligible assignments; they do not remove
+qualifications. Other eligibility rules, such as night-teaching permission,
+still apply. The part-timer surrogate is exempt from named-faculty qualification
+requirements. Placeholder assignments use the ``other'' room surrogate and do
+not consume physical-room capacity.
 
 In the formulation this restriction should generally be denoted in the summation over X, however it is placed outside of the equation for better readability\\ 
 
@@ -175,6 +187,7 @@ $CBLPen_{c,bl}$ - Counts the number of violations of block preference $bl$ per c
 $CFNPen_{c}$ - Counts the number of violations of blocks scheduled to Friday night 3 hour block \\
 $PDayT_{p,s,dw}$ - Indicates if a professor $p$ is teaching during day of the week $dw$, semeseter $s$ \\ 
 $PRoomU_{p,s,dw,k}$ - Indicates if a professor $p$ uses classroom $k$ during day of the week $dw$, semester $s$ \\
+$PPhysical_{p,s,dw}$ - Indicates use of at least one physical room on that day\\
 $RoomExtra_{p,s,dw}$ - Counts the classrooms a professor uses on a day past the first one \\
 $ProfBBV_{}$ - Counts the number of back to back occurences for professor $p$ 
 
@@ -183,6 +196,7 @@ $ProfBBV_{}$ - Counts the number of back to back occurences for professor $p$
 $ConcI_{cst}$ - Counts the number of concurrencies of courses with itself \\
 $ConcT_{c,cc,st}$ - Counts the number of concurrencies between courses where they should be together\\
 $ConcN_{c,cc,st}$ - Counts the number of concurrencies between courses where they should not be together\\
+$ConcO_{c,cc,s,t,tt}$ - Slack for separated courses assigned to distinct overlapping timeslots\\
 $ProfTV{p}$ - Counts violations for required number of sections to be taught per professor
 
 
@@ -199,20 +213,24 @@ Professors can't be scheduled multiple times during one time block
 	[pcistk] \in \{ XV \}, p \not \in {\text{part-timer}},  t \not \in \{\text{placeholder} \}
 \end{equation}
 
-Professors can't be scheduled multiple times during intercepting time blocks
+Named professors cannot teach during overlapping real meeting times. All
+summands below are restricted to $XV$:
 \begin{equation}
-	\sum_{cik} X_{pcistk} + \sum_{cik} X_{pcis,tt,k} \le 1 \quad \forall \quad P, S, T, TT, [t,tt] \in \{ tc \}, 
-	[pcistk] \in \{ XV \}, [pcis,tt,k] \in \{ XV \},  p \not \in {\text{part-timer}}
+	\sum_{cik} X_{pcistk} + \sum_{cik} X_{pcis,tt,k} \le 1
+	\quad \forall p\in P^*,\ s\in S,\ [t,tt]\in tc.
 \end{equation}
 
-Professors must teach a required number of sections
+Professors must teach at least their required number of sections. The
+nonnegative slack counts teaching above that load; it does not permit a shortfall.
 \begin{equation}
-	\sum_{cikst} X_{pcistk} = pt_{p} - ProfTV_{p} \quad \forall \quad P, [pcistk] \in \{ XV \}, p \not \in {\text{part-timer}}
+	\sum_{cikst} X_{pcistk} = pt_{p} + ProfTV_{p} \quad \forall \quad p\in P^{*},\qquad ProfTV_p\ge0
 \end{equation}
 
-Professors can only teach courses they are qualified to teach (removed by $XV$)
+Professors can only teach courses they are qualified to teach. Unqualified
+assignments are excluded by $XV$; qualification does not impose an additional
+upper bound equal to the agreed teaching load.
 \begin{equation}
-	\sum_{istk} X_{pcistk} \le pt_{p} \, pq_{pc}  \quad \forall \quad P,C, [pcistk] \in \{ XV \}
+	X_{pcistk}=0 \quad \text{if }p\in P^{*}\text{ and }pq_{pc}=0
 \end{equation}
 
 Counts the maximum number of days a professor is teaching per each semester
@@ -227,10 +245,16 @@ further room adds to $RoomExtra_{p,s,dw}$.
 	\sum_{c,i,\, t \in T_{dw}} X_{pcistk} \le M \, PRoomU_{p,s,dw,k} 
 	\quad \forall P, S, DW, K, [pcistk] \in \{ XV \}, k \not \in \{ \text{other} \}
 \end{equation}
+Let $K^*=K\setminus\{\text{other}\}$. The implementation uses a separate
+physical-room-day indicator, since teaching only off campus must not subtract
+a room from this count:
 \begin{equation}
-	\sum_{k} PRoomU_{p,s,dw,k} \le PDayT_{p,s,dw} + RoomExtra_{p,s,dw} 
-	\quad \forall P, S, DW, k \not \in \{ \text{other} \}
+	PPhysical_{p,s,dw}\le\sum_{k\in K^*}PRoomU_{p,s,dw,k}
+	\le |K^*|PPhysical_{p,s,dw}.
 \end{equation}
+The room-change expression is
+$RoomExtra_{p,s,dw}=\sum_{k\in K^*}PRoomU_{p,s,dw,k}-PPhysical_{p,s,dw}$;
+it is not a separate slack variable in the implementation.
 
 Counts the number of occurences a professor has back to back classes (in different classrooms)
 \begin{equation}
@@ -275,12 +299,15 @@ Each classroom can only be occupied once per period and the time slots that shar
 	[t,tt] \in \{tc\}, [pcistk] \in \{ XV \}, k \not \in \{ \text{other} \}
 \end{equation}
 
-Classroom capacities must be respected. The section attendance cannot be higher than the classroom
-capacity and must be higher than at least 80 percent of the classroom capacity. (removed by $XV$)
+Physical-room eligibility requires attendance no greater than capacity and no
+less than the configured fill fraction. Ineligible assignments are removed
+from $XV$:
 \begin{equation}
-	\sum_{p,td,\, t \in T_{td}} X_{pcistk} = 0 \quad \forall \quad C,I,S,K,  0.8 kc_{k} 
-	\le csa_{cis} \le kc_{k}, [pcistk] \in \{ XV \}, k \not \in \{ \text{other} \}
+	X_{pcistk}=0 \quad\text{if } csa_{cis}<\rho kc_k
+	\text{ or }csa_{cis}>kc_k,\qquad k\ne\text{other}.
 \end{equation}
+Setting $\rho=0$ disables only the minimum-fill restriction; capacity remains
+an upper bound. The default $\rho=0.8$ preserves the institutional 80\% rule.
 
 Finally the classroom utilization must be maximized which is done by counting the number of courses
 allocated to classroom and that value is rewarded in the objective function. (this is not needed as it is modelled by minimizing "other" classrooms)
@@ -291,9 +318,11 @@ allocated to classroom and that value is rewarded in the objective function. (th
 
 
 \subsubsection{Course Constraints}
-For each course section, there must be scheduled a required number of sections per each time of the day.
+Every declared course--section--semester--time-of-day tuple is assigned exactly once,
+including an explicit placeholder if no real meeting is selected.
 \begin{equation}
-	\sum_{cpstk} X_{pcistk} = 1 \quad \forall \quad I, [pcistk] \in \{ XV \}
+	\sum_{p,\,t\in T_{td},\,k} X_{pcistk} = 1
+	\quad \forall(c,i,s,td)\in CS.
 \end{equation}
 
 Three hour courses with more than 75 students can only be scheduled at night. (removed by $XV$)
@@ -315,20 +344,25 @@ Some courses should not be scheduled on the 3 hour Friday night block.
 
 
 \subsubsection{Concurrency Constraints}
-Sections of same courses must not be scheduled together
+The same-course penalty counts excess named-faculty sections at the same
+meeting-time ID. This rule is unchanged by the distinct-time apart constraints
+below; it does not itself add penalties across distinct overlapping IDs.
 \begin{equation}
 	\sum_{p \in P^{*},i,k} X_{pcistk} 
 	\le 1 + ConcI_{cst} \quad \forall \quad C,S,T, 
 	[pcistk] \in \{ XV \}, t \not \in \{\text{placeholder}\}
 \end{equation}
 
-Some concurrent courses must be scheduled together ($[pcistk] \in \{ XV \}$ and $[p,cc,istk] \in \{ XV \}$)
+Courses marked together require equal named-faculty assignment counts at each
+exact meeting-time ID. The nonnegative penalty bounds the absolute difference;
+merely overlapping meeting IDs do not satisfy this rule.
 \begin{equation}
-	\sum_{p \in P^{*},i,k} X_{pcistk} 
-	= \sum_{p \in P^{*},i,k} X_{p,cc,istk} + ConcT_{c,cc,st} 
-	\quad \forall \quad C,CC,S,T, 
-	t \not \in \{\text{placeholder}\}, [c,cc] \in \{ cct \}
+	\left|\sum_{p \in P^{*},i,k} X_{pcistk}
+	- \sum_{p \in P^{*},i,k} X_{p,cc,istk}\right|
+	\le ConcT_{c,cc,st}
+	\quad [c,cc,s]\in cct,\quad t\text{ real}.
 \end{equation}
+The implementation expresses the absolute-value bound as two linear inequalities.
 
 Some concurrent courses cannot be scheduled together ($[pcistk] \in \{ XV \}$ and $[p,cc,istk] \in \{ XV \}$)
 \begin{equation}
@@ -338,13 +372,33 @@ Some concurrent courses cannot be scheduled together ($[pcistk] \in \{ XV \}$ an
 	t \not \in \{\text{placeholder}\}, [c,cc] \in \{ ccn \}
 \end{equation}
 
+For courses marked apart, distinct overlapping meeting IDs must also be
+considered. Define the symmetric relation
+$E=\{(t,tt),(tt,t):[t,tt]\in tc,\ t\ne tt,\ t,tt\text{ real}\}$.
+For each distinct-course pair $[c,cc,s]\in ccn$ not marked together, impose
+\begin{equation}
+	\sum_{p\in P^{*},i,k}X_{pcistk}
+	+\sum_{p\in P^{*},i,k}X_{p,cc,is,tt,k}
+	\le 1+ConcO_{c,cc,s,t,tt}\qquad \forall(t,tt)\in E.
+\end{equation}
+Each orientation keeps the courses at opposite ends of the overlap pair.
+No transitive closure is taken: overlap of $t$ with $u$ and $u$ with $v$ does
+not imply overlap of $t$ with $v$. These are soft constraints with nonnegative
+slack, like the same-time apart rule. Part-timer and placeholder assignments
+remain exempt. The summed slack is an aggregate penalty, not necessarily a
+count of distinct conflicting section pairs.
+
 
 %%%%%%%%%%%%%%%%
 %%% Objective Function
 %%%%%%%%%%%%%%%%
 \subsection{Objective Function}
-Each stage is optimized and bounded before the next begins. Later preferences
-cannot worsen an earlier result.
+The solver runs the following ten stages in order. Each of the first nine
+minimizes a measure $f_j$ and adds the cap
+$f_j(X)\le\lceil z_j-10^{-6}\rceil$, where $z_j$ is the returned incumbent
+value. Thus later stages preserve the rounded cap, rather than re-optimizing
+the preceding priority. The second stage caps its combined measure, not its
+conflict and placeholder components separately.
 \begin{enumerate}
 
 	\item \textbf{Teaching load.}
@@ -355,17 +409,15 @@ cannot worsen an earlier result.
 		
 	\item \textbf{Conflicts and unscheduled sections.}
 		\begin{equation}
-		\begin{aligned}
-			& min \sum (ConcI + ConcT + ConcN) +  \sum_{t\in\{\text{placeholder}\}} X & \Rightarrow \\
-			& \sum(ConcI + ConcT + ConcN) \le \text{ value of } \sum(ConcI + ConcT + ConcN) & \\
-			& \sum_{t\in\{\text{placeholder}\}} X \le \text{ value of } \sum_{t\in\{\text{placeholder}\}} X & 
-		\end{aligned}
+			\min f_2(X)=\sum ConcI+\sum ConcT+\sum ConcN+\sum ConcO
+			+\sum_{t\in\{\text{placeholder}\}}X.
 		\end{equation}
 
-	\item \textbf{Off-campus assignments.}
+	\item \textbf{Off-campus assignments.} Count only assignments with real meeting
+		times; unscheduled placeholders are already counted in stage 2.
 		\begin{equation}
-			\min \sum_{k\in\{\text{other}\}} X \Rightarrow 
-			\sum_{k\in\{\text{other}\}} X \le \text{ value of } \sum_{k\in\{\text{other}\}} X
+			\min f_3(X)=\sum_{\substack{p,c,i,s,\,t\text{ real}\\k=\text{other}}} X_{pcistk}
+			\quad\Rightarrow\quad f_3(X)\le\lceil z_3-10^{-6}\rceil.
 		\end{equation}
 
 	\item \textbf{Part-timer room use.} Prefer physical rooms for named faculty.
@@ -378,17 +430,15 @@ cannot worsen an earlier result.
 		\end{aligned}
 		\end{equation}
 
-	\item \textbf{Soft penalties.}
-			\begin{equation}
-			\begin{aligned}
-			\min\quad & \sum_{c,bl} CBLPen_{c,bl} \\
-			\min\quad & \sum_c CFNPen_c \\
-			\min\quad & \sum_{p,s,dw} RoomExtra_{p,s,dw} \\
-			\min\quad & \sum_{s,p,dw} PDayT_{p,s,dw}\,ppp_p
-			\end{aligned}
-			\end{equation}
+	\item \textbf{Course block violations.} Minimize $\sum_{c,bl}CBLPen_{c,bl}$.
 
-	\item \textbf{Preference rewards.}
+	\item \textbf{Friday-night penalties.} Minimize $\sum_c CFNPen_c$.
+
+	\item \textbf{Room changes.} Minimize $\sum_{p,s,dw}RoomExtra_{p,s,dw}$.
+
+	\item \textbf{Teaching days.} Minimize $\sum_{s,p,dw}PDayT_{p,s,dw}\,ppp_p$.
+
+	\item \textbf{Preference rewards.} Maximize the sum of the following rewards:
 			\begin{equation}
 			\begin{aligned}
 						 & + 1 \sum_{pcistk} X \, pcp_{pc} 		& [pcistk] \in XV, pcp_{pc} > 0 \\
@@ -398,6 +448,24 @@ cannot worsen an earlier result.
 		\end{equation}
 		
 \end{enumerate}
+
+Stages 1, 2, 4, 5, 6, 7, and 9 request a zero relative MIP gap. Stages 3,
+8, and 10 allow a 5\% relative gap. A zero requested gap does not guarantee
+that a time-limited run proves its optimum. Conversely, a solver's successful
+termination with a positive requested gap does not establish exact mathematical
+optimality. Exact lexicographic optimality requires proving every relevant
+preceding optimum; this manuscript makes no such claim for a general run.
+
+The configured time limit applies separately to each stage. Ten stages can
+therefore consume approximately ten times that limit, plus model construction,
+incumbent repair, and other overhead. Preference-definition rows are added
+after stage 4. Their auxiliary values are repaired before offering the incumbent
+to the next stage; room-use indicators are reconstructed again before stage 8.
+These implementation choices have not been established here to improve runtime.
+
+The following weighted breakdown is an explanatory score computed from the
+final solution. It is not the single objective optimized by all ten stages;
+only course, time, and block rewards enter the final maximization.
 
 \begin{center}
 \begin{tabular}{>{\raggedright\arraybackslash}p{0.38\textwidth}r p{0.42\textwidth}}
@@ -416,5 +484,23 @@ Packed-day penalty & $-1$ & Professor teaching on additional days \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\section{Scope, Limitations, and Evaluation Status}
+This formulation describes an institutional faculty-allocation and course
+scheduling application. Part-timer, unscheduled, and off-campus surrogates make
+selected compromises explicit, but do not guarantee feasibility: named-faculty
+load requirements and other hard constraints can still be incompatible.
+The minimum-fill threshold and priority order are institutional policy choices,
+not general claims about educational quality or fairness.
+
+This manuscript reports no controlled benchmark experiments, independently
+validated improvements over manual schedules, or cross-institution performance
+results. Software regression tests check selected implementation properties;
+they do not establish novelty, computational superiority, or publication
+readiness. A research evaluation still needs a reconciled formulation and
+independent schedule checker, documented instances, matched baselines, equal
+total compute budgets, stage bounds and termination records, and reproducible
+artifacts. Competition timetabling scores cannot be compared directly without
+first matching the respective benchmark constraints and objectives.
 
 \end{document}  
