@@ -7,18 +7,15 @@ import json
 import math
 import sys
 from collections.abc import Sequence
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 from . import __version__
-from .audit import audit_result
 from .backends import BACKENDS, DEFAULT_BACKEND
 from .config import Instance
 from .errors import InvalidInstanceError, SchedulerError
 from .progress import ProgressCallback, TeeProgress, TerminalProgress, silent, to_stderr
-from .solve import Result, solve_instance
-from .solve.warm_start import assignments_from_result, validate_initial_assignments
+from .solve import solve_instance
 
 __all__ = ["main"]
 
@@ -131,10 +128,6 @@ def _cmd_solve(args: argparse.Namespace) -> int:
         print(f"instance is valid: {instance.summary()}", file=sys.stderr)
         return 0
 
-    initial = None
-    if args.warm_start is not None:
-        initial = assignments_from_result(_read_json(args.warm_start))
-        validate_initial_assignments(instance, initial)
     outputs = _solve_output_paths(args)
     live_reporter = silent if args.quiet else (
         TerminalProgress() if sys.stderr.isatty() else to_stderr
@@ -147,8 +140,7 @@ def _cmd_solve(args: argparse.Namespace) -> int:
         reporter = live_reporter
     try:
         result = solve_instance(
-            instance, reporter, time_limit=args.time_limit, solver=args.solver,
-            initial_assignments=initial,
+            instance, reporter, time_limit=args.time_limit, solver=args.solver
         )
     finally:
         if log_file is not None:
@@ -197,37 +189,6 @@ def _cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
-def _cmd_audit(args: argparse.Namespace) -> int:
-    """Check saved assignments without solving or trusting their saved scores."""
-    instance = Instance.from_payload(_read_instance(args.instance))
-    try:
-        assignments = assignments_from_result(_read_json(args.result))
-    except UnicodeError as exc:
-        raise SchedulerError(f"{args.result}: result must be UTF-8 text") from exc
-    except SchedulerError as exc:
-        raise SchedulerError(str(exc).replace("warm start:", "audit result:", 1)) from exc
-    # Stored solver status/objective are deliberately not interpreted or verified.
-    result = Result("feasible", 0.0, assignments)
-    issues = audit_result(instance, result)
-    unresolved = {
-        "unscheduled": len(result.unscheduled),
-        "unstaffed": len(result.unstaffed),
-        "off_campus": len(result.off_campus),
-    }
-    scheduling_gate_passed = not args.require_scheduled or not result.unscheduled
-    print(_as_json({
-        "hard_rules": {"passed": not issues, "issues": [asdict(issue) for issue in issues]},
-        "unresolved": unresolved,
-        "scheduling_gate": {
-            "required": args.require_scheduled, "passed": scheduling_gate_passed,
-        },
-        "scope": (
-            "Checks hard rules and missing timeslots, not optimality or operational readiness."
-        ),
-    }), end="")
-    return 0 if not issues and scheduling_gate_passed else 1
-
-
 def _positive_seconds(value: str) -> float:
     seconds = float(value)
     if not math.isfinite(seconds) or seconds <= 0:
@@ -266,10 +227,6 @@ def build_parser() -> argparse.ArgumentParser:
              "is still returned, with status 'feasible'",
     )
     solve_cmd.add_argument(
-        "--warm-start", metavar="RESULT_JSON",
-        help="start from a complete validated prior schedule without fixing its assignments",
-    )
-    solve_cmd.add_argument(
         "--html", metavar="PATH", help="override the schedule HTML path"
     )
     solve_cmd.set_defaults(handler=_cmd_solve)
@@ -286,19 +243,6 @@ def build_parser() -> argparse.ArgumentParser:
     report_cmd.add_argument("-o", "--output", required=True, help="write the HTML page here")
     report_cmd.add_argument("--title", help="page title (default depends on the page)")
     report_cmd.set_defaults(handler=_cmd_report)
-
-    audit_cmd = subcommands.add_parser(
-        "audit", help="check saved assignments against hard rules without solving or writing files",
-    )
-    audit_cmd.add_argument(
-        "instance", help="split-instance directory, YAML/JSON file, or - for stdin",
-    )
-    audit_cmd.add_argument("--result", required=True, metavar="RESULT_JSON")
-    audit_cmd.add_argument(
-        "--require-scheduled", action="store_true",
-        help="also fail when any assignment has no timeslot; this does not certify readiness",
-    )
-    audit_cmd.set_defaults(handler=_cmd_audit)
 
     return parser
 

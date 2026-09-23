@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import replace
 from typing import Any
 
 from ..backends import DEFAULT_BACKEND, Backend, SolutionStatus, open_backend
@@ -27,7 +26,6 @@ from ..model.program import LinearExpr, Program, Row, Sense, VarKind
 from ..progress import Progress, ProgressCallback
 from .result import Assignment, ObjectiveBreakdown, ObjectiveTerm, Result, Stage
 from .room_seed import seed_physical_rooms
-from .warm_start import validate_initial_assignments
 
 __all__ = ["Assignment", "Result", "Stage", "solve", "solve_instance"]
 
@@ -109,26 +107,14 @@ class _StagedSolve:
         room_seed: Callable[[list[float]], list[float]] | None = None,
         deferred: Sequence[Row] = (),
     ) -> float:
-        initial = list(self.values)
         self._minimise_then_cap(
             "assign named professors to required sections",
             objectives.teaching_load,
             EXACT,
         )
-        # Load minimisation is indifferent to whether sections have timeslots.
-        # Preserve a better timetable hint when it still meets the new load cap;
-        # never sacrifice the higher-priority objective to keep that timetable.
-        timetable = objectives.concurrency + objectives.placeholder_use
-        if initial:
-            initial_load = sum(c * initial[i] for i, c in objectives.teaching_load.terms.items())
-            load_cap = math.ceil(self.stages[-1].value - 1e-6)
-            initial_timetable = sum(c * initial[i] for i, c in timetable.terms.items())
-            current_timetable = sum(c * self.values[i] for i, c in timetable.terms.items())
-            if initial_load <= load_cap + 1e-6 and initial_timetable < current_timetable - 1e-6:
-                self.values = initial
         self._minimise_then_cap(
             "minimise timetable conflicts and unscheduled sections",
-            timetable,
+            objectives.concurrency + objectives.placeholder_use,
             EXACT,
         )
         if room_seed is not None:
@@ -368,91 +354,29 @@ def _placeholder_seed(built: BuiltModel) -> list[float]:
     return values
 
 
-def _schedule_seed(built: BuiltModel, assignments: Sequence[Assignment]) -> list[float]:
-    """Reconstruct core slacks for a validated external schedule."""
-    values = [variable.lower for variable in built.program.variables]
-    for assignment in assignments:
-        key = AssignmentKey(
-            PART_TIMER if assignment.professor_id is None else assignment.professor_id,
-            assignment.course_id,
-            str(assignment.section_id),
-            assignment.semester_id,
-            assignment.time_of_day_id,
-            (placeholder_for(assignment.time_of_day_id)
-             if assignment.timeslot_id is None else assignment.timeslot_id),
-            OFF_CAMPUS if assignment.classroom_id is None else assignment.classroom_id,
-        )
-        if key not in built.assign:
-            raise SolveError("warm start", f"assignment is not eligible: {key}")
-        values[built.assign[key]] = 1.0
-
-    assignment_columns = set(built.assign.values())
-    definitions = []
-    for row in built.program.core_rows:
-        auxiliary = row.terms.keys() - assignment_columns
-        if len(auxiliary) == 1:
-            definitions.append(replace(row, defines=next(iter(auxiliary))))
-    values = _repair(built.program, values, definitions)
-    for row in built.program.core_rows:
-        lhs = sum(coefficient * values[index] for index, coefficient in row.terms.items())
-        if (
-            (row.sense is Sense.LE and lhs > row.rhs + 1e-6)
-            or (row.sense is Sense.GE and lhs < row.rhs - 1e-6)
-            or (row.sense is Sense.EQ and abs(lhs - row.rhs) > 1e-6)
-        ):
-            raise SolveError("warm start", f"cannot satisfy core row {row.name}")
-    return values
-
-
 def solve_instance(
     inst: Instance,
     progress: ProgressCallback | None = None,
     time_limit: float | None = None,
     solver: str = DEFAULT_BACKEND,
-    *,
-    initial_assignments: Sequence[Assignment] | None = None,
 ) -> Result:
     """Solve an already-validated instance.
 
-    :param time_limit: seconds, applied to each solve stage. Cold initialization
-        adds a preliminary budget of at most ten seconds, capped by this limit.
-        Model construction and backend overhead are additional. Without one a hard
+    :param time_limit: seconds, applied to each solve stage. Without one a hard
         instance can run indefinitely, which is not something an HTTP service
         can offer. Stopping early yields ``status="feasible"`` rather than an
         error, provided a solution was found.
     :param solver: which backend to use; see :data:`scheduler.backends.BACKENDS`.
-    :param initial_assignments: optional complete, legal schedule used as an
-        incumbent, never as fixed assignments or a restriction of the model.
     """
     if time_limit is not None and (not math.isfinite(time_limit) or time_limit <= 0):
         raise ValueError("time_limit must be positive and finite")
 
     reporter = Progress(progress)
     reporter(inst.summary())
-    if initial_assignments is not None:
-        validate_initial_assignments(inst, initial_assignments)
 
     # Preferences rank legal assignments; they do not revoke qualifications.
     # Even a load-feasible subset can exclude the only conflict-free timetable.
     built = build(inst, reporter)
-    with reporter.step("building", "preparing initial schedule"):
-        initial = (
-            _placeholder_seed(built) if initial_assignments is None
-            else _schedule_seed(built, initial_assignments)
-        )
-
-    if initial_assignments is None:
-        from .cold_start import restricted_incumbent
-
-        candidate = restricted_incumbent(
-            built, min(time_limit, 10.0) if time_limit is not None else 10.0,
-            solver, reporter,
-        )
-        if candidate is not None:
-            initial = candidate
-            reporter("using validated restricted-search timetable as the initial schedule")
-        else:
-            reporter("restricted search supplied no better seed; using the placeholder fallback")
 
     backend = open_backend(solver, threads=THREADS, seed=SEED)
     try:
@@ -460,7 +384,7 @@ def solve_instance(
             backend.load(built.program)
 
         staged = _StagedSolve(backend, reporter, time_limit, built.program)
-        staged.values = initial
+        staged.values = _placeholder_seed(built)
         objective = staged.run(
             built.objectives,
             room_seed=lambda values: seed_physical_rooms(built, values),

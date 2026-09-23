@@ -16,7 +16,6 @@ from scheduler.model import Objectives, build
 from scheduler.model.program import LinearExpr, Program, Row, Sense, VarKind
 from scheduler.progress import Progress
 from scheduler.solve import solver as solver_module
-from scheduler.solve.result import Stage
 from scheduler.solve.solver import EXACT, GOOD_ENOUGH, _repair, _StagedSolve
 
 
@@ -186,49 +185,5 @@ def test_fractional_stage_cap_preserves_attained_value() -> None:
         staged._minimise_then_cap("balance", objective, EXACT, integral=False)
         staged._optimise("reward", objective, maximise=True, gap=EXACT)
         assert staged.values[variable] == pytest.approx(0.5, abs=2e-6)
-    finally:
-        backend.close()
-
-
-@pytest.mark.parametrize(
-    ("initial", "after_load", "expected"),
-    [
-        ([0.0, 0.0, 0.0], [0.0, 0.0, 426.0], [0.0, 0.0, 0.0]),
-        ([1.0, 0.0, 0.0], [0.0, 0.0, 426.0], [0.0, 0.0, 426.0]),
-        ([0.0, 4.0, 0.0], [0.0, 0.0, 3.0], [0.0, 0.0, 3.0]),
-        ([0.0, 3.0, 0.0], [0.0, 0.0, 3.0], [0.0, 0.0, 3.0]),
-        ([], [0.0, 0.0, 426.0], [0.0, 0.0, 426.0]),
-    ],
-)
-def test_load_stage_preserves_better_eligible_timetable_seed(
-    payload: dict[str, Any], monkeypatch: pytest.MonkeyPatch,
-    initial: list[float], after_load: list[float], expected: list[float],
-) -> None:
-    objectives = replace(
-        build(Instance.from_payload(payload), Progress(silent)).objectives,
-        teaching_load=LinearExpr({0: 1.0}),
-        concurrency=LinearExpr({1: 1.0}),
-        placeholder_use=LinearExpr({2: 1.0}),
-    )
-    backend = HighsBackend()
-    staged = _StagedSolve(backend, Progress(silent), 1.0)
-    staged.values = initial
-
-    class ReachedTimetableStage(Exception):
-        pass
-
-    def stop_after_handoff(name: str, objective: LinearExpr, gap: float) -> None:
-        if not staged.stages:
-            staged.values = after_load
-            staged.stages.append(Stage(name, after_load[0], 0.0, True))
-        else:
-            assert objective.terms == (objectives.concurrency + objectives.placeholder_use).terms
-            assert staged.values == expected
-            raise ReachedTimetableStage
-
-    monkeypatch.setattr(staged, "_minimise_then_cap", stop_after_handoff)
-    try:
-        with pytest.raises(ReachedTimetableStage):
-            staged.run(objectives)
     finally:
         backend.close()
