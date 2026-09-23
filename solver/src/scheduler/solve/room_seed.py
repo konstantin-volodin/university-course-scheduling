@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from .instance import OFF_CAMPUS, is_placeholder
-from .model import AssignmentKey, BuiltModel
+from ..config import OFF_CAMPUS, is_placeholder
+from ..model import AssignmentKey, BuiltModel
 
 
 def seed_physical_rooms(built: BuiltModel, values: list[float]) -> list[float]:

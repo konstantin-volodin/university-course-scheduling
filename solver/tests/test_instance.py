@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from scheduler import Instance, InvalidInstanceError
-from scheduler.instance import OFF_CAMPUS, PART_TIMER, placeholder_for
+from scheduler.config.instance import OFF_CAMPUS, PART_TIMER, placeholder_for
 
 
 def problems_from(payload: dict[str, Any]) -> list[str]:
@@ -154,3 +154,14 @@ def test_malformed_timeslot_concurrency_is_reported(payload: dict[str, Any]) -> 
     payload["timeslot_concurrency"] = ["Mon0900", ["a", "b", "c"]]
     with pytest.raises(InvalidInstanceError, match="expected two timeslot ids"):
         Instance.from_payload(payload)
+
+
+def test_program_requirements_reference_known_courses_and_semesters(
+    payload: dict[str, Any],
+) -> None:
+    payload["program_requirements"].append(["bcom", "NOSUCH", "ADM1000"])
+    payload["program_requirements"].append(["bcom", "Fall", "NOSUCH"])
+    problems = problems_from(payload)
+    assert len(problems) >= 2
+    assert any("semester" in p and "NOSUCH" in p for p in problems)
+    assert any("course" in p and "NOSUCH" in p for p in problems)

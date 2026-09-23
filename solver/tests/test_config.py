@@ -8,8 +8,8 @@ from typing import Any
 import pytest
 
 from scheduler import config, solve
+from scheduler.config.instance import PAYLOAD_KEYS, Instance
 from scheduler.errors import InvalidInstanceError
-from scheduler.instance import PAYLOAD_KEYS, Instance
 from scheduler.progress import silent
 
 INSTANCES = Path(__file__).parents[2] / "instances"
@@ -194,3 +194,342 @@ courses:
         {"key": ["traore-namatie", "Fall", "Morning"], "value": 3}
     ]
     assert payload["classroom_set"] == ["1110"]
+
+
+BASE = """
+semesters: [Fall]
+meeting_times:
+  - {id: A, days: {Mon: '09:00'}, duration_minutes: 90, time_of_day: Morning}
+  - {id: N, days: {Mon: '19:00'}, duration_minutes: 90, time_of_day: Night}
+classrooms: {R1: 30}
+"""
+
+
+def test_professor_defaults_apply_when_flags_are_omitted() -> None:
+    payload = config.loads(
+        BASE
+        + """
+professor_defaults: {can_teach_night: true, prefers_packed_days: true}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+  p2: {teaching_load: 1, qualified_for: all, can_teach_night: false}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["professor_can_teach_night"] == [["p1", True], ["p2", False]]
+    assert payload["professor_pack_day_pref"] == [["p1", 1], ["p2", 1]]
+
+
+def test_course_defaults_apply_when_flags_are_omitted() -> None:
+    payload = config.loads(
+        BASE
+        + """
+course_defaults: {penalise_friday_night: true}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+  C2:
+    penalise_friday_night: false
+    sections:
+      - {id: C2-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["course_friday_penalty"] == ["C1"]
+
+
+def test_defaults_without_a_block_keep_the_old_behavior() -> None:
+    payload = config.loads(
+        BASE
+        + """
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["professor_can_teach_night"] == [["p1", False]]
+    assert payload["professor_pack_day_pref"] == [["p1", 0]]
+    assert payload["course_friday_penalty"] == []
+
+
+def test_non_boolean_default_is_reported() -> None:
+    with pytest.raises(
+        InvalidInstanceError,
+        match=r"professor_defaults.can_teach_night: expected true or false",
+    ):
+        config.loads(
+            BASE
+            + """
+professor_defaults: {can_teach_night: maybe}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+        )
+
+
+def test_unknown_default_key_is_reported_with_suggestion() -> None:
+    with pytest.raises(
+        InvalidInstanceError,
+        match="professor_defaults: unknown field 'can_teach_knight'; "
+        "did you mean 'can_teach_night'",
+    ):
+        config.loads(
+            BASE
+            + """
+professor_defaults: {can_teach_knight: true}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+        )
+
+
+def test_manifest_carries_defaults(tmp_path: Path) -> None:
+    (tmp_path / "instance.yaml").write_text(
+        """
+semesters: [Fall]
+professor_defaults: {can_teach_night: true}
+course_defaults: {penalise_friday_night: true}
+files:
+  meeting_times: meetings.yaml
+  classrooms: rooms.yaml
+  professors: professors.yaml
+  courses: courses.yaml
+"""
+    )
+    (tmp_path / "meetings.yaml").write_text(
+        "- {id: A, days: {Mon: '09:00'}, duration_minutes: 90, time_of_day: Morning}\n"
+    )
+    (tmp_path / "rooms.yaml").write_text("R1: 30\n")
+    (tmp_path / "professors.yaml").write_text(
+        "p1: {teaching_load: 1, qualified_for: all}\n"
+    )
+    (tmp_path / "courses.yaml").write_text(
+        """
+C1:
+  sections:
+    - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+
+    payload = config.load(tmp_path)
+    assert payload["professor_can_teach_night"] == [["p1", True]]
+    assert payload["course_friday_penalty"] == ["C1"]
+
+
+def test_professor_defaults_cover_preferred_class_length() -> None:
+    payload = config.loads(
+        BASE
+        + """
+professor_defaults: {preferred_class_length: single}
+professors:
+  p1: {teaching_load: 3, qualified_for: all}
+  p2: {teaching_load: 1, qualified_for: [C1], preferred_class_length: double}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["professor_block_pref"] == [["p1", "1.5"], ["p2", "double"]]
+
+
+def test_qualified_for_defaults_to_all() -> None:
+    payload = config.loads(
+        BASE
+        + """
+professors:
+  p1: {teaching_load: 1}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+  C2:
+    sections:
+      - {id: C2-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["professor_qualification"] == [["p1", "C1"], ["p1", "C2"]]
+
+
+def test_course_defaults_cover_preferred_class_length() -> None:
+    payload = config.loads(
+        BASE
+        + """
+course_defaults: {preferred_class_length: single}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    assert payload["course_block_pref"] == [["C1", "1.5"]]
+
+
+def test_bad_preferred_class_length_default_is_reported() -> None:
+    with pytest.raises(
+        InvalidInstanceError,
+        match=r"course_defaults\.preferred_class_length: expected a class-length name",
+    ):
+        config.loads(
+            BASE
+            + """
+course_defaults: {preferred_class_length: 3}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+        )
+
+
+CONC = """
+semesters: [Fall, Winter]
+meeting_times:
+  - {id: A, days: {Mon: '09:00'}, duration_minutes: 90, time_of_day: Morning}
+classrooms: {R1: 30}
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1: {sections: [{id: C1-1, semester: Fall, time_of_day: Morning, students: 30}]}
+  C2: {sections: [{id: C2-1, semester: Fall, time_of_day: Morning, students: 30}]}
+  C3: {sections: [{id: C3-1, semester: Fall, time_of_day: Morning, students: 30}]}
+"""
+
+
+def test_concurrency_without_semester_covers_every_semester() -> None:
+    payload = config.loads(
+        CONC
+        + """
+course_concurrency:
+  - {courses: [C1, C2], must_run: apart}
+"""
+    )
+    assert payload["course_concurrency_nt"] == [
+        ["C1", "C2", "Fall"],
+        ["C1", "C2", "Winter"],
+    ]
+
+
+def test_concurrency_apart_expands_course_groups_to_pairs() -> None:
+    payload = config.loads(
+        CONC
+        + """
+course_concurrency:
+  - {courses: [C1, C2, C3], semester: [Fall, Winter], must_run: apart}
+"""
+    )
+    assert payload["course_concurrency_nt"] == [
+        ["C1", "C2", "Fall"],
+        ["C1", "C2", "Winter"],
+        ["C1", "C3", "Fall"],
+        ["C1", "C3", "Winter"],
+        ["C2", "C3", "Fall"],
+        ["C2", "C3", "Winter"],
+    ]
+
+
+def test_concurrency_together_still_requires_a_pair() -> None:
+    with pytest.raises(
+        InvalidInstanceError, match="'together' expects exactly two courses"
+    ):
+        config.loads(
+            CONC
+            + """
+course_concurrency:
+  - {courses: [C1, C2, C3], must_run: together}
+"""
+        )
+
+
+def test_programs_parse_into_requirement_triples() -> None:
+    payload = config.loads(
+        BASE
+        + """
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+programs:
+  bcom-finance:
+    Fall: [C1]
+    Winter: [C1]
+"""
+    )
+    assert payload["program_requirements"] == [
+        ["bcom-finance", "Fall", "C1"],
+        ["bcom-finance", "Winter", "C1"],
+    ]
+
+
+def test_program_terms_must_be_course_lists() -> None:
+    with pytest.raises(
+        InvalidInstanceError, match=r"programs.bcom-finance.Fall: expected a list of course ids"
+    ):
+        config.loads(
+            BASE
+            + """
+professors:
+  p1: {teaching_load: 1, qualified_for: all}
+courses:
+  C1:
+    sections:
+      - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+programs:
+  bcom-finance:
+    Fall: C1
+"""
+        )
+
+
+def test_manifest_can_carry_a_programs_file(tmp_path: Path) -> None:
+    (tmp_path / "instance.yaml").write_text(
+        """
+semesters: [Fall]
+files:
+  meeting_times: meetings.yaml
+  classrooms: rooms.yaml
+  professors: professors.yaml
+  courses: courses.yaml
+  programs: programs.yaml
+"""
+    )
+    (tmp_path / "meetings.yaml").write_text(
+        "- {id: A, days: {Mon: '09:00'}, duration_minutes: 90, time_of_day: Morning}\n"
+    )
+    (tmp_path / "rooms.yaml").write_text("R1: 30\n")
+    (tmp_path / "professors.yaml").write_text(
+        "p1: {teaching_load: 1, qualified_for: all}\n"
+    )
+    (tmp_path / "courses.yaml").write_text(
+        """
+C1:
+  sections:
+    - {id: C1-1, semester: Fall, time_of_day: Morning, students: 30}
+"""
+    )
+    (tmp_path / "programs.yaml").write_text("bcom:\n  Fall: [C1]\n")
+
+    payload = config.load(tmp_path)
+    assert payload["program_requirements"] == [["bcom", "Fall", "C1"]]

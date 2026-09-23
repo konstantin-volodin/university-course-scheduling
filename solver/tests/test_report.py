@@ -25,7 +25,7 @@ def payload() -> dict[str, Any]:
 
 @pytest.fixture(scope="module")
 def result(payload: dict[str, Any]) -> dict[str, Any]:
-    from scheduler.instance import Instance
+    from scheduler.config.instance import Instance
     from scheduler.progress import silent
     from scheduler.solve import solve_instance
 
@@ -50,6 +50,73 @@ def _is_a_document(html: str) -> None:
 
 def test_schedule_page_is_a_self_contained_document(payload, result) -> None:
     _is_a_document(report.schedule_page(payload, result))
+
+
+def test_schedule_page_keeps_objective_details_out_of_the_schedule(payload, result) -> None:
+    page = report.schedule_page(payload, result)
+    assert "Preference breakdown" not in page
+    assert "preferenceBreakdown" not in _embedded(page)
+
+
+def test_objective_audit_caps_large_term_detail_without_changing_result() -> None:
+    terms = [
+        {
+            "variable": f"x_{index}",
+            "coefficient": 1 if index % 2 else -3,
+            "value": 1,
+            "contribution": 1 if index % 2 else -3,
+        }
+        for index in range(100)
+    ]
+    result = {
+        "status": "optimal",
+        "solver": "test",
+        "objective": -100,
+        "stages": [],
+        "preference_breakdown": [
+            {
+                "name": "example",
+                "label": "Example preference",
+                "description": "A test component",
+                "raw_value": 100,
+                "weight": -1,
+                "contribution": -100,
+                "terms": terms,
+            }
+        ],
+    }
+
+    markdown = report.objective_markdown(result)
+
+    assert "| Example preference | A test component | 100.00 | -1.00 | -100.00 |" in markdown
+    assert "Active terms: 100; showing 12; omitted 88." in markdown
+    assert "[result.json](result.json)" in markdown
+    assert "| -3.00 | 38 | 38.00 | -114.00 |" in markdown
+    assert "| 1.00 | 50 | 50.00 | 50.00 |" in markdown
+    assert "`x_0`" in markdown
+    assert "`x_99`" not in markdown
+    assert len(markdown) < 4_000
+
+
+def test_objective_audit_preserves_component_rows_and_does_not_mutate_result() -> None:
+    result = {
+        "preference_breakdown": [
+            {
+                "name": "empty",
+                "label": "Empty component",
+                "description": "No active terms",
+                "raw_value": 0,
+                "weight": 2,
+                "contribution": 0,
+            }
+        ]
+    }
+    before = json.dumps(result, sort_keys=True)
+
+    markdown = report.objective_markdown(result)
+
+    assert "| Empty component | No active terms | 0.00 | 2.00 | 0.00 |" in markdown
+    assert json.dumps(result, sort_keys=True) == before
 
 
 @pytest.mark.parametrize("kind", ["schedule", "instance"])
@@ -95,7 +162,9 @@ def test_schedule_page_carries_every_assignment(payload, result) -> None:
 
 def test_schedule_rows_carry_the_meeting_pattern(payload, result) -> None:
     rows = _embedded(report.schedule_page(payload, result))["assignments"]
-    days_by_slot = report._slot_days(payload)
+    days_by_slot: dict[str, list[str]] = {}
+    for slot, day in payload["timeslot_dow_subset"]:
+        days_by_slot.setdefault(slot, []).append(day)
     assert rows, "no assignments to check"
     for row in rows:
         assert row["days"] == days_by_slot[row["slot"]]
@@ -145,7 +214,11 @@ def test_a_two_day_slot_carries_both_days(payload, result) -> None:
 
 def test_instance_page_counts_supply_against_demand(payload) -> None:
     data = _embedded(report.instance_page(payload))
-    loads = dict(report._pairs(payload["professor_teaching"]))
+    loads = {
+        professor: load
+        for row in payload["professor_teaching"]
+        for professor, load in row.items()
+    }
     assert data["supply"]["capacity"] == sum(loads.values())
     assert data["supply"]["demand"] == len(payload["section_subset"])
     assert data["supply"]["gap"] == max(

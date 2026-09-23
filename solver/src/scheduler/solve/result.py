@@ -5,9 +5,9 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from .backends import DEFAULT_BACKEND
+from ..backends import DEFAULT_BACKEND
 
-__all__ = ["Assignment", "Result", "Stage"]
+__all__ = ["Assignment", "ObjectiveBreakdown", "ObjectiveTerm", "Result", "Stage"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,12 +39,36 @@ class Stage:
 
 
 @dataclass(frozen=True, slots=True)
+class ObjectiveTerm:
+    """One active model term contributing to a preference component."""
+
+    variable: str
+    coefficient: float
+    value: float
+    contribution: float
+
+
+@dataclass(frozen=True, slots=True)
+class ObjectiveBreakdown:
+    """Raw and weighted value of one final preference component."""
+
+    name: str
+    label: str
+    description: str
+    raw_value: float
+    weight: float
+    contribution: float
+    terms: list[ObjectiveTerm] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
 class Result:
     status: str
     objective: float
     assignments: list[Assignment]
     solver: str = DEFAULT_BACKEND
     stages: list[Stage] = field(default_factory=list)
+    preference_breakdown: list[ObjectiveBreakdown] = field(default_factory=list)
 
     @property
     def unstaffed(self) -> list[Assignment]:
@@ -66,6 +90,9 @@ class Result:
             "objective": self.objective,
             "assignments": [asdict(assignment) for assignment in self.assignments],
             "stages": [asdict(stage) for stage in self.stages],
+            "preference_breakdown": [
+                asdict(component) for component in self.preference_breakdown
+            ],
             "summary": {
                 "assignments": len(self.assignments),
                 "unstaffed": len(self.unstaffed),

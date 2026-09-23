@@ -12,9 +12,17 @@ import sys
 import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager, suppress
-from typing import Protocol
+from datetime import datetime
+from typing import Protocol, TextIO
 
-__all__ = ["Progress", "ProgressCallback", "silent", "to_stderr"]
+__all__ = [
+    "Progress",
+    "ProgressCallback",
+    "TeeProgress",
+    "TerminalProgress",
+    "silent",
+    "to_stderr",
+]
 
 
 class ProgressCallback(Protocol):
@@ -25,11 +33,59 @@ class ProgressCallback(Protocol):
 
 def to_stderr(stage: str, message: str) -> None:
     """Default reporter. stderr, never stdout — stdout carries the JSON result."""
-    print(f"[{stage}] {message}", file=sys.stderr, flush=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    print(f"{timestamp} [{stage}] {message}", file=sys.stderr, flush=True)
 
 
 def silent(stage: str, message: str) -> None:
     """Report nothing."""
+
+
+class TerminalProgress:
+    """Compact live reporter for an interactive terminal.
+
+    It deliberately has no dependency or background thread. Long operations
+    publish updates through :meth:`Progress.update`; ordinary stage messages
+    finish the current line. Non-TTY callers should use :func:`to_stderr`.
+    """
+
+    def __init__(self) -> None:
+        self._line_open = False
+
+    def __call__(self, stage: str, message: str) -> None:
+        if self._line_open:
+            print(file=sys.stderr)
+        timestamp = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+        print(f"{timestamp} [{stage}] {message}", file=sys.stderr, flush=True)
+        self._line_open = False
+
+    def update(self, stage: str, message: str) -> None:
+        self._line_open = True
+        print(f"\r\033[K[{stage}] {message}", end="", file=sys.stderr, flush=True)
+
+
+class TeeProgress:
+    """Send progress to a live reporter and a plain timestamped log file."""
+
+    def __init__(self, reporter: ProgressCallback, log: TextIO) -> None:
+        self.reporter = reporter
+        self.log = log
+
+    @staticmethod
+    def _line(stage: str, message: str) -> str:
+        timestamp = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+        return f"{timestamp} [{stage}] {message}\n"
+
+    def __call__(self, stage: str, message: str) -> None:
+        self.reporter(stage, message)
+        self.log.write(self._line(stage, message))
+        self.log.flush()
+
+    def update(self, stage: str, message: str) -> None:
+        update = getattr(self.reporter, "update", self.reporter)
+        update(stage, message)
+        self.log.write(self._line(stage, message))
+        self.log.flush()
 
 
 class Progress:
@@ -44,6 +100,12 @@ class Progress:
         with suppress(Exception):
             self._callback(self.stage, message)
 
+    def update(self, message: str) -> None:
+        """Replace the current terminal status, or report a normal line."""
+        with suppress(Exception):
+            update = getattr(self._callback, "update", self._callback)
+            update(self.stage, message)
+
     @contextmanager
     def step(self, stage: str, message: str) -> Iterator[Callable[[str], None]]:
         """Time a step, then report how it went.
@@ -56,8 +118,7 @@ class Progress:
                 done(f"{len(viable):,} variables")
         """
         self.stage = stage
-        self(f"{message} ...")
-        outcome = "done"
+        outcome: str | None = None
 
         def set_outcome(text: str) -> None:
             nonlocal outcome
@@ -65,4 +126,6 @@ class Progress:
 
         started = time.perf_counter()
         yield set_outcome
-        self(f"{message}: {outcome} ({time.perf_counter() - started:,.2f}s)")
+        elapsed = time.perf_counter() - started
+        suffix = f": {outcome}" if outcome is not None else ""
+        self(f"done in {elapsed:,.2f}s - {message}{suffix}")

@@ -1,6 +1,5 @@
 ADM1100:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1100-1', semester: Summer, time_of_day: Night, students: 200}
     - {id: 'ADM1100-2', semester: Fall, time_of_day: Night, students: 350}
@@ -8,26 +7,22 @@ ADM1100:
     - {id: 'ADM1100-4', semester: Winter, time_of_day: Night, students: 350}
 ADM1101:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1101-1', semester: Fall, time_of_day: Night, students: 244}
     - {id: 'ADM1101-2', semester: Winter, time_of_day: Night, students: 200}
 ADM1300:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1300-1', semester: Fall, time_of_day: Morning, students: 200}
     - {id: 'ADM1300-2', semester: Fall, time_of_day: Morning, students: 200}
     - {id: 'ADM1300-3', semester: Fall, time_of_day: Evening, students: 200}
     - {id: 'ADM1300-4', semester: Fall, time_of_day: Night, students: 200}
 ADM1301:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1301-1', semester: Fall, time_of_day: Afternoon, students: 200}
     - {id: 'ADM1301-2', semester: Fall, time_of_day: Evening, students: 200}
     - {id: 'ADM1301-3', semester: Fall, time_of_day: Night, students: 200}
     - {id: 'ADM1301-4', semester: Fall, time_of_day: Night, students: 200}
 ADM1340:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1340-1', semester: Fall, time_of_day: Morning, students: 118}
     - {id: 'ADM1340-2', semester: Winter, time_of_day: Morning, students: 89}
@@ -43,7 +38,6 @@ ADM1340:
     - {id: 'ADM1340-12', semester: Winter, time_of_day: Night, students: 118}
     - {id: 'ADM1340-13', semester: Winter, time_of_day: Night, students: 89}
 ADM1370:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1370-1', semester: Winter, time_of_day: Afternoon, students: 200}
     - {id: 'ADM1370-2', semester: Winter, time_of_day: Afternoon, students: 200}
@@ -52,29 +46,24 @@ ADM1370:
     - {id: 'ADM1370-5', semester: Winter, time_of_day: Night, students: 200}
 ADM1500:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1500-1', semester: Summer, time_of_day: Night, students: 90}
     - {id: 'ADM1500-2', semester: Fall, time_of_day: Night, students: 350}
     - {id: 'ADM1500-3', semester: Winter, time_of_day: Night, students: 200}
 ADM1501:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1501-1', semester: Fall, time_of_day: Night, students: 119}
     - {id: 'ADM1501-2', semester: Winter, time_of_day: Night, students: 102}
 ADM1700:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1700-1', semester: Fall, time_of_day: Evening, students: 200}
     - {id: 'ADM1700-2', semester: Fall, time_of_day: Night, students: 200}
 ADM1701:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1701-1', semester: Fall, time_of_day: Morning, students: 200}
     - {id: 'ADM1701-2', semester: Fall, time_of_day: Night, students: 244}
 ADM1740:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1740-1', semester: Winter, time_of_day: Morning, students: 118}
     - {id: 'ADM1740-2', semester: Winter, time_of_day: Afternoon, students: 119}
@@ -82,14 +71,12 @@ ADM1740:
     - {id: 'ADM1740-4', semester: Winter, time_of_day: Evening, students: 89}
     - {id: 'ADM1740-5', semester: Winter, time_of_day: Night, students: 102}
 ADM1770:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM1770-1', semester: Winter, time_of_day: Morning, students: 118}
     - {id: 'ADM1770-2', semester: Fall, time_of_day: Afternoon, students: 75}
     - {id: 'ADM1770-3', semester: Winter, time_of_day: Afternoon, students: 118}
     - {id: 'ADM1770-4', semester: Winter, time_of_day: Night, students: 119}
 ADM2302:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2302-1', semester: Fall, time_of_day: Morning, students: 89}
     - {id: 'ADM2302-2', semester: Winter, time_of_day: Morning, students: 89}
@@ -102,7 +89,6 @@ ADM2302:
     - {id: 'ADM2302-9', semester: Fall, time_of_day: Night, students: 102}
     - {id: 'ADM2302-10', semester: Winter, time_of_day: Night, students: 89}
 ADM2303:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2303-1', semester: Fall, time_of_day: Morning, students: 102}
     - {id: 'ADM2303-2', semester: Fall, time_of_day: Afternoon, students: 102}
@@ -114,7 +100,6 @@ ADM2303:
     - {id: 'ADM2303-8', semester: Fall, time_of_day: Night, students: 89}
     - {id: 'ADM2303-9', semester: Winter, time_of_day: Night, students: 89}
 ADM2304:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2304-1', semester: Winter, time_of_day: Morning, students: 89}
     - {id: 'ADM2304-2', semester: Winter, time_of_day: Morning, students: 89}
@@ -126,12 +111,10 @@ ADM2304:
     - {id: 'ADM2304-8', semester: Winter, time_of_day: Night, students: 118}
     - {id: 'ADM2304-9', semester: Winter, time_of_day: Night, students: 78}
 ADM2313:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2313-1', semester: Fall, time_of_day: Afternoon, students: 118}
     - {id: 'ADM2313-2', semester: Winter, time_of_day: Afternoon, students: 119}
 ADM2320:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2320-1', semester: Winter, time_of_day: Morning, students: 89}
     - {id: 'ADM2320-2', semester: Fall, time_of_day: Afternoon, students: 118}
@@ -145,7 +128,6 @@ ADM2320:
     - {id: 'ADM2320-10', semester: Winter, time_of_day: Night, students: 102}
     - {id: 'ADM2320-11', semester: Winter, time_of_day: Night, students: 89}
 ADM2336:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2336-1', semester: Fall, time_of_day: Morning, students: 89}
     - {id: 'ADM2336-2', semester: Fall, time_of_day: Morning, students: 89}
@@ -159,7 +141,6 @@ ADM2336:
     - {id: 'ADM2336-10', semester: Winter, time_of_day: Night, students: 89}
     - {id: 'ADM2336-11', semester: Winter, time_of_day: Night, students: 89}
 ADM2337:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2337-1', semester: Fall, time_of_day: Morning, students: 89}
     - {id: 'ADM2337-2', semester: Winter, time_of_day: Morning, students: 89}
@@ -173,7 +154,6 @@ ADM2337:
     - {id: 'ADM2337-10', semester: Winter, time_of_day: Night, students: 89}
     - {id: 'ADM2337-11', semester: Winter, time_of_day: Night, students: 75}
 ADM2341:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2341-1', semester: Fall, time_of_day: Morning, students: 118}
     - {id: 'ADM2341-2', semester: Fall, time_of_day: Morning, students: 118}
@@ -186,14 +166,12 @@ ADM2341:
     - {id: 'ADM2341-9', semester: Fall, time_of_day: Night, students: 89}
     - {id: 'ADM2341-10', semester: Winter, time_of_day: Night, students: 74}
 ADM2342:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2342-1', semester: Fall, time_of_day: Morning, students: 89}
     - {id: 'ADM2342-2', semester: Winter, time_of_day: Morning, students: 89}
     - {id: 'ADM2342-3', semester: Winter, time_of_day: Afternoon, students: 89}
     - {id: 'ADM2342-4', semester: Summer, time_of_day: Evening, students: 75}
 ADM2350:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2350-1', semester: Winter, time_of_day: Morning, students: 102}
     - {id: 'ADM2350-2', semester: Fall, time_of_day: Afternoon, students: 89}
@@ -205,14 +183,12 @@ ADM2350:
     - {id: 'ADM2350-8', semester: Fall, time_of_day: Night, students: 89}
     - {id: 'ADM2350-9', semester: Winter, time_of_day: Night, students: 118}
 ADM2352:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2352-1', semester: Fall, time_of_day: Morning, students: 119}
     - {id: 'ADM2352-2', semester: Summer, time_of_day: Night, students: 60}
     - {id: 'ADM2352-3', semester: Fall, time_of_day: Night, students: 118}
     - {id: 'ADM2352-4', semester: Winter, time_of_day: Night, students: 102}
 ADM2372:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2372-1', semester: Fall, time_of_day: Morning, students: 89}
     - {id: 'ADM2372-2', semester: Fall, time_of_day: Afternoon, students: 102}
@@ -222,36 +198,28 @@ ADM2372:
     - {id: 'ADM2372-6', semester: Fall, time_of_day: Night, students: 102}
     - {id: 'ADM2372-7', semester: Fall, time_of_day: Night, students: 118}
     - {id: 'ADM2372-8', semester: Winter, time_of_day: Night, students: 118}
-ADM2381:
-  penalise_friday_night: true
-  sections: []
 ADM2702:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2702-1', semester: Fall, time_of_day: Morning, students: 118}
     - {id: 'ADM2702-2', semester: Winter, time_of_day: Evening, students: 80}
     - {id: 'ADM2702-3', semester: Fall, time_of_day: Night, students: 118}
     - {id: 'ADM2702-4', semester: Winter, time_of_day: Night, students: 80}
 ADM2703:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2703-1', semester: Fall, time_of_day: Morning, students: 89}
     - {id: 'ADM2703-2', semester: Fall, time_of_day: Afternoon, students: 118}
     - {id: 'ADM2703-3', semester: Fall, time_of_day: Night, students: 119}
     - {id: 'ADM2703-4', semester: Winter, time_of_day: Night, students: 89}
 ADM2704:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2704-1', semester: Fall, time_of_day: Night, students: 102}
     - {id: 'ADM2704-2', semester: Winter, time_of_day: Night, students: 89}
     - {id: 'ADM2704-3', semester: Winter, time_of_day: Night, students: 119}
     - {id: 'ADM2704-4', semester: Winter, time_of_day: Night, students: 118}
 ADM2713:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2713-1', semester: Fall, time_of_day: Evening, students: 102}
 ADM2720:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2720-1', semester: Winter, time_of_day: Morning, students: 102}
     - {id: 'ADM2720-2', semester: Fall, time_of_day: Evening, students: 89}
@@ -259,7 +227,6 @@ ADM2720:
     - {id: 'ADM2720-4', semester: Fall, time_of_day: Night, students: 89}
     - {id: 'ADM2720-5', semester: Winter, time_of_day: Night, students: 89}
 ADM2736:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2736-1', semester: Fall, time_of_day: Morning, students: 89}
     - {id: 'ADM2736-2', semester: Fall, time_of_day: Afternoon, students: 118}
@@ -267,42 +234,35 @@ ADM2736:
     - {id: 'ADM2736-4', semester: Fall, time_of_day: Night, students: 89}
     - {id: 'ADM2736-5', semester: Winter, time_of_day: Night, students: 89}
 ADM2737:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2737-1', semester: Winter, time_of_day: Afternoon, students: 119}
     - {id: 'ADM2737-2', semester: Summer, time_of_day: Night, students: 60}
     - {id: 'ADM2737-3', semester: Fall, time_of_day: Night, students: 102}
     - {id: 'ADM2737-4', semester: Winter, time_of_day: Night, students: 118}
 ADM2741:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2741-1', semester: Fall, time_of_day: Afternoon, students: 118}
     - {id: 'ADM2741-2', semester: Winter, time_of_day: Afternoon, students: 102}
     - {id: 'ADM2741-3', semester: Fall, time_of_day: Night, students: 119}
     - {id: 'ADM2741-4', semester: Winter, time_of_day: Night, students: 89}
 ADM2742:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2742-1', semester: Winter, time_of_day: Morning, students: 89}
 ADM2750:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2750-1', semester: Fall, time_of_day: Morning, students: 119}
     - {id: 'ADM2750-2', semester: Winter, time_of_day: Morning, students: 118}
     - {id: 'ADM2750-3', semester: Winter, time_of_day: Morning, students: 118}
 ADM2752:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2752-1', semester: Fall, time_of_day: Afternoon, students: 65}
     - {id: 'ADM2752-2', semester: Winter, time_of_day: Night, students: 45}
 ADM2772:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM2772-1', semester: Winter, time_of_day: Afternoon, students: 102}
     - {id: 'ADM2772-2', semester: Winter, time_of_day: Evening, students: 102}
     - {id: 'ADM2772-3', semester: Fall, time_of_day: Night, students: 118}
 ADM3301:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3301-1', semester: Fall, time_of_day: Afternoon, students: 89}
     - {id: 'ADM3301-2', semester: Fall, time_of_day: Afternoon, students: 89}
@@ -314,21 +274,17 @@ ADM3301:
     - {id: 'ADM3301-8', semester: Fall, time_of_day: Night, students: 89}
     - {id: 'ADM3301-9', semester: Winter, time_of_day: Night, students: 74}
 ADM3302:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3302-1', semester: Winter, time_of_day: Night, students: 89}
 ADM3305:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3305-1', semester: Fall, time_of_day: Night, students: 89}
 ADM3308:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3308-1', semester: Fall, time_of_day: Afternoon, students: 89}
     - {id: 'ADM3308-2', semester: Winter, time_of_day: Afternoon, students: 69}
 ADM3313:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3313-1', semester: Fall, time_of_day: Morning, students: 72}
     - {id: 'ADM3313-2', semester: Winter, time_of_day: Morning, students: 72}
@@ -337,7 +293,6 @@ ADM3313:
     - {id: 'ADM3313-5', semester: Winter, time_of_day: Evening, students: 72}
     - {id: 'ADM3313-6', semester: Fall, time_of_day: Night, students: 72}
 ADM3318:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3318-1', semester: Fall, time_of_day: Morning, students: 89}
     - {id: 'ADM3318-2', semester: Winter, time_of_day: Morning, students: 89}
@@ -352,7 +307,6 @@ ADM3318:
     - {id: 'ADM3318-11', semester: Winter, time_of_day: Night, students: 89}
 ADM3319:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3319-1', semester: Fall, time_of_day: Evening, students: 89}
     - {id: 'ADM3319-2', semester: Winter, time_of_day: Evening, students: 89}
@@ -360,7 +314,6 @@ ADM3319:
     - {id: 'ADM3319-4', semester: Summer, time_of_day: Night, students: 89}
     - {id: 'ADM3319-5', semester: Fall, time_of_day: Night, students: 89}
 ADM3321:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3321-1', semester: Winter, time_of_day: Morning, students: 75}
     - {id: 'ADM3321-2', semester: Fall, time_of_day: Afternoon, students: 89}
@@ -369,60 +322,51 @@ ADM3321:
     - {id: 'ADM3321-5', semester: Fall, time_of_day: Night, students: 58}
     - {id: 'ADM3321-6', semester: Winter, time_of_day: Night, students: 75}
 ADM3322:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3322-1', semester: Winter, time_of_day: Morning, students: 78}
     - {id: 'ADM3322-2', semester: Fall, time_of_day: Afternoon, students: 89}
     - {id: 'ADM3322-3', semester: Winter, time_of_day: Afternoon, students: 78}
 ADM3323:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3323-1', semester: Fall, time_of_day: Afternoon, students: 75}
     - {id: 'ADM3323-2', semester: Winter, time_of_day: Afternoon, students: 60}
 ADM3326:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3326-1', semester: Fall, time_of_day: Morning, students: 74}
     - {id: 'ADM3326-2', semester: Fall, time_of_day: Afternoon, students: 89}
     - {id: 'ADM3326-3', semester: Winter, time_of_day: Afternoon, students: 89}
 ADM3333:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3333-1', semester: Fall, time_of_day: Afternoon, students: 74}
     - {id: 'ADM3333-2', semester: Fall, time_of_day: Night, students: 74}
 ADM3334:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3334-1', semester: Fall, time_of_day: Night, students: 74}
 ADM3337:
+  penalise_friday_night: false
   sections:
     - {id: 'ADM3337-1', semester: Fall, time_of_day: Night, students: 89}
 ADM3340:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3340-1', semester: Fall, time_of_day: Morning, students: 88}
     - {id: 'ADM3340-2', semester: Fall, time_of_day: Night, students: 75}
     - {id: 'ADM3340-3', semester: Winter, time_of_day: Night, students: 89}
 ADM3345:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3345-1', semester: Fall, time_of_day: Night, students: 75}
     - {id: 'ADM3345-2', semester: Fall, time_of_day: Night, students: 75}
     - {id: 'ADM3345-3', semester: Winter, time_of_day: Night, students: 89}
 ADM3346:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3346-1', semester: Summer, time_of_day: Evening, students: 89}
     - {id: 'ADM3346-2', semester: Fall, time_of_day: Night, students: 74}
     - {id: 'ADM3346-3', semester: Winter, time_of_day: Night, students: 89}
 ADM3349:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3349-1', semester: Fall, time_of_day: Night, students: 75}
     - {id: 'ADM3349-2', semester: Fall, time_of_day: Night, students: 70}
     - {id: 'ADM3349-3', semester: Winter, time_of_day: Night, students: 89}
 ADM3350:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3350-1', semester: Fall, time_of_day: Morning, students: 74}
     - {id: 'ADM3350-2', semester: Winter, time_of_day: Morning, students: 75}
@@ -433,57 +377,44 @@ ADM3350:
     - {id: 'ADM3350-7', semester: Fall, time_of_day: Night, students: 89}
     - {id: 'ADM3350-8', semester: Winter, time_of_day: Night, students: 75}
 ADM3351:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3351-1', semester: Fall, time_of_day: Morning, students: 74}
     - {id: 'ADM3351-2', semester: Winter, time_of_day: Afternoon, students: 74}
     - {id: 'ADM3351-3', semester: Winter, time_of_day: Night, students: 74}
 ADM3352:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3352-1', semester: Winter, time_of_day: Morning, students: 80}
     - {id: 'ADM3352-2', semester: Fall, time_of_day: Evening, students: 80}
     - {id: 'ADM3352-3', semester: Winter, time_of_day: Evening, students: 80}
 ADM3358:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3358-1', semester: Fall, time_of_day: Morning, students: 68}
 ADM3360:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3360-1', semester: Summer, time_of_day: Evening, students: 75}
     - {id: 'ADM3360-2', semester: Fall, time_of_day: Evening, students: 89}
     - {id: 'ADM3360-3', semester: Summer, time_of_day: Night, students: 75}
     - {id: 'ADM3360-4', semester: Winter, time_of_day: Night, students: 89}
 ADM3378:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3378-1', semester: Fall, time_of_day: Evening, students: 89}
 ADM3379:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3379-1', semester: Winter, time_of_day: Night, students: 60}
-ADM3396:
-  penalise_friday_night: true
-  sections: []
 ADM3701:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3701-1', semester: Fall, time_of_day: Morning, students: 89}
     - {id: 'ADM3701-2', semester: Winter, time_of_day: Afternoon, students: 68}
     - {id: 'ADM3701-3', semester: Winter, time_of_day: Afternoon, students: 68}
     - {id: 'ADM3701-4', semester: Summer, time_of_day: Night, students: 68}
 ADM3705:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3705-1', semester: Fall, time_of_day: Night, students: 60}
 ADM3713:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3713-1', semester: Winter, time_of_day: Night, students: 89}
 ADM3718:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3718-1', semester: Fall, time_of_day: Afternoon, students: 89}
     - {id: 'ADM3718-2', semester: Winter, time_of_day: Afternoon, students: 89}
@@ -491,104 +422,78 @@ ADM3718:
     - {id: 'ADM3718-4', semester: Fall, time_of_day: Night, students: 1}
     - {id: 'ADM3718-5', semester: Winter, time_of_day: Night, students: 89}
 ADM3719:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3719-1', semester: Fall, time_of_day: Night, students: 78}
 ADM3721:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3721-1', semester: Fall, time_of_day: Afternoon, students: 88}
 ADM3722:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3722-1', semester: Winter, time_of_day: Morning, students: 68}
 ADM3723:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3723-1', semester: Fall, time_of_day: Afternoon, students: 40}
 ADM3726:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3726-1', semester: Fall, time_of_day: Morning, students: 68}
 ADM3733:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3733-1', semester: Fall, time_of_day: Evening, students: 40}
 ADM3734:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3734-1', semester: Fall, time_of_day: Night, students: 40}
 ADM3737:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3737-1', semester: Fall, time_of_day: Night, students: 45}
 ADM3740:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3740-1', semester: Fall, time_of_day: Morning, students: 89}
 ADM3745:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3745-1', semester: Fall, time_of_day: Evening, students: 80}
 ADM3746:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3746-1', semester: Summer, time_of_day: Evening, students: 35}
     - {id: 'ADM3746-2', semester: Winter, time_of_day: Night, students: 80}
 ADM3749:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3749-1', semester: Fall, time_of_day: Night, students: 80}
 ADM3750:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3750-1', semester: Fall, time_of_day: Afternoon, students: 89}
     - {id: 'ADM3750-2', semester: Winter, time_of_day: Afternoon, students: 75}
     - {id: 'ADM3750-3', semester: Summer, time_of_day: Night, students: 75}
 ADM3751:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3751-1', semester: Winter, time_of_day: Evening, students: 65}
 ADM3752:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3752-1', semester: Winter, time_of_day: Night, students: 74}
 ADM3760:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3760-1', semester: Summer, time_of_day: Night, students: 45}
     - {id: 'ADM3760-2', semester: Winter, time_of_day: Night, students: 89}
-ADM3778:
-  penalise_friday_night: true
-  sections: []
-ADM3779:
-  penalise_friday_night: true
-  sections: []
-ADM3797:
-  sections: []
 ADM3993:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3993-1', semester: Fall, time_of_day: Night, students: 35}
 ADM4103:
+  penalise_friday_night: false
   preferred_class_length: double
   sections:
     - {id: 'ADM4103-1', semester: Fall, time_of_day: Evening, students: 60}
 ADM4307:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4307-1', semester: Fall, time_of_day: Night, students: 60}
 ADM4311:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4311-1', semester: Fall, time_of_day: Morning, students: 60}
     - {id: 'ADM4311-2', semester: Fall, time_of_day: Morning, students: 60}
@@ -604,117 +509,94 @@ ADM4311:
     - {id: 'ADM4311-12', semester: Winter, time_of_day: Night, students: 60}
 ADM4312:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4312-1', semester: Winter, time_of_day: Night, students: 60}
 ADM4315:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4315-1', semester: Fall, time_of_day: Morning, students: 35}
 ADM4316:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4316-1', semester: Fall, time_of_day: Afternoon, students: 60}
     - {id: 'ADM4316-2', semester: Fall, time_of_day: Night, students: 60}
 ADM4318:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4318-1', semester: Winter, time_of_day: Morning, students: 40}
     - {id: 'ADM4318-2', semester: Fall, time_of_day: Afternoon, students: 60}
 ADM4322:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4322-1', semester: Fall, time_of_day: Afternoon, students: 60}
     - {id: 'ADM4322-2', semester: Winter, time_of_day: Afternoon, students: 60}
 ADM4325:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4325-1', semester: Fall, time_of_day: Evening, students: 50}
     - {id: 'ADM4325-2', semester: Winter, time_of_day: Evening, students: 60}
 ADM4326:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4326-1', semester: Winter, time_of_day: Afternoon, students: 60}
     - {id: 'ADM4326-2', semester: Fall, time_of_day: Evening, students: 60}
 ADM4328:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4328-1', semester: Fall, time_of_day: Morning, students: 60}
     - {id: 'ADM4328-2', semester: Winter, time_of_day: Morning, students: 60}
-ADM4329:
-  preferred_class_length: double
-  penalise_friday_night: true
-  sections: []
 ADM4336:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4336-1', semester: Winter, time_of_day: Night, students: 60}
 ADM4337:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4337-1', semester: Winter, time_of_day: Evening, students: 60}
 ADM4338:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4338-1', semester: Fall, time_of_day: Afternoon, students: 60}
     - {id: 'ADM4338-2', semester: Winter, time_of_day: Evening, students: 60}
 ADM4339:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4339-1', semester: Winter, time_of_day: Night, students: 60}
 ADM4340:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4340-1', semester: Fall, time_of_day: Morning, students: 60}
     - {id: 'ADM4340-2', semester: Winter, time_of_day: Morning, students: 60}
     - {id: 'ADM4340-3', semester: Winter, time_of_day: Night, students: 60}
 ADM4341:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4341-1', semester: Fall, time_of_day: Night, students: 69}
     - {id: 'ADM4341-2', semester: Winter, time_of_day: Night, students: 60}
     - {id: 'ADM4341-3', semester: Winter, time_of_day: Night, students: 60}
 ADM4342:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4342-1', semester: Fall, time_of_day: Morning, students: 60}
     - {id: 'ADM4342-2', semester: Fall, time_of_day: Afternoon, students: 60}
     - {id: 'ADM4342-3', semester: Winter, time_of_day: Evening, students: 60}
 ADM4344:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4344-1', semester: Fall, time_of_day: Morning, students: 60}
     - {id: 'ADM4344-2', semester: Winter, time_of_day: Afternoon, students: 60}
     - {id: 'ADM4344-3', semester: Fall, time_of_day: Evening, students: 60}
 ADM4345:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4345-1', semester: Winter, time_of_day: Afternoon, students: 60}
     - {id: 'ADM4345-2', semester: Fall, time_of_day: Evening, students: 65}
     - {id: 'ADM4345-3', semester: Winter, time_of_day: Evening, students: 60}
 ADM4346:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4346-1', semester: Fall, time_of_day: Night, students: 70}
     - {id: 'ADM4346-2', semester: Winter, time_of_day: Night, students: 60}
     - {id: 'ADM4346-3', semester: Winter, time_of_day: Night, students: 60}
 ADM4348:
+  penalise_friday_night: false
   preferred_class_length: double
   sections:
     - {id: 'ADM4348-1', semester: Winter, time_of_day: Morning, students: 60}
     - {id: 'ADM4348-2', semester: Fall, time_of_day: Night, students: 60}
     - {id: 'ADM4348-3', semester: Fall, time_of_day: Night, students: 60}
 ADM4349:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4349-1', semester: Fall, time_of_day: Evening, students: 60}
     - {id: 'ADM4349-2', semester: Fall, time_of_day: Night, students: 60}
     - {id: 'ADM4349-3', semester: Winter, time_of_day: Night, students: 60}
 ADM4350:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4350-1', semester: Fall, time_of_day: Evening, students: 60}
     - {id: 'ADM4350-2', semester: Winter, time_of_day: Evening, students: 60}
@@ -722,238 +604,202 @@ ADM4350:
     - {id: 'ADM4350-4', semester: Fall, time_of_day: Night, students: 60}
     - {id: 'ADM4350-5', semester: Winter, time_of_day: Night, students: 60}
 ADM4351:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4351-1', semester: Winter, time_of_day: Morning, students: 60}
     - {id: 'ADM4351-2', semester: Fall, time_of_day: Evening, students: 60}
     - {id: 'ADM4351-3', semester: Winter, time_of_day: Night, students: 60}
 ADM4352:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4352-1', semester: Fall, time_of_day: Afternoon, students: 60}
     - {id: 'ADM4352-2', semester: Winter, time_of_day: Night, students: 60}
 ADM4354:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4354-1', semester: Fall, time_of_day: Morning, students: 60}
     - {id: 'ADM4354-2', semester: Winter, time_of_day: Morning, students: 60}
 ADM4355:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4355-1', semester: Fall, time_of_day: Afternoon, students: 60}
     - {id: 'ADM4355-2', semester: Fall, time_of_day: Night, students: 60}
     - {id: 'ADM4355-3', semester: Winter, time_of_day: Night, students: 60}
     - {id: 'ADM4355-4', semester: Winter, time_of_day: Night, students: 60}
 ADM4377:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4377-1', semester: Winter, time_of_day: Evening, students: 60}
 ADM4378:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4378-1', semester: Fall, time_of_day: Afternoon, students: 60}
 ADM4379:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4379-1', semester: Winter, time_of_day: Night, students: 60}
-ADM4396:
-  penalise_friday_night: true
-  sections: []
 ADM4503:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4503-1', semester: Fall, time_of_day: Evening, students: 35}
 ADM4707:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4707-1', semester: Fall, time_of_day: Night, students: 40}
 ADM4711:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4711-1', semester: Fall, time_of_day: Morning, students: 60}
     - {id: 'ADM4711-2', semester: Winter, time_of_day: Morning, students: 60}
     - {id: 'ADM4711-3', semester: Summer, time_of_day: Evening, students: 40}
     - {id: 'ADM4711-4', semester: Winter, time_of_day: Evening, students: 60}
-ADM4712:
-  preferred_class_length: double
-  penalise_friday_night: true
-  sections: []
 ADM4715:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4715-1', semester: Fall, time_of_day: Evening, students: 30}
 ADM4716:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4716-1', semester: Fall, time_of_day: Evening, students: 55}
 ADM4718:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4718-1', semester: Winter, time_of_day: Afternoon, students: 60}
 ADM4722:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4722-1', semester: Winter, time_of_day: Morning, students: 60}
 ADM4725:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4725-1', semester: Winter, time_of_day: Evening, students: 60}
 ADM4726:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4726-1', semester: Fall, time_of_day: Evening, students: 40}
 ADM4728:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4728-1', semester: Fall, time_of_day: Afternoon, students: 45}
-ADM4729:
-  penalise_friday_night: true
-  sections: []
 ADM4736:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4736-1', semester: Winter, time_of_day: Night, students: 40}
-ADM4737:
-  penalise_friday_night: true
-  sections: []
 ADM4738:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4738-1', semester: Fall, time_of_day: Night, students: 30}
-ADM4739:
-  preferred_class_length: double
-  penalise_friday_night: true
-  sections: []
 ADM4740:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4740-1', semester: Fall, time_of_day: Evening, students: 55}
 ADM4741:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4741-1', semester: Fall, time_of_day: Night, students: 55}
 ADM4742:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4742-1', semester: Fall, time_of_day: Evening, students: 55}
 ADM4744:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4744-1', semester: Winter, time_of_day: Night, students: 60}
 ADM4745:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4745-1', semester: Fall, time_of_day: Night, students: 25}
     - {id: 'ADM4745-2', semester: Winter, time_of_day: Night, students: 45}
 ADM4746:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4746-1', semester: Fall, time_of_day: Night, students: 55}
 ADM4748:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4748-1', semester: Fall, time_of_day: Morning, students: 55}
 ADM4749:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4749-1', semester: Winter, time_of_day: Night, students: 50}
 ADM4750:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4750-1', semester: Fall, time_of_day: Night, students: 60}
 ADM4751:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4751-1', semester: Fall, time_of_day: Night, students: 55}
 ADM4752:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4752-1', semester: Winter, time_of_day: Night, students: 60}
 ADM4754:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4754-1', semester: Fall, time_of_day: Afternoon, students: 40}
-ADM4777:
-  penalise_friday_night: true
-  sections: []
-ADM4779:
-  penalise_friday_night: true
-  sections: []
 ADM4317:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4317-1', semester: Fall, time_of_day: Night, students: 60}
     - {id: 'ADM4317-2', semester: Winter, time_of_day: Night, students: 60}
 ADM4717:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4717-1', semester: Fall, time_of_day: Night, students: 35}
 ADM4363:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4363-1', semester: Fall, time_of_day: Afternoon, students: 35}
 ADM3363:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3363-1', semester: Fall, time_of_day: Morning, students: 60}
 ADM3716:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3716-1', semester: Winter, time_of_day: Evening, students: 68}
 ADM3316:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3316-1', semester: Fall, time_of_day: Morning, students: 45}
     - {id: 'ADM3316-2', semester: Winter, time_of_day: Morning, students: 45}
 ADM4319:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4319-1', semester: Winter, time_of_day: Evening, students: 60}
 ADM4719:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4719-1', semester: Winter, time_of_day: Night, students: 60}
 ADM4756:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4756-1', semester: Winter, time_of_day: Night, students: 45}
 ADM4356:
   preferred_class_length: double
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4356-1', semester: Winter, time_of_day: Afternoon, students: 60}
 ADM4755:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM4755-1', semester: Fall, time_of_day: Afternoon, students: 60}
 ADM3317:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3317-1', semester: Winter, time_of_day: Morning, students: 89}
 ADM3717:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3717-1', semester: Winter, time_of_day: Morning, students: 74}
 ADM3702:
-  penalise_friday_night: true
   sections:
     - {id: 'ADM3702-1', semester: Winter, time_of_day: Night, students: 45}
+
+# No sections offered this year.
+ADM2381:
+  sections: []
+ADM3396:
+  sections: []
+ADM3778:
+  sections: []
+ADM3779:
+  sections: []
+ADM3797:
+  penalise_friday_night: false
+  sections: []
+ADM4329:
+  preferred_class_length: double
+  sections: []
+ADM4396:
+  sections: []
+ADM4712:
+  preferred_class_length: double
+  sections: []
+ADM4729:
+  sections: []
+ADM4737:
+  sections: []
+ADM4739:
+  preferred_class_length: double
+  sections: []
+ADM4777:
+  sections: []
+ADM4779:
+  sections: []

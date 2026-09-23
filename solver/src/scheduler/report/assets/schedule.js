@@ -11,11 +11,12 @@
 
   var totalPT=R.filter(function(r){return r.professor===null}).length;
   var profs={}; R.forEach(function(r){ if(r.professor!==null) profs[r.professor]=1; });
-  [["",R.length,"sections"],
-   ["",R.length-totalPT,"named-faculty sections"],
-   ["pt",totalPT,"part-time sections"],
-   ["",Object.keys(profs).length,"professors"],
-   ["",R.filter(function(r){return r.room!==null}).length,"on campus"],
+  function pct(value){return Number(value||0).toFixed(1)+"%";}
+  [["",DATA.summary.total,"total sections"],
+   ["",pct(DATA.summary.namedPct),"named faculty"],
+   ["pt",pct(100-DATA.summary.namedPct),"part-time"],
+   ["",pct(DATA.summary.onCampusPct),"on campus"],
+   ["",pct(DATA.summary.roomUtilizationPct),"room-slot utilization"],
    ["",DATA.summary.unscheduled,"unscheduled"]
   ].forEach(function(s){
     var d=document.createElement("div"); d.className="stat "+s[0];
@@ -31,7 +32,10 @@
       '<td class="v">'+Math.round(s.seconds)+'s</td>'+
       '<td class="st '+(early?"early":"ok")+'">'+(early?"stopped early":"proven")+'</td></tr>';
   }).join("");
-
+  document.getElementById("semesterstats").innerHTML=DATA.summary.bySemester.map(function(s){
+    return '<div class="semesterstat"><span>'+esc(s.semester)+'</span><b>'+s.total+
+      '</b> sections · <b>'+s.named+'</b> named faculty · <b>'+s.onCampus+'</b> on campus</div>';
+  }).join("");
   document.getElementById("semseg").innerHTML=SEMS.map(function(s){
     var n=R.filter(function(r){return r.semester===s}).length;
     return '<button data-sem="'+esc(s)+'" aria-pressed="'+(s===state.sem)+'">'+esc(s)+

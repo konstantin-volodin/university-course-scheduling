@@ -13,12 +13,13 @@ already known.
 from __future__ import annotations
 
 import time
+from collections.abc import Sequence
 
 import highspy
 import numpy as np
 
 from ..errors import SolverError
-from ..program import LinearExpr, Program, Sense, VarKind
+from ..model.program import LinearExpr, Program, Row, Sense, VarKind
 from .base import Outcome, SolutionStatus
 
 __all__ = ["HighsBackend"]
@@ -27,11 +28,11 @@ _HIGHS_INFINITY = highspy.kHighsInf
 
 
 class HighsBackend:
-    """Solves a :class:`~scheduler.program.Program` with HiGHS."""
+    """Solves a :class:`~scheduler.model.program.Program` with HiGHS."""
 
     name = "highs"
 
-    def __init__(self, *, threads: int = 4, seed: int = 0) -> None:
+    def __init__(self, *, threads: int = 1, seed: int = 0) -> None:
         try:
             self._highs = highspy.Highs()  # type: ignore[no-untyped-call]
         except Exception as exc:  # pragma: no cover - only if highspy is broken
@@ -70,13 +71,15 @@ class HighsBackend:
                 np.array([highspy.HighsVarType.kInteger] * len(integral)),
             )
 
-        if not program.rows:
-            return
+        self.add_rows(program.core_rows)
 
-        # One flat CSR-style batch: starts, indices, values.
+    def add_rows(self, rows: Sequence[Row]) -> None:
+        """One flat CSR-style batch: starts, indices, values."""
+        if not rows:
+            return
         starts, indices, values = [0], [], []
         row_lower, row_upper = [], []
-        for row in program.rows:
+        for row in rows:
             for column, coefficient in row.terms.items():
                 indices.append(column)
                 values.append(coefficient)
@@ -85,8 +88,8 @@ class HighsBackend:
             row_lower.append(low)
             row_upper.append(high)
 
-        highs.addRows(
-            len(program.rows),
+        self._highs.addRows(
+            len(rows),
             np.array(row_lower, dtype=np.float64),
             np.array(row_upper, dtype=np.float64),
             len(indices),
@@ -94,13 +97,6 @@ class HighsBackend:
             np.array(indices, dtype=np.int32),
             np.array(values, dtype=np.float64),
         )
-
-    def add_row(self, name: str, terms: dict[int, float], sense: Sense, rhs: float) -> None:
-        del name  # HiGHS addresses rows positionally; names are for the program only
-        low, high = _bounds(sense, rhs)
-        columns = np.array(list(terms), dtype=np.int32)
-        coefficients = np.array(list(terms.values()), dtype=np.float64)
-        self._highs.addRow(low, high, len(terms), columns, coefficients)
 
     def warm_start(self, values: list[float]) -> None:
         # Held, not applied: HiGHS drops a user solution when the objective
@@ -165,4 +161,3 @@ def _bounds(sense: Sense, rhs: float) -> tuple[float, float]:
     if sense is Sense.GE:
         return rhs, _HIGHS_INFINITY
     return rhs, rhs
-

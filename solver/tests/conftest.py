@@ -75,6 +75,7 @@ def oversized_payload() -> dict[str, Any]:
         "course_concurrency_nt": [],
         "course_friday_penalty": [],
         "course_block_pref": [],
+        "program_requirements": [],
     }
 
 

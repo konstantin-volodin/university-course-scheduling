@@ -26,7 +26,8 @@ my-university/
 ├── classrooms.yaml
 ├── professors.yaml
 ├── courses.yaml
-└── course-concurrency.yaml  # optional
+├── course-concurrency.yaml  # optional
+└── programs.yaml            # optional
 ```
 
 `instance.yaml`:
@@ -85,11 +86,11 @@ smith-jordan:
   course_ranks: {BIO205: 3}
 ```
 
-Required: `teaching_load`, `qualified_for`.
+Required: `teaching_load`.
 
 Optional:
 
-- `qualified_for: all`
+- `qualified_for: all` (the default when omitted) or a list of course ids
 - `can_teach_night` (default `false`)
 - `can_teach_off_campus` (default `false`)
 - `prefers_packed_days` (default `false`)
@@ -99,6 +100,24 @@ Optional:
 
 Preference scores: `0` or omitted = none; higher values = stronger. `part-timer`
 is reserved.
+
+## Flag defaults
+
+When most entries share one flag value, declare it once in `instance.yaml` and
+list only the exceptions:
+
+```yaml
+professor_defaults: {can_teach_night: true, can_teach_off_campus: true}
+course_defaults: {penalise_friday_night: true}
+```
+
+`professor_defaults` accepts `can_teach_night`, `can_teach_off_campus`,
+`prefers_packed_days`, and `preferred_class_length`; `course_defaults` accepts
+`penalise_friday_night` and `preferred_class_length`. A flag on an individual
+professor or course overrides the declared default. Note that a
+`preferred_class_length` default applies to *every* entry that omits it —
+including ones that previously had no preference — so only declare it when
+that is what you mean.
 
 ## Courses
 
@@ -119,9 +138,25 @@ Optional concurrency rules:
 
 ```yaml
 - {courses: [BIO101, BIO205], semester: Fall, must_run: apart}
+- {courses: [BIO101, BIO205, BIO305], must_run: apart}
 ```
 
-`apart` prevents overlap. `together` requires the same meeting time.
+`apart` prevents overlap. `together` requires the same meeting time and takes
+exactly two courses. Omit `semester` (or pass a list) to cover every semester;
+listing more than two courses under `apart` keeps every pair apart.
+
+## Programs
+
+A program names the courses a cohort must be able to take in each semester:
+
+```yaml
+programs:
+  bcom-finance:
+    Fall: [BIO101, BIO205]
+    Winter: [BIO305]
+```
+
+Programs are read and validated, but do not yet affect the schedule.
 
 ## Commands
 

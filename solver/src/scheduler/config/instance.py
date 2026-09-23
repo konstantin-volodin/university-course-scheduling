@@ -16,7 +16,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Final
 
-from .errors import InvalidInstanceError
+from ..errors import InvalidInstanceError
 
 __all__ = [
     "OFF_CAMPUS",
@@ -51,7 +51,7 @@ BLOCK_WEIGHTS: Final[Mapping[str, float]] = {"1.5": 0.5, "3.0": 1.0}
 #: Attendance above this must be scheduled at night if it needs a 3-hour block.
 LARGE_SECTION: Final = 75
 
-#: A room may not be filled below this fraction of its capacity.
+#: Default minimum occupied fraction; instances may override this policy.
 MIN_ROOM_FILL: Final = 0.8
 
 #: Big-M for the "did this professor teach at all that day" indicator.
@@ -99,6 +99,7 @@ PAYLOAD_KEYS: Final[tuple[str, ...]] = (
     "course_concurrency_nt",
     "course_friday_penalty",
     "course_block_pref",
+    "program_requirements",
 )
 
 
@@ -257,6 +258,12 @@ class Instance:
     friday_night_penalty: frozenset[str]
     course_block_preference: frozenset[tuple[str, str]]
 
+    # programs: courses a cohort must be able to take together, per semester
+    program_requirements: frozenset[tuple[str, str, str]]
+
+    # institutional policy (defaults preserve existing instances)
+    minimum_room_fill: float = MIN_ROOM_FILL
+
     @property
     def real_professors(self) -> frozenset[str]:
         """Professors excluding the part-timer fallback."""
@@ -283,6 +290,7 @@ class Instance:
             count(len(self.real_classrooms), "room"),
             count(len(self.real_timeslots), "timeslot"),
             count(len(self.semesters), "semester"),
+            count(len({r[0] for r in self.program_requirements}), "program"),
         ))
 
     # ----------------------------------------------------------------- #
@@ -301,6 +309,14 @@ class Instance:
             raise InvalidInstanceError([f"missing required key: {key}" for key in missing])
 
         problems: list[str] = []
+
+        minimum_room_fill = payload.get("minimum_room_fill", MIN_ROOM_FILL)
+        if (
+            isinstance(minimum_room_fill, bool)
+            or not isinstance(minimum_room_fill, (int, float))
+            or not 0 <= minimum_room_fill <= 1
+        ):
+            problems.append("minimum_room_fill: expected a finite number between 0 and 1")
 
         professors = _ids(payload, "professor_set", problems)
         courses = _ids(payload, "course_set", problems)
@@ -386,6 +402,7 @@ class Instance:
         must_not_overlap = _tuples(payload, "course_concurrency_nt", 3, problems)
         friday_night_penalty = _ids(payload, "course_friday_penalty", problems)
         course_block_preference = _tuples(payload, "course_block_pref", 2, problems)
+        program_requirements = _tuples(payload, "program_requirements", 3, problems)
 
         # ---- referential integrity ------------------------------------ #
         # Every one of these would otherwise surface as a bare KeyError from
@@ -434,6 +451,18 @@ class Instance:
         check_pairs("course_block_pref", course_block_preference, (courses, "course"), blocks)
 
         check_members("course_friday_penalty", friday_night_penalty, courses, "course")
+        check_members(
+            "program_requirements",
+            frozenset(r[1] for r in program_requirements),
+            semesters,
+            "semester",
+        )
+        check_members(
+            "program_requirements",
+            frozenset(r[2] for r in program_requirements),
+            courses,
+            "course",
+        )
         check_members(
             "professor_can_teach_night", can_teach_night, professors, "professor"
         )
@@ -507,4 +536,6 @@ class Instance:
             must_not_overlap=must_not_overlap,
             friday_night_penalty=friday_night_penalty,
             course_block_preference=course_block_preference,
+            program_requirements=program_requirements,
+            minimum_room_fill=float(minimum_room_fill),
         )

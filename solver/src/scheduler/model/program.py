@@ -62,6 +62,16 @@ class Row:
     terms: Mapping[int, float]
     sense: Sense
     rhs: float
+    #: A row that no violation stage can be cut off by: it only defines a
+    #: variable the preference objective reads. Loading it before stage four
+    #: costs the earlier stages half the matrix and buys them nothing, so a
+    #: backend leaves it out until :mod:`scheduler.solve` asks for it.
+    deferred: bool = False
+    #: The variable this row exists to pin, when it has one. A deferred row is
+    #: always a definition -- an indicator, a bound, a slack -- so knowing which
+    #: variable it settles is what lets a solution found without it be repaired
+    #: rather than thrown away. See :func:`scheduler.solve.solver._repair`.
+    defines: int | None = None
 
 
 class LinearExpr:
@@ -113,9 +123,28 @@ class Program:
         self.variables.append(Variable(name, lower, upper, kind))
         return len(self.variables) - 1
 
-    def add_row(self, name: str, terms: Mapping[int, float], sense: Sense, rhs: float) -> int:
-        self.rows.append(Row(name, dict(terms), sense, rhs))
+    def add_row(
+        self,
+        name: str,
+        terms: Mapping[int, float],
+        sense: Sense,
+        rhs: float,
+        *,
+        deferred: bool = False,
+        defines: int | None = None,
+    ) -> int:
+        self.rows.append(Row(name, dict(terms), sense, rhs, deferred, defines))
         return len(self.rows) - 1
+
+    @property
+    def core_rows(self) -> list[Row]:
+        """The rows every stage needs."""
+        return [row for row in self.rows if not row.deferred]
+
+    @property
+    def deferred_rows(self) -> list[Row]:
+        """The rows only the preference stage needs."""
+        return [row for row in self.rows if row.deferred]
 
     @property
     def nonzeros(self) -> int:

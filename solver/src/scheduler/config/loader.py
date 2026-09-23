@@ -8,7 +8,7 @@ from difflib import get_close_matches
 from pathlib import Path
 from typing import Any
 
-from .errors import InvalidInstanceError, SchedulerError
+from ..errors import InvalidInstanceError, SchedulerError
 
 __all__ = ["load", "loads"]
 
@@ -56,10 +56,14 @@ def _expand_meeting_times(cfg: dict[str, Any]) -> dict[str, Any]:
         {
             "semesters",
             "meeting_times",
+            "minimum_room_fill",
             "classrooms",
             "professors",
             "courses",
             "course_concurrency",
+            "professor_defaults",
+            "course_defaults",
+            "programs",
         },
         problems,
     )
@@ -181,6 +185,9 @@ def _expand_meeting_times(cfg: dict[str, Any]) -> dict[str, Any]:
     }
     if "course_concurrency" in cfg:
         expanded["course_concurrency"] = cfg["course_concurrency"]
+    for optional_key in ("professor_defaults", "course_defaults", "programs", "minimum_room_fill"):
+        if optional_key in cfg:
+            expanded[optional_key] = cfg[optional_key]
     return expanded
 
 
@@ -214,18 +221,61 @@ def loads(text: str) -> dict[str, Any]:
         cfg,
         {
             "calendar",
+            "minimum_room_fill",
             "timeslots",
             "overlapping_timeslots",
             "classrooms",
             "professors",
             "courses",
             "course_concurrency",
+            "professor_defaults",
+            "course_defaults",
+            "programs",
         },
         problems,
     )
 
     def as_id(value: Any) -> str:
         return str(value)
+
+    def flag_defaults(name: str, allowed: set[str]) -> dict[str, Any]:
+        """Read an optional ``*_defaults`` block of per-field defaults."""
+        raw = cfg.get(name)
+        if raw is None:
+            return {}
+        if not isinstance(raw, dict):
+            problems.append(f"{name}: expected a mapping, got {type(raw).__name__}")
+            return {}
+        _check_unknown_fields(name, raw, allowed, problems)
+        return {str(key): value for key, value in raw.items() if str(key) in allowed}
+
+    professor_defaults = flag_defaults(
+        "professor_defaults",
+        {
+            "can_teach_night",
+            "can_teach_off_campus",
+            "prefers_packed_days",
+            "preferred_class_length",
+        },
+    )
+    for option in ("can_teach_night", "can_teach_off_campus", "prefers_packed_days"):
+        if option in professor_defaults and not isinstance(professor_defaults[option], bool):
+            problems.append(f"professor_defaults.{option}: expected true or false")
+    course_defaults = flag_defaults(
+        "course_defaults", {"penalise_friday_night", "preferred_class_length"}
+    )
+    if "penalise_friday_night" in course_defaults and not isinstance(
+        course_defaults["penalise_friday_night"], bool
+    ):
+        problems.append("course_defaults.penalise_friday_night: expected true or false")
+    for block_name, block in (
+        ("professor_defaults", professor_defaults),
+        ("course_defaults", course_defaults),
+    ):
+        if "preferred_class_length" in block and not isinstance(
+            block["preferred_class_length"], str
+        ):
+            problems.append(f"{block_name}.preferred_class_length: expected a class-length name")
 
     cal = cfg["calendar"]
     if not isinstance(cal, dict):
@@ -338,15 +388,19 @@ def loads(text: str) -> dict[str, Any]:
         )
         if "sections" not in spec:
             problems.append(f"courses.{course}: missing 'sections'")
-        penalty = spec.get("penalise_friday_night", False)
+        penalty = spec.get(
+            "penalise_friday_night", course_defaults.get("penalise_friday_night", False)
+        )
         if not isinstance(penalty, bool):
             problems.append(f"courses.{course}.penalise_friday_night: expected true or false")
-        if spec.get("penalise_friday_night"):
+        if penalty:
             friday.append(course)
-        if "preferred_class_length" in spec:
+        course_length_pref = spec.get(
+            "preferred_class_length", course_defaults.get("preferred_class_length")
+        )
+        if course_length_pref is not None:
             course_length.append(
-                [course, hours_of.get(spec["preferred_class_length"],
-                                      spec["preferred_class_length"])]
+                [course, hours_of.get(course_length_pref, course_length_pref)]
             )
         raw_sections = spec.get("sections") or []
         if not isinstance(raw_sections, list):
@@ -405,9 +459,8 @@ def loads(text: str) -> dict[str, Any]:
             },
             problems,
         )
-        for required in ("teaching_load", "qualified_for"):
-            if required not in spec:
-                problems.append(f"professors.{prof}: missing {required!r}")
+        if "teaching_load" not in spec:
+            problems.append(f"professors.{prof}: missing 'teaching_load'")
         teaching_load = spec.get("teaching_load", 0)
         if (
             isinstance(teaching_load, bool)
@@ -423,15 +476,21 @@ def loads(text: str) -> dict[str, Any]:
         ):
             if option in spec and not isinstance(spec[option], bool):
                 problems.append(f"professors.{prof}.{option}: expected true or false")
-        night.append([prof, bool(spec.get("can_teach_night"))])
-        offc.append([prof, bool(spec.get("can_teach_off_campus"))])
-        pack.append([prof, int(bool(spec.get("prefers_packed_days", False)))])
-        if "preferred_class_length" in spec:
+        night.append([prof, bool(spec.get("can_teach_night",
+                                          professor_defaults.get("can_teach_night", False)))])
+        offc.append([prof, bool(spec.get("can_teach_off_campus",
+                                         professor_defaults.get("can_teach_off_campus", False)))])
+        pack.append([prof, int(bool(spec.get("prefers_packed_days",
+                                             professor_defaults.get("prefers_packed_days",
+                                                                    False))))])
+        prof_length_pref = spec.get(
+            "preferred_class_length", professor_defaults.get("preferred_class_length")
+        )
+        if prof_length_pref is not None:
             prof_length.append(
-                [prof, hours_of.get(spec["preferred_class_length"],
-                                    spec["preferred_class_length"])]
+                [prof, hours_of.get(prof_length_pref, prof_length_pref)]
             )
-        qualified = spec.get("qualified_for", [])
+        qualified = spec.get("qualified_for", "all")
         if qualified != "all" and not isinstance(qualified, list):
             problems.append(
                 f"professors.{prof}.qualified_for: expected 'all' or a list of course ids"
@@ -472,14 +531,15 @@ def loads(text: str) -> dict[str, Any]:
             {"courses", "semester", "must_run"},
             problems,
         )
-        for name in ("courses", "semester", "must_run"):
-            if name not in rule:
-                problems.append(f"course_concurrency[{index}]: missing '{name}'")
-        if not all(name in rule for name in ("courses", "semester", "must_run")):
+        if "courses" not in rule:
+            problems.append(f"course_concurrency[{index}]: missing 'courses'")
+        if "must_run" not in rule:
+            problems.append(f"course_concurrency[{index}]: missing 'must_run'")
+        if "courses" not in rule or "must_run" not in rule:
             continue
         rule_courses = rule["courses"]
-        if not isinstance(rule_courses, list) or len(rule_courses) != 2:
-            problems.append(f"course_concurrency[{index}].courses: expected exactly two courses")
+        if not isinstance(rule_courses, list) or len(rule_courses) < 2:
+            problems.append(f"course_concurrency[{index}].courses: expected at least two courses")
             continue
         kind = rule["must_run"]
         if kind not in {"together", "apart"}:
@@ -487,14 +547,59 @@ def loads(text: str) -> dict[str, Any]:
                 f"course_concurrency[{index}].must_run: expected 'together' or 'apart'"
             )
             continue
-        first, second = rule_courses
+        if kind == "together" and len(rule_courses) != 2:
+            problems.append(
+                f"course_concurrency[{index}].courses: 'together' expects exactly two courses"
+            )
+            continue
+        # A missing semester applies to every semester; more than two courses
+        # under 'apart' keeps every pair apart.
+        raw_semesters = rule.get("semester")
+        if raw_semesters is None:
+            semesters = list(cal.get("semesters") or [])
+        elif isinstance(raw_semesters, str):
+            semesters = [raw_semesters]
+        elif isinstance(raw_semesters, list) and all(
+            isinstance(item, str) for item in raw_semesters
+        ):
+            semesters = list(raw_semesters)
+        else:
+            problems.append(
+                f"course_concurrency[{index}].semester: expected a name or a list of names"
+            )
+            continue
         target = together if kind == "together" else apart
-        target.append([as_id(first), as_id(second), rule["semester"]])
+        for first, second in itertools.combinations(rule_courses, 2):
+            for semester in semesters:
+                target.append([as_id(first), as_id(second), semester])
+
+    program_requirements: list[list[str]] = []
+    programs_cfg = cfg.get("programs") or {}
+    if not isinstance(programs_cfg, dict):
+        problems.append(f"programs: expected a mapping, got {type(programs_cfg).__name__}")
+        programs_cfg = {}
+    for raw_program, terms in programs_cfg.items():
+        program = as_id(raw_program)
+        if not isinstance(terms, dict):
+            problems.append(
+                f"programs.{program}: expected a semester-to-courses mapping, "
+                f"got {type(terms).__name__}"
+            )
+            continue
+        for semester, required in terms.items():
+            where = f"programs.{program}.{semester}"
+            if not isinstance(required, list) or not all(
+                isinstance(item, str) for item in required
+            ):
+                problems.append(f"{where}: expected a list of course ids")
+                continue
+            for course in required:
+                program_requirements.append([program, str(semester), course])
 
     if problems:
         raise InvalidInstanceError(problems)
 
-    return {
+    payload = {
         "professor_set": professors,
         "course_set": courses,
         "section_set": sections,
@@ -523,7 +628,11 @@ def loads(text: str) -> dict[str, Any]:
         "course_concurrency_nt": apart,
         "course_friday_penalty": friday,
         "course_block_pref": course_length,
+        "program_requirements": program_requirements,
     }
+    if "minimum_room_fill" in cfg:
+        payload["minimum_room_fill"] = cfg["minimum_room_fill"]
+    return payload
 
 
 def load(path: Any) -> dict[str, Any]:
@@ -544,7 +653,10 @@ def load(path: Any) -> dict[str, Any]:
     if not isinstance(manifest, dict) or "files" not in manifest:
         return loads(text)
 
-    allowed_manifest = {"semesters", "files"}
+    allowed_manifest = {
+        "semesters", "files", "professor_defaults", "course_defaults", "programs",
+        "minimum_room_fill",
+    }
     problems = [
         f"instance.yaml: unknown field {key!r}"
         for key in manifest
@@ -557,7 +669,7 @@ def load(path: Any) -> dict[str, Any]:
         files = {}
     for key in sorted(required - set(files)):
         problems.append(f"instance.yaml.files: missing {key!r}")
-    for key in sorted(set(files) - required - {"course_concurrency"}):
+    for key in sorted(set(files) - required - {"course_concurrency", "programs"}):
         problems.append(f"instance.yaml.files: unknown entry {key!r}")
     if problems:
         raise InvalidInstanceError(problems)
@@ -574,7 +686,7 @@ def load(path: Any) -> dict[str, Any]:
                 f"instance.yaml.files.{key}: expected a file path or non-empty list of paths"
             )
             continue
-        mapping_kind = key in {"classrooms", "professors", "courses"}
+        mapping_kind = key in {"classrooms", "professors", "courses", "programs"}
         merged: Any = {} if mapping_kind else []
         for relative_path in paths:
             fragment_path = source.parent / relative_path
@@ -614,4 +726,9 @@ def load(path: Any) -> dict[str, Any]:
     }
     if "course_concurrency" in fragments:
         combined["course_concurrency"] = fragments["course_concurrency"]
+    if "programs" in fragments:
+        combined["programs"] = fragments["programs"]
+    for optional_key in ("professor_defaults", "course_defaults", "programs", "minimum_room_fill"):
+        if optional_key in manifest:
+            combined[optional_key] = manifest[optional_key]
     return loads(yaml.safe_dump(combined, sort_keys=False))

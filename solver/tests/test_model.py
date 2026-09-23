@@ -12,9 +12,10 @@ from typing import Any
 
 import pytest
 
-from scheduler.instance import PART_TIMER, Instance
+from scheduler.config.instance import PART_TIMER, Instance
 from scheduler.model import build
-from scheduler.program import Program, Sense, VarKind
+from scheduler.model.builder import _maximal_slot_cliques
+from scheduler.model.program import Program, Sense, VarKind
 from scheduler.progress import Progress, silent
 
 
@@ -194,3 +195,31 @@ def test_pack_day_penalty_weights_every_day_the_same(payload: dict[str, Any]) ->
     for professor, by_day in weights.items():
         assert {"Mon", "Wed"} <= set(by_day), by_day
         assert len(set(by_day.values())) == 1, f"{professor} is charged by day: {by_day}"
+
+
+def test_uses_room_indicators_are_binary_and_forced(program: Program) -> None:
+    indicators = [v for v in program.variables if v.name.startswith("uses_room[")]
+    assert indicators
+    assert all(v.kind is VarKind.BINARY for v in indicators)
+    forcing = [row for row in program.rows if row.name.startswith("professor_uses_room[")]
+    assert len(forcing) == len(indicators)
+    for row in forcing:
+        assert row.sense is Sense.LE
+        assert min(row.terms.values()) < -1.0  # the BIG_M forcing coefficient
+
+
+@pytest.mark.parametrize("self_overlaps", [False, True])
+def test_program_periods_do_not_merge_non_overlapping_slots(self_overlaps: bool) -> None:
+    """A-B and B-C overlap does not imply that A and C overlap."""
+    overlaps = {
+        "A": [("A", "B")],
+        "B": [("A", "B"), ("B", "C")],
+        "C": [("B", "C")],
+    }
+    if self_overlaps:
+        for slot in overlaps:
+            overlaps[slot].append((slot, slot))
+    assert _maximal_slot_cliques(["A", "B", "C"], overlaps) == [
+        ("A", "B"),
+        ("B", "C"),
+    ]

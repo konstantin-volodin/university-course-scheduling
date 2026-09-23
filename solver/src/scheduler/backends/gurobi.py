@@ -12,11 +12,11 @@ backend is actually asked for.
 from __future__ import annotations
 
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from ..errors import SolverError
-from ..program import LinearExpr, Program, Sense, VarKind
+from ..model.program import LinearExpr, Program, Row, Sense, VarKind
 from .base import Outcome, SolutionStatus
 
 __all__ = ["GurobiBackend"]
@@ -25,7 +25,7 @@ _LICENCE_HINTS = ("size-limited", "license", "licence")
 
 
 class GurobiBackend:
-    """Solves a :class:`~scheduler.program.Program` with Gurobi."""
+    """Solves a :class:`~scheduler.model.program.Program` with Gurobi."""
 
     name = "gurobi"
 
@@ -66,15 +66,16 @@ class GurobiBackend:
                 for v in program.variables
             ]
             self._model.update()
-            for row in program.rows:
+            for row in program.core_rows:
                 self._add(row.name, row.terms, row.sense, row.rhs)
             self._model.update()
         except gp.GurobiError as exc:
             raise self._translate(exc, program) from exc
 
-    def add_row(self, name: str, terms: dict[int, float], sense: Sense, rhs: float) -> None:
+    def add_rows(self, rows: Sequence[Row]) -> None:
         try:
-            self._add(name, terms, sense, rhs)
+            for row in rows:
+                self._add(row.name, row.terms, row.sense, row.rhs)
             self._model.update()
         except self._gp.GurobiError as exc:
             raise SolverError(f"Gurobi rejected a constraint: {exc}") from exc
@@ -161,4 +162,3 @@ def _explain(status: int) -> str:
         gp.GRB.TIME_LIMIT: "hit the time limit before finding any solution",
         gp.GRB.INTERRUPTED: "interrupted before finding any solution",
     }.get(status, f"gurobi status {status}")
-

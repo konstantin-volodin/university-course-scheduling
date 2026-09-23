@@ -7,11 +7,12 @@ solver offers beyond that is not the formulation's business.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
 from typing import Protocol, runtime_checkable
 
-from ..program import LinearExpr, Program, Sense
+from ..model.program import LinearExpr, Program, Row
 
 __all__ = ["Backend", "Outcome", "SolutionStatus"]
 
@@ -42,10 +43,15 @@ class Backend(Protocol):
     name: str
 
     def load(self, program: Program) -> None:
-        """Hand over the variables and rows. Called once."""
+        """Hand over the variables and the core rows. Called once.
 
-    def add_row(self, name: str, terms: dict[int, float], sense: Sense, rhs: float) -> None:
-        """Add a row after loading. Used to freeze one stage before the next."""
+        Rows marked ``deferred`` are left out: they only define variables the
+        preference objective reads, so the violation stages would carry them
+        through branch and bound for nothing. :meth:`add_rows` puts them in.
+        """
+
+    def add_rows(self, rows: Sequence[Row]) -> None:
+        """Add a batch of rows after loading."""
 
     def warm_start(self, values: list[float]) -> None:
         """Offer a known-feasible point for the next solve to start from.

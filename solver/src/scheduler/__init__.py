@@ -3,10 +3,18 @@
 from __future__ import annotations
 
 from .backends import BACKENDS, DEFAULT_BACKEND
+from .config import PAYLOAD_KEYS, Instance
 from .errors import InvalidInstanceError, SchedulerError, SolveError, SolverError
-from .instance import PAYLOAD_KEYS, Instance
-from .progress import Progress, silent, to_stderr
-from .solve import Assignment, Result, Stage, solve, solve_instance
+from .progress import Progress, TerminalProgress, silent, to_stderr
+from .solve import (
+    Assignment,
+    ObjectiveBreakdown,
+    ObjectiveTerm,
+    Result,
+    Stage,
+    solve,
+    solve_instance,
+)
 
 __version__ = "1.0.0"
 
@@ -17,12 +25,15 @@ __all__ = [
     "Assignment",
     "Instance",
     "InvalidInstanceError",
+    "ObjectiveBreakdown",
+    "ObjectiveTerm",
     "Progress",
     "Result",
     "SchedulerError",
     "SolveError",
     "SolverError",
     "Stage",
+    "TerminalProgress",
     "__version__",
     "silent",
     "solve",

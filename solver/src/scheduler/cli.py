@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -11,9 +12,9 @@ from typing import Any
 
 from . import __version__
 from .backends import BACKENDS, DEFAULT_BACKEND
+from .config import Instance
 from .errors import InvalidInstanceError, SchedulerError
-from .instance import Instance
-from .progress import silent, to_stderr
+from .progress import ProgressCallback, TeeProgress, TerminalProgress, silent, to_stderr
 from .solve import solve_instance
 
 __all__ = ["main"]
@@ -46,7 +47,7 @@ def _write(text: str, output: str | Path | None) -> None:
     print(f"wrote {output}", file=sys.stderr)
 
 
-def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path] | None:
+def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Path] | None:
     """Return the result, schedule, and instance paths for a file-backed solve."""
     if args.instance == "-" and args.output is None:
         return None
@@ -62,13 +63,15 @@ def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path] | N
     # would only repeat the folder: instance/results/instance-instance.html.
     schedule = Path(args.html) if args.html else result.with_name("schedule.html")
     instance = result.with_name("instance.html")
+    objective = result.with_name("objective.md")
     try:
         result.parent.mkdir(parents=True, exist_ok=True)
         schedule.parent.mkdir(parents=True, exist_ok=True)
         instance.parent.mkdir(parents=True, exist_ok=True)
+        objective.parent.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         raise SchedulerError(f"could not create the results directory: {exc}") from exc
-    return result, schedule, instance
+    return result, schedule, instance, objective
 
 
 def _as_json(payload: Any) -> str:
@@ -95,27 +98,39 @@ def _read_instance(path: str) -> Any:
 
 def _cmd_solve(args: argparse.Namespace) -> int:
     payload = _read_instance(args.instance)
-    reporter = silent if args.quiet else to_stderr
-
     instance = Instance.from_payload(payload)
     if args.check:
         print(f"instance is valid: {instance.summary()}", file=sys.stderr)
         return 0
 
-    result = solve_instance(
-        instance, reporter, time_limit=args.time_limit, solver=args.solver
-    )
-    payload_result = result.to_dict()
     outputs = _solve_output_paths(args)
+    live_reporter = silent if args.quiet else (
+        TerminalProgress() if sys.stderr.isatty() else to_stderr
+    )
+    log_file = None
+    if outputs is not None:
+        log_file = (outputs[0].with_name("solve.log")).open("w", encoding="utf-8")
+        reporter: ProgressCallback = TeeProgress(live_reporter, log_file)
+    else:
+        reporter = live_reporter
+    try:
+        result = solve_instance(
+            instance, reporter, time_limit=args.time_limit, solver=args.solver
+        )
+    finally:
+        if log_file is not None:
+            log_file.close()
+    payload_result = result.to_dict()
     if outputs is None:
         _write(_as_json(payload_result), None)
     else:
-        from .report import instance_page, schedule_page
+        from .report import instance_page, objective_markdown, schedule_page
 
-        result_path, schedule_path, instance_path = outputs
+        result_path, schedule_path, instance_path, objective_path = outputs
         _write(_as_json(payload_result), result_path)
         _write(schedule_page(payload, payload_result), schedule_path)
         _write(instance_page(payload), instance_path)
+        _write(objective_markdown(payload_result), objective_path)
 
     if not args.quiet:
         print(
@@ -140,6 +155,13 @@ def _cmd_report(args: argparse.Namespace) -> int:
         result = _read_json(args.result)
         _write(schedule_page(payload, result, title=args.title or "Solved Schedule"), args.output)
     return 0
+
+
+def _positive_seconds(value: str) -> float:
+    seconds = float(value)
+    if not math.isfinite(seconds) or seconds <= 0:
+        raise argparse.ArgumentTypeError("must be a finite, positive number of seconds")
+    return seconds
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -168,7 +190,7 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"which solver to use (default {DEFAULT_BACKEND}; gurobi needs a licence)",
     )
     solve_cmd.add_argument(
-        "--time-limit", type=float, metavar="SECONDS",
+        "--time-limit", type=_positive_seconds, metavar="SECONDS",
         help="give up proving optimality after this long per stage; the result "
              "is still returned, with status 'feasible'",
     )
@@ -200,7 +222,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except InvalidInstanceError as exc:
         print(f"invalid instance: {exc}", file=sys.stderr)
         return 2
-    except SchedulerError as exc:
+    except (SchedulerError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:
