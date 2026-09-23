@@ -1,22 +1,13 @@
-"""The input contract: raw JSON payload in, validated :class:`Instance` out.
-
-The payload is keyed by endpoint name — one key per ``/OPTIM_data/`` endpoint,
-holding exactly what that endpoint returns. Keeping the wire format identical to
-what the backend already serves means no translation layer has to exist on
-either side.
-
-Everything defensive lives here. Once you hold an :class:`Instance`, the model
-builder can index into it without guarding, because the references have already
-been checked.
-"""
+"""Validate the internal normalized scheduling data produced by the YAML loader."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Final
 
 from ..errors import InvalidInstanceError
+from .patterns import Meeting, MeetingPattern
 
 __all__ = [
     "OFF_CAMPUS",
@@ -54,10 +45,6 @@ LARGE_SECTION: Final = 75
 #: Default minimum occupied fraction; instances may override this policy.
 MIN_ROOM_FILL: Final = 0.8
 
-#: Big-M for the "did this professor teach at all that day" indicator.
-BIG_M: Final = 1000
-
-
 def placeholder_for(time_of_day: str) -> str:
     return f"{PLACEHOLDER_PREFIX}{time_of_day}"
 
@@ -66,7 +53,7 @@ def is_placeholder(timeslot: str) -> bool:
     return timeslot.startswith(PLACEHOLDER_PREFIX)
 
 
-#: Every payload key read, in the order they are documented. One per endpoint.
+#: Required fields of the private normalized representation.
 PAYLOAD_KEYS: Final[tuple[str, ...]] = (
     # sets
     "professor_set",
@@ -148,7 +135,7 @@ def _merged_mapping(
 ) -> dict[str, Any]:
     """``[{"a": 1}, {"b": 2}]`` -> ``{"a": 1, "b": 2}``.
 
-    The endpoints emit one single-entry object per row rather than one object.
+    The internal row representation uses one single-entry object per row.
     """
     out: dict[str, Any] = {}
     for i, item in enumerate(_require_list(payload, key, problems)):
@@ -225,13 +212,11 @@ class Instance:
     # sets
     professors: frozenset[str]
     courses: frozenset[str]
-    sections: frozenset[str]
     classrooms: frozenset[str]
     semesters: frozenset[str]
     timeslots: frozenset[str]
     times_of_day: frozenset[str]
     days_of_week: frozenset[str]
-    block_types: frozenset[str]
 
     # subsets: which combinations exist at all
     section_keys: frozenset[SectionKey]
@@ -263,6 +248,14 @@ class Instance:
 
     # institutional policy (defaults preserve existing instances)
     minimum_room_fill: float = MIN_ROOM_FILL
+    meeting_patterns: Mapping[str, MeetingPattern] = field(default_factory=dict)
+    section_patterns: Mapping[SectionKey, frozenset[str]] = field(default_factory=dict)
+    forbidden_professor_patterns: frozenset[tuple[str, str, str]] = frozenset()
+    professor_pattern_preference: Mapping[tuple[str, str, str], float] = field(default_factory=dict)
+    strict: bool = False
+    large_section_threshold: int | None = LARGE_SECTION
+    long_meeting_minutes: int = 180
+    night_period: str = "Night"
 
     @property
     def real_professors(self) -> frozenset[str]:
@@ -346,11 +339,7 @@ class Instance:
         timeslot_time_of_day = _tuples(payload, "timeslot_tod_subset", 2, problems)
         timeslot_block = _tuples(payload, "timeslot_block_subset", 2, problems)
 
-        # Two shapes reach us: {"timeslot_1": a, "timeslot_2": b} from the
-        # Django endpoint, and [a, b] from a config file or a hand-written
-        # instance. Anything else is reported rather than dropped — silently
-        # discarding a clash yields a schedule that double-books a room and
-        # looks perfectly successful.
+        # Reject malformed overlap rows: dropping a clash can double-book a resource.
         overlapping_rows: list[tuple[str, str]] = []
         for index, row in enumerate(_require_list(payload, "timeslot_concurrency", problems)):
             if isinstance(row, Mapping):
@@ -485,7 +474,12 @@ class Instance:
             if len(gaps) > 5:
                 problems.append(f"{label}: ... and {len(gaps) - 5} more {position}s with no value")
 
-        unknown_blocks = sorted(block_types - frozenset(BLOCK_WEIGHTS))
+        known_blocks = frozenset(BLOCK_WEIGHTS) | frozenset(
+            str(meeting["duration_minutes"] / 60)
+            for row in payload.get("meeting_pattern_data", [])
+            for meeting in row["meetings"]
+        )
+        unknown_blocks = sorted(block_types - known_blocks)
         for block in unknown_blocks:
             problems.append(
                 f"block_type_set: {block!r} has no weight; known blocks are "
@@ -495,7 +489,9 @@ class Instance:
         # Every section must have at least one timeslot at its time of day, or
         # it can only ever land on a placeholder.
         slot_times = frozenset(td for _, td in timeslot_time_of_day)
-        for time_of_day in sorted({k[3] for k in section_keys} - slot_times):
+        for time_of_day in sorted({k[3] for k in section_keys} - slot_times - (
+            {"Any"} if payload.get("section_pattern_data") else set()
+        )):
             problems.append(
                 f"timeslot_tod_subset: no timeslot at time of day {time_of_day!r}, "
                 "so sections scheduled then can only get a placeholder"
@@ -508,13 +504,11 @@ class Instance:
         return cls(
             professors=professors | {PART_TIMER},
             courses=courses,
-            sections=sections,
             classrooms=classrooms | {OFF_CAMPUS},
             semesters=semesters,
             timeslots=timeslots | {placeholder_for(td) for td in times_of_day},
             times_of_day=times_of_day,
             days_of_week=days_of_week,
-            block_types=block_types,
             section_keys=section_keys,
             timeslot_day=timeslot_day,
             timeslot_time_of_day=(
@@ -538,4 +532,26 @@ class Instance:
             course_block_preference=course_block_preference,
             program_requirements=program_requirements,
             minimum_room_fill=float(minimum_room_fill),
+            meeting_patterns={
+                row["id"]: MeetingPattern(
+                    id=row["id"], time_of_day=row["time_of_day"],
+                    meetings=tuple(Meeting(**meeting) for meeting in row["meetings"]),
+                )
+                for row in payload.get("meeting_pattern_data", [])
+            },
+            section_patterns={
+                tuple(row["key"]): frozenset(row["patterns"])
+                for row in payload.get("section_pattern_data", [])
+            },
+            forbidden_professor_patterns=frozenset(
+                tuple(row) for row in payload.get("forbidden_professor_patterns", [])
+            ),
+            professor_pattern_preference={
+                tuple(row["key"]): float(row["value"])
+                for row in payload.get("professor_pattern_preference", [])
+            },
+            strict=payload.get("strict", False),
+            large_section_threshold=payload.get("large_section_threshold", LARGE_SECTION),
+            long_meeting_minutes=payload.get("long_meeting_minutes", 180),
+            night_period=payload.get("night_period", "Night"),
         )

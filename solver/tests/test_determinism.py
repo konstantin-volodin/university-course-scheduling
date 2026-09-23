@@ -17,8 +17,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 TINY = Path(__file__).parents[2] / "instances" / "tiny"
 
 SCRIPT = """
@@ -46,7 +44,6 @@ def solve_in_subprocess(seed: str) -> dict[str, object]:
     return json.loads(completed.stdout)
 
 
-@pytest.mark.slow
 def test_identical_across_processes_with_different_hash_seeds() -> None:
     runs = [solve_in_subprocess(seed) for seed in ("0", "1", "12345")]
     first = runs[0]
@@ -55,26 +52,16 @@ def test_identical_across_processes_with_different_hash_seeds() -> None:
         assert other["assignments"] == first["assignments"]
 
 
-def test_identical_within_a_process() -> None:
-    from scheduler import config, silent, solve
-
-    payload = config.load(TINY)
-
-    first = solve(payload, progress=silent)
-    second = solve(payload, progress=silent)
-
-    assert first.objective == second.objective
-    assert first.assignments == second.assignments
-
-
-def test_solving_does_not_mutate_the_payload() -> None:
-    """A caller reusing their payload must get the same instance back."""
+def test_repeated_solves_are_deterministic_and_preserve_input() -> None:
     import copy
 
     from scheduler import config, silent, solve
 
     payload = config.load(TINY)
-
     before = copy.deepcopy(payload)
-    solve(payload, progress=silent)
+    first = solve(payload, progress=silent, time_limit=10)
     assert payload == before
+    second = solve(payload, progress=silent, time_limit=10)
+    assert payload == before
+    assert first.objective == second.objective
+    assert first.assignments == second.assignments

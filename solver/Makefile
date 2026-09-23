@@ -1,10 +1,11 @@
 PY := .venv/bin/python
 
-.PHONY: check test lint types fmt example solve report clean help
+.PHONY: check test test-all lint types fmt example solve report clean help
 
 help:
-	@echo "make check    lint + types + tests"
-	@echo "make test     pytest"
+	@echo "make check    lint + types + full test suite"
+	@echo "make test     fast regression tests"
+	@echo "make test-all full test suite, including larger solver runs"
 	@echo "make lint     ruff"
 	@echo "make types    mypy --strict"
 	@echo "make fmt      ruff --fix"
@@ -12,12 +13,15 @@ help:
 	@echo "make solve    solve YAML=<file> and write the JSON + both HTML pages"
 	@echo "make report   re-render the HTML pages from an existing result (no re-solve)"
 	@echo ""
-	@echo "  make solve                                    Telfer (900 seconds per stage)"
+	@echo "  make solve                                    Telfer (30 seconds per stage)"
 	@echo "  make solve YAML=../instances/medium LIMIT=60       medium (60 seconds per stage)"
 
-check: lint types test
+check: lint types test-all
 
 test:
+	$(PY) -m pytest -m "not slow"
+
+test-all:
 	$(PY) -m pytest
 
 lint:
@@ -35,7 +39,7 @@ example:
 # One instance, one place to say which. Override any of these on the command
 # line:  make solve YAML=../instances/medium LIMIT=60
 YAML  ?= ../instances/telfer
-LIMIT ?= 900
+LIMIT ?= 30
 # Outputs live in the instance folder's results/ -- the same place solve writes.
 DIR   := $(if $(wildcard $(YAML)/.),$(YAML),$(patsubst %/,%,$(dir $(YAML))))
 OUT   ?= $(DIR)/results

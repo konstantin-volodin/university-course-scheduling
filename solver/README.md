@@ -35,10 +35,13 @@ cat ../instances/tiny/instance.yaml | scheduler solve - --time-limit 30
 ```
 
 A file-backed solve writes `result.json`, `schedule.html`, `instance.html`,
-`objective.md`, and `solve.log` to the instance folder's `results/` directory.
+and `objective.md` to the instance folder's `results/` directory.
 A split instance directory is itself the instance folder. Use `-o` to
-override the JSON path; the reports and log are written beside it. A solve read
-from stdin continues to write JSON to stdout. Progress goes to stderr.
+override the JSON path; the reports are written beside it. A solve read
+from stdin continues to write JSON to stdout. Progress goes to stderr as timestamped `INFO` lines: model dimensions, search
+progress, and stage objective, bound, gap, elapsed time, and status.
+Use `--verbose` to also retain timestamped diagnostics in `solve.log` beside file outputs.
+Use `--quiet` for warnings and errors only.
 
 Exit codes:
 
@@ -64,16 +67,19 @@ The free Gurobi license is too small for medium and full instances.
 src/scheduler/
   config/    YAML loading and payload validation
   model/     scheduling formulation and solver-neutral MIP types
-  solve/     staged solving, results, and room seeding
+  solve/     staged solving, validated initialization, results, and room seeding
   backends/  HiGHS and Gurobi adapters
   report/    report rendering and frontend assets
   cli.py     command line
+  audit.py   independent hard-rule checks on saved assignments
+  benchmark.py  reproducible experiment records
 tests/
 ```
 
-Dependency direction: `cli → solve → model → config`, with `backends` and
-`report` as leaves. Every `__init__.py` is re-exports only; cross-package
-imports go through them rather than reaching into a submodule.
+The formulation follows `solve → model → config`; backend adapters translate the
+solver-neutral program. The independent audit checks configuration and assignments
+without calling the model builder. Package entry points expose the public API;
+`backends/__init__.py` also contains the small lazy solver selector.
 
 ## Input formats
 
@@ -82,8 +88,16 @@ Preferred:
 - single YAML file
 - directory containing `instance.yaml` and referenced YAML files
 
-Legacy flat JSON payloads remain supported. Required keys are listed in
-`scheduler.PAYLOAD_KEYS`.
+Instance inputs use the YAML schema described in [the editing guide](../instances/README.md).
+Legacy `/OPTIM_data/` payloads are no longer accepted by the CLI. Result files remain JSON.
+The loader normalizes YAML into private model data; applications should call `config.load`
+or `config.loads` before constructing an `Instance`.
+
+Named meeting pools combine custom weekly bundles with generated candidates. The solver
+chooses one whole bundle per section, sharing its professor and room across meetings.
+Courses and sections can restrict eligible pools and acceptable meeting formats.
+Use `--strict` (or `strict: true` in YAML) to require a named professor, listed room,
+and real meeting pattern for every section.
 
 Reserved IDs:
 
@@ -99,7 +113,8 @@ they never remove non-preferred courses from a professor's qualifications.
 Instances with broad qualifications can therefore build larger models.
 
 The optional top-level `minimum_room_fill` policy accepts a fraction from `0` to
-`1` and defaults to `0.8`. For example, `minimum_room_fill: 0` allows underfilled
+`1`. The general preset defaults to `0`; `preset: telfer` defaults to `0.8`.
+For example, `minimum_room_fill: 0` allows underfilled
 rooms; room capacity remains a hard upper bound. The setting works in single YAML
 files and split-instance manifests.
 
@@ -134,8 +149,12 @@ files and split-instance manifests.
 
 Status values:
 
-- `optimal`: every stage proved its bound
-- `feasible`: a valid result without full proof
+- `optimal`: every stage attained an objective lower bound or reported backend
+  optimality under its configured gap and numerical tolerances;
+  some stages permit a 5% relative gap, so this is not a
+  blanket claim of exact mathematical optimality
+- `feasible`: a solver-feasible result with at least one stage stopping without
+  backend optimality or a lower-bound certificate; it may still contain unscheduled placeholders
 
 Summary fields:
 
@@ -158,19 +177,40 @@ Summary fields:
 
 Stages 3, 8, and 10 use a 5% gap; the others use an exact gap.
 Each minimization stage caps its result before the next stage starts.
+When a feasible incumbent already attains a nonnegative objective's zero lower
+bound, the stage skips search and still installs its cap. Its result records
+`optimality_source: "lower_bound"`; other stages record `"backend"`.
+Assignment variables are binary, including section-specific fallbacks. Teaching
+and room-use indicators use bounds derived from section and timeslot capacity.
+These bounds preserve the declared qualifications and legal schedules.
+For HiGHS models with at least 100,000 columns, an incumbent, and a budget of
+30 seconds or less, presolve is disabled and 20% of the budget is reserved for
+solver completion overhead. Smaller models and longer searches retain presolve.
+Objective and warm-start setup count toward the HiGHS stage budget and duration.
+Reports include the full-stage backend's best bound and relative gap when
+available; unavailable values appear as an em dash.
+
+`make solve` defaults to 30 seconds per stage; override with `LIMIT=60` as needed.
 Budget up to ten times the per-stage time limit, plus preprocessing and report
-generation. A 900-second limit allows up to 2.5 hours across the ten stages.
+generation. A 30-second limit allows up to five minutes of stage search; backend
+overhead can exceed the requested limit, and a stage can finish without proving
+optimality. This is a search budget, not a guaranteed wall-clock deadline.
 
 ## Development
 
 ```bash
 make check
 make test
+make test-all
 make lint
 make types
 make fmt
 make example
 ```
+
+`make test` runs the fast regression suite. `make test-all` includes the larger
+solver integration cases; `make check` runs lint, types, and that full suite.
+Report tests render a fixed schedule instead of solving another medium instance.
 
 GitHub Actions runs `make check` on Python 3.14 using locked dependencies.
 It validates all three public instances and solves the tiny example with a

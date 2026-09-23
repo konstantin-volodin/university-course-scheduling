@@ -26,18 +26,15 @@ from dataclasses import dataclass
 from typing import Any, NamedTuple
 
 from ..config import (
-    BIG_M,
     BLOCK_WEIGHTS,
-    LARGE_SECTION,
     OFF_CAMPUS,
     PART_TIMER,
     Instance,
-    SectionKey,
     is_placeholder,
     placeholder_for,
 )
 from ..progress import Progress
-from .program import INFINITY, LinearExpr, Program, Sense, VarKind
+from .program import LinearExpr, Program, Sense, VarKind
 
 __all__ = ["AssignmentKey", "BuiltModel", "ObjectiveComponent", "Objectives", "build"]
 
@@ -174,10 +171,11 @@ class _Index:
     slots_at: dict[str, list[str]]        # time of day -> real timeslots
     days_of: dict[str, list[str]]         # timeslot -> days of week
     times_of: dict[str, list[str]]        # timeslot -> times of day
-    day_weight_of: dict[str, float]       # timeslot -> share of a day consumed
+    day_weight_of: dict[tuple[str, str], float]       # timeslot -> share of a day consumed
     overlap_pairs_of: dict[str, list[tuple[str, str]]]
     blocks_of: dict[str, list[str]]       # timeslot -> block types
     pairs_touching: dict[tuple[str, str], list[tuple[str, str, str]]]
+    conflict_cliques: list[tuple[str, ...]]
 
     @classmethod
     def of(cls, inst: Instance) -> _Index:
@@ -193,12 +191,20 @@ class _Index:
             days_of[slot].append(day)
 
         blocks_of: dict[str, list[str]] = defaultdict(list)
-        day_weight_of: dict[str, float] = defaultdict(float)
+        day_weight_of: dict[tuple[str, str], float] = defaultdict(float)
         for slot, block in sorted(inst.timeslot_block):
             blocks_of[slot].append(block)
             # Summed rather than picked, so a slot mapped to several block types
             # still contributes all of them.
-            day_weight_of[slot] += BLOCK_WEIGHTS[block]
+            for day in days_of.get(slot, ()):
+                day_weight_of[(slot, day)] += BLOCK_WEIGHTS.get(block, float(block) / 3.0)
+
+        # Keep the historical three-hour objective unit for arbitrary durations.
+        for slot, pattern in inst.meeting_patterns.items():
+            for day in days_of.get(slot, ()):
+                day_weight_of[(slot, day)] = sum(
+                    meeting.duration_minutes for meeting in pattern.meetings if meeting.day == day
+                ) / 180.0
 
         overlap_pairs_of: dict[str, list[tuple[str, str]]] = defaultdict(list)
         for overlap_pair in sorted(inst.overlapping_timeslots):
@@ -222,7 +228,10 @@ class _Index:
             rooms=sorted(inst.classrooms),
             real_slots=sorted(inst.real_timeslots),
             days=sorted(inst.days_of_week),
-            times_of_day=sorted(inst.times_of_day),
+            times_of_day=sorted(
+                {pattern.time_of_day for pattern in inst.meeting_patterns.values()}
+                if inst.meeting_patterns else inst.times_of_day
+            ),
             slots_at=dict(slots_at),
             days_of=dict(days_of),
             times_of=dict(times_of),
@@ -230,11 +239,12 @@ class _Index:
             overlap_pairs_of=dict(overlap_pairs_of),
             blocks_of=dict(blocks_of),
             pairs_touching=dict(pairs_touching),
+            conflict_cliques=_maximal_slot_cliques(inst.real_timeslots, overlap_pairs_of),
         )
 
 
 def _viable_assignments(
-    inst: Instance, index: _Index, progress: Progress | None = None
+    inst: Instance, index: _Index
 ) -> list[AssignmentKey]:
     """Enumerate the assignments worth giving a variable to.
 
@@ -247,11 +257,17 @@ def _viable_assignments(
     for section_key in sorted(inst.section_keys):
         course, section, semester, time_of_day = section_key
         heads = inst.attendance[section_key]
-        candidate_slots = index.slots_at.get(time_of_day, ())
-        at_night = time_of_day == "Night"
+        candidate_slots = (
+            sorted(inst.section_patterns[section_key])
+            if section_key in inst.section_patterns
+            else index.slots_at.get(time_of_day, ())
+        )
+        at_night = time_of_day == inst.night_period
 
         for professor in index.professors:
             part_timer = professor == PART_TIMER
+            if inst.strict and part_timer:
+                continue
 
             if not part_timer:
                 if (professor, course) not in inst.qualifications:
@@ -266,20 +282,22 @@ def _viable_assignments(
             # those extras were identical in meaning and differed only by a
             # label, which is precisely the symmetry branch and bound cannot
             # see through.
-            viable.append(
-                AssignmentKey(
-                    professor,
-                    course,
-                    section,
-                    semester,
-                    time_of_day,
-                    placeholder_for(time_of_day),
-                    OFF_CAMPUS,
+            if not inst.strict:
+                viable.append(
+                    AssignmentKey(
+                        professor,
+                        course,
+                        section,
+                        semester,
+                        time_of_day,
+                        placeholder_for(time_of_day),
+                        OFF_CAMPUS,
+                    )
                 )
-            )
-
             for room in index.rooms:
                 if room == OFF_CAMPUS:
+                    if inst.strict:
+                        continue
                     # Only part-timers go off campus, unless the professor agreed.
                     if not part_timer and professor not in inst.can_teach_off_campus:
                         continue
@@ -290,11 +308,28 @@ def _viable_assignments(
                         continue
 
                 for slot in candidate_slots:
-                    # A big section needing a 3-hour block has to run at night.
+                    if (professor, semester, slot) in inst.forbidden_professor_patterns:
+                        continue
+                    pattern = inst.meeting_patterns.get(slot)
                     if (
-                        heads > LARGE_SECTION
-                        and "3.0" in index.blocks_of.get(slot, ())
-                        and "Night" not in index.times_of.get(slot, ())
+                        not part_timer
+                        and inst.night_period in index.times_of.get(slot, ())
+                        and professor not in inst.can_teach_night
+                    ):
+                        continue
+                    has_long_meeting = (
+                        any(
+                            meeting.duration_minutes >= inst.long_meeting_minutes
+                            for meeting in pattern.meetings
+                        )
+                        if pattern is not None
+                        else "3.0" in index.blocks_of.get(slot, ())
+                    )
+                    if (
+                        inst.large_section_threshold is not None
+                        and heads > inst.large_section_threshold
+                        and has_long_meeting
+                        and inst.night_period not in index.times_of.get(slot, ())
                     ):
                         continue
                     viable.append(
@@ -302,8 +337,6 @@ def _viable_assignments(
                             professor, course, section, semester, time_of_day, slot, room
                         )
                     )
-                if progress is not None and len(viable) % 25_000 == 0:
-                    progress.update(f"{len(viable):,} assignments")
 
     return sorted(viable)
 
@@ -355,16 +388,13 @@ class _Builder:
 
     def add_assignment_variables(self, viable: list[AssignmentKey]) -> None:
         for key in viable:
-            professor, slot, room = key.professor, key.timeslot, key.classroom
-            # A named professor, in a real room, at a real time teaches a
-            # section once or not at all. The fallbacks are counters, not
-            # switches: many sections can pile onto "a part-timer", "off
-            # campus", or "no slot yet".
-            capped = professor != PART_TIMER and room != OFF_CAMPUS and not is_placeholder(slot)
+            # Each variable belongs to one section's sum(assignments) == 1
+            # row, including fallbacks. Different sections have separate
+            # variables, so sharing a fallback does not require counters.
             self.assign[key] = self.program.add_variable(
                 f"assign[{_label(key)}]",
-                upper=1.0 if capped else INFINITY,
-                kind=VarKind.INTEGER,
+                upper=1.0,
+                kind=VarKind.BINARY,
             )
 
     # -- constraints ----------------------------------------------------- #
@@ -373,13 +403,7 @@ class _Builder:
         """Returns teaching-load violation, pack-day penalty, and room spread."""
         inst, ix = self.inst, self.ix
 
-        # Each section is taught exactly once, so a row counting assignment
-        # variables can never exceed the number of distinct sections it touches.
-        # That is the tight big-M; the constant is only the last-resort ceiling.
-        sections_of = {
-            variable: (key.course, key.section, key.semester, key.time_of_day)
-            for key, variable in self.assign.items()
-        }
+        assignments_of = {variable: key for key, variable in self.assign.items()}
 
         one_at_a_time: dict[tuple[str, str, str], Terms] = defaultdict(dict)
         load: dict[str, Terms] = defaultdict(dict)
@@ -424,7 +448,7 @@ class _Builder:
             indicator = self.program.add_variable(
                 f"teaches_day[{_label(day_key)}]", upper=1.0, kind=VarKind.BINARY
             )
-            teaches[day_key][indicator] = -_big_m(teaches[day_key], sections_of)
+            teaches[day_key][indicator] = -_indicator_bound(teaches[day_key], assignments_of)
             teaches_indicator[day_key] = indicator
             # Every day counts the same: the weight is the professor's own
             # preference, never the size of the day. (Resolved 2026-08-26.)
@@ -441,7 +465,7 @@ class _Builder:
             indicator = self.program.add_variable(
                 f"uses_room[{_label(room_key)}]", upper=1.0, kind=VarKind.BINARY
             )
-            uses_room[room_key][indicator] = -_big_m(uses_room[room_key], sections_of)
+            uses_room[room_key][indicator] = -_indicator_bound(uses_room[room_key], assignments_of)
             uses_indicator[room_key] = indicator
         self._emit(
             "professor_uses_room", uses_room, Sense.LE, 0.0,
@@ -495,15 +519,25 @@ class _Builder:
     def _add_overlap_rows(
         self, name: str, owner: Callable[[AssignmentKey], str], skip: str
     ) -> None:
-        """Stop one professor, or one room, being claimed by two overlapping slots."""
-        rows: dict[tuple[str, str, str, str], Terms] = defaultdict(dict)
+        """At most one assignment in each clique of mutually overlapping slots.
+
+        Pairwise rows allow fractional occupancy of 1/2 in every slot of a
+        triangle. The clique row excludes that relaxation while preserving
+        all integral schedules. Single-slot occupancy is emitted separately.
+        """
+        touching: dict[str, list[tuple[str, ...]]] = defaultdict(list)
+        for clique in self.ix.conflict_cliques:
+            if len(clique) > 1:
+                for slot in clique:
+                    touching[slot].append(clique)
+        rows: dict[tuple[str, ...], Terms] = defaultdict(dict)
         for key, variable in self.assign.items():
             semester, slot = key.semester, key.timeslot
             held_by = owner(key)
             if held_by == skip:
                 continue
-            for first, second in self.ix.overlap_pairs_of.get(slot, ()):
-                rows[(held_by, semester, first, second)][variable] = 1.0
+            for clique in touching.get(slot, ()):
+                rows[(held_by, semester, *clique)][variable] = 1.0
         self._emit(name, rows, Sense.LE, 1.0)
 
     def add_balance_constraints(self) -> tuple[LinearExpr, LinearExpr]:
@@ -517,7 +551,9 @@ class _Builder:
         ix = self.ix
         spreads: list[LinearExpr] = []
 
-        groups: tuple[tuple[str, list[str], dict[str, list[str]], dict[str, float] | None], ...] = (
+        groups: tuple[
+            tuple[str, list[str], dict[str, list[str]], dict[tuple[str, str], float] | None], ...
+        ] = (
             ("time_of_day", ix.times_of_day, ix.times_of, None),
             ("day_of_week", ix.days, ix.days_of, ix.day_weight_of),
         )
@@ -528,10 +564,10 @@ class _Builder:
 
             for key, variable in self.assign.items():
                 semester, slot = key.semester, key.timeslot
-                weight = 1.0 if weight_of is None else weight_of.get(slot, 0.0)
-                if not weight:
-                    continue
                 for bucket in buckets_of.get(slot, ()):
+                    weight = 1.0 if weight_of is None else weight_of.get((slot, bucket), 0.0)
+                    if not weight or (semester, bucket) not in upper:
+                        continue
                     upper[(semester, bucket)][variable] = weight
                     lower[(semester, bucket)][variable] = weight
 
@@ -598,7 +634,7 @@ class _Builder:
             if (
                 course in inst.friday_night_penalty
                 and "Fri" in ix.days_of.get(key.timeslot, ())
-                and "Night" in ix.times_of.get(key.timeslot, ())
+                and inst.night_period in ix.times_of.get(key.timeslot, ())
             ):
                 fridays[course][variable] = 1.0
 
@@ -704,6 +740,10 @@ class _Builder:
                 if preferred:
                     time_reward.add(variable, preferred)
 
+            preference = inst.professor_pattern_preference.get((professor, semester, slot))
+            if preference:
+                time_reward.add(variable, preference)
+
             for block in ix.blocks_of.get(slot, ()):
                 if (professor, block) in inst.block_preference:
                     block_reward.add(variable, 1.0)
@@ -734,16 +774,17 @@ class _Builder:
 
 
 
-def _big_m(terms: Terms, sections_of: Mapping[int, SectionKey]) -> float:
-    """The tightest valid ceiling for an indicator row over assignment variables.
+def _indicator_bound(terms: Terms, assignments: Mapping[int, AssignmentKey]) -> float:
+    """Bound one named professor's real teaching in one semester and day.
 
-    Every section is taught exactly once, so however many variables a row
-    counts, the sum cannot pass the number of distinct sections among them. The
-    constant :data:`~scheduler.config.BIG_M` stays as the ceiling for anything
-    that somehow counts more, which keeps the row valid in every case.
+    Section equalities permit at most one choice per section. Professor
+    occupancy rows also permit at most one assignment per real timeslot,
+    regardless of how many courses or rooms the professor can choose from.
+    The smaller count strengthens the relaxation without excluding schedules.
     """
-    sections = {sections_of[variable] for variable in terms if variable in sections_of}
-    return float(min(len(sections) or BIG_M, BIG_M))
+    keys = [assignments[variable] for variable in terms]
+    sections = {(key.course, key.section, key.semester, key.time_of_day) for key in keys}
+    return float(min(len(sections), len({key.timeslot for key in keys})))
 
 
 def _label(key: Any) -> str:
@@ -795,7 +836,7 @@ def build(inst: Instance, progress: Progress) -> BuiltModel:
     builder = _Builder(inst, index)
 
     with progress.step("building", "enumerating viable assignments") as done:
-        viable = _viable_assignments(inst, index, progress)
+        viable = _viable_assignments(inst, index)
         builder.add_assignment_variables(viable)
         done(f"{len(viable):,} assignments")
 

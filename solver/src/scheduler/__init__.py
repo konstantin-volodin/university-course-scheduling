@@ -5,7 +5,7 @@ from __future__ import annotations
 from .backends import BACKENDS, DEFAULT_BACKEND
 from .config import PAYLOAD_KEYS, Instance
 from .errors import InvalidInstanceError, SchedulerError, SolveError, SolverError
-from .progress import Progress, TerminalProgress, silent, to_stderr
+from .progress import Progress, silent, to_stderr
 from .solve import (
     Assignment,
     ObjectiveBreakdown,
@@ -33,7 +33,6 @@ __all__ = [
     "SolveError",
     "SolverError",
     "Stage",
-    "TerminalProgress",
     "__version__",
     "silent",
     "solve",

@@ -7,6 +7,7 @@ solver offers beyond that is not the formulation's business.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
@@ -30,10 +31,17 @@ class Outcome:
     values: list[float]
     seconds: float
     detail: str = ""
+    best_bound: float | None = None
+    relative_gap: float | None = None
 
     @property
     def usable(self) -> bool:
         return self.status is not SolutionStatus.NO_SOLUTION
+
+
+def finite_or_none(value: float, infinity: float = math.inf) -> float | None:
+    """Keep unavailable solver bounds/gaps valid in strict JSON."""
+    return float(value) if math.isfinite(value) and abs(value) < infinity else None
 
 
 @runtime_checkable

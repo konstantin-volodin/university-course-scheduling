@@ -12,6 +12,7 @@ import pytest
 
 from scheduler import config, report
 from scheduler.cli import main
+from scheduler.solve import Assignment, Result
 
 INSTANCES = Path(__file__).parents[2] / "instances"
 TINY = INSTANCES / "tiny"
@@ -20,17 +21,17 @@ MEDIUM = INSTANCES / "medium"
 
 @pytest.fixture(scope="module")
 def payload() -> dict[str, Any]:
-    return config.load(MEDIUM)
+    return config.load(TINY)
 
 
 @pytest.fixture(scope="module")
-def result(payload: dict[str, Any]) -> dict[str, Any]:
-    from scheduler.config.instance import Instance
-    from scheduler.progress import silent
-    from scheduler.solve import solve_instance
-
-    solved = solve_instance(Instance.from_payload(payload), silent, time_limit=20)
-    return solved.to_dict()
+def result() -> dict[str, Any]:
+    """Known tiny schedule: renderer tests do not need an optimization run."""
+    return Result("feasible", 0, [
+        Assignment("prof_a", "ADM1000", 1, "Fall", "Mon0900", "DMS1150", "Day", 1),
+        Assignment("prof_b", "ADM1000", 2, "Fall", "Wed0900", "DMS1150", "Day", 1),
+        Assignment("prof_a", "ADM2000", 3, "Fall", "Mon1800", "DMS1150", "Night", 1),
+    ]).to_dict()
 
 
 def _embedded(html: str) -> dict[str, Any]:
@@ -50,6 +51,25 @@ def _is_a_document(html: str) -> None:
 
 def test_schedule_page_is_a_self_contained_document(payload, result) -> None:
     _is_a_document(report.schedule_page(payload, result))
+
+
+def test_objective_audit_distinguishes_lower_bound_certificate() -> None:
+    audit = report.objective_markdown({"stages": [
+        {"name": "load", "value": 0, "seconds": 0, "proven": True,
+         "optimality_source": "lower_bound"},
+    ]})
+    assert "| load | 0.00 | 0.00 | lower bound attained |" in audit
+    assert "needed no backend search" in audit
+
+
+def test_objective_audit_reports_bounds_gaps_and_unknown_values() -> None:
+    audit = report.objective_markdown({"stages": [
+        {"name": "rooms", "value": 10, "seconds": 5, "proven": False,
+         "best_bound": 8, "relative_gap": 0.2},
+        {"name": "legacy", "value": 2, "seconds": 1, "proven": False},
+    ]})
+    assert "| rooms | 10.00 | 5.00 | no | 8.00 | 20.0% |" in audit
+    assert "| legacy | 2.00 | 1.00 | no | — | — |" in audit
 
 
 def test_schedule_page_keeps_objective_details_out_of_the_schedule(payload, result) -> None:
@@ -171,7 +191,10 @@ def test_schedule_rows_carry_the_meeting_pattern(payload, result) -> None:
 
 
 def test_schedule_labels_do_not_repeat_the_course(payload, result) -> None:
-    rows = _embedded(report.schedule_page(payload, result))["assignments"]
+    varied = deepcopy(result)
+    assignment = varied["assignments"][0]
+    assignment["section_id"] = f"{assignment['course_id']}-{assignment['section_id']}"
+    rows = _embedded(report.schedule_page(payload, varied))["assignments"]
     assert rows
     for row in rows:
         course, section, label = row["course"], row["section"], row["label"]
@@ -197,12 +220,14 @@ def test_reports_keep_explanatory_copy_short(payload, result) -> None:
 def test_a_two_day_slot_carries_both_days(payload, result) -> None:
     """The grid draws one cell per day, so a Mon+Thu section must carry both.
 
-    The medium instance is single-day throughout, so the pattern is injected here
+    The tiny instance is single-day throughout, so the pattern is injected here
     rather than left to the fixture to happen to contain one.
     """
     assignment = result["assignments"][0]
     slot = assignment["timeslot_id"]
     doubled = dict(payload)
+    # Exercise the normalized index fallback without canonical clock metadata.
+    doubled.pop("meeting_pattern_data", None)
     doubled["timeslot_dow_subset"] = [
         *payload["timeslot_dow_subset"],
         [slot, "Thu" if [slot, "Thu"] not in payload["timeslot_dow_subset"] else "Wed"],
@@ -256,3 +281,20 @@ def test_solve_html_flag_writes_the_same_page(tmp_path: Path) -> None:
                  "--time-limit", "20", "--html", str(page)]) == 0
     _is_a_document(page.read_text())
     assert _embedded(page.read_text())["assignments"]
+
+
+def test_objective_report_qualifies_backend_optimality() -> None:
+    document = report.objective_markdown({"status": "optimal", "stages": [
+        {"name": "preference", "value": 1.0, "seconds": 0.1, "proven": True},
+    ]})
+    assert "Backend optimality" in document
+    assert "configured gap and numerical tolerances" in document
+    assert "| Proven |" not in document
+    assert "| preference | 1.00 | 0.10 | yes |" in document
+
+
+def test_html_report_qualifies_backend_optimality() -> None:
+    page = report.schedule_page({}, {})
+    assert "does not necessarily certify an exact optimum" in page
+    assert '"backend optimal"' in page
+    assert '"proven"' not in page

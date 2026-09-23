@@ -15,6 +15,7 @@ don't ask them to.
 from __future__ import annotations
 
 import math
+import time
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
@@ -66,24 +67,48 @@ class _StagedSolve:
         self.time_limit = time_limit
         self.stages: list[Stage] = []
         self.values: list[float] = []
+        self.active_rows = self.program.core_rows
+
+    def _add_row(self, name: str, terms: dict[int, float], sense: Sense, rhs: float) -> None:
+        row = Row(name, terms, sense, rhs)
+        self.backend.add_rows([row])
+        self.active_rows.append(row)
 
     def _optimise(self, name: str, objective: LinearExpr, maximise: bool, gap: float) -> float:
-        with self.progress.step("solving", name) as done:
-            if self.values:
-                self.backend.warm_start(self.values)
-            outcome = self.backend.optimise(
-                objective, maximise=maximise, gap=gap, time_limit=self.time_limit
-            )
-            if not outcome.usable:
-                raise SolveError(name, outcome.detail)
-            self.values = outcome.values
-            proven = outcome.status is SolutionStatus.OPTIMAL
-            done(f"{outcome.objective:,.2f}" + ("" if proven else " (stopped early)"))
+        started = time.perf_counter()
+        if self.values:
+            self.backend.warm_start(self.values)
+        self.progress(f"{len(self.stages) + 1}/10 {name} | starting search", stage="solving")
+        outcome = self.backend.optimise(
+            objective, maximise=maximise, gap=gap, time_limit=self.time_limit
+        )
+        if not outcome.usable:
+            raise SolveError(name, outcome.detail)
+        self.values = outcome.values
+        proven = outcome.status is SolutionStatus.OPTIMAL
 
-        self.stages.append(
-            Stage(name=name, value=outcome.objective, seconds=outcome.seconds, proven=proven)
+        self._record(
+            Stage(
+                name=name, value=outcome.objective,
+                seconds=time.perf_counter() - started, proven=proven,
+                best_bound=outcome.best_bound, relative_gap=outcome.relative_gap,
+            )
         )
         return outcome.objective
+
+    def _record(self, stage: Stage) -> None:
+        self.stages.append(stage)
+        status = (
+            "bound certified" if stage.optimality_source == "lower_bound"
+            else "optimal" if stage.proven else "search stopped"
+        )
+        bound = "n/a" if stage.best_bound is None else f"{stage.best_bound:g}"
+        gap = "n/a" if stage.relative_gap is None else f"{100 * stage.relative_gap:.2f}%"
+        self.progress(
+            f"{len(self.stages)}/10 {stage.name} | objective={stage.value:g} "
+            f"bound={bound} gap={gap} elapsed={stage.seconds:.2f}s status={status}",
+            stage="stage",
+        )
 
     def _minimise_then_cap(
         self, name: str, objective: LinearExpr, gap: float, *, integral: bool = True,
@@ -93,13 +118,32 @@ class _StagedSolve:
         Count objectives use an integer ceiling. Balance contains fractional
         teaching-hour units, so it retains its attained value within tolerance.
         """
-        value = self._optimise(name, objective, maximise=False, gap=gap)
-        self.backend.add_rows([Row(
+        # The incumbent is feasible for the active model. If every objective
+        # term is nonnegative and exactly zero, no search can improve it.
+        # Use exact zero here: a near-zero float is not a bound certificate.
+        if (
+            self.values
+            and len(self.values) == len(self.program.variables)
+            and all(
+                coefficient >= 0
+                and self.program.variables[index].lower >= 0
+                and coefficient * self.values[index] == 0
+                for index, coefficient in objective.terms.items()
+            )
+            # A repaired incumbent is only a hint. Capping at zero from an
+            # infeasible point would make the model itself infeasible.
+            and _feasible(self.program, self.active_rows, self.values)
+        ):
+            value = 0.0
+            self._record(Stage(name, value, 0.0, True, "lower_bound", 0.0, 0.0))
+        else:
+            value = self._optimise(name, objective, maximise=False, gap=gap)
+        self._add_row(
             f"cap_{name.replace(' ', '_')}",
             dict(objective.terms),
             Sense.LE,
             math.ceil(value - 1e-6) if integral else value + 1e-6,
-        )])
+        )
 
     def run(
         self,
@@ -134,6 +178,7 @@ class _StagedSolve:
         if deferred:
             with self.progress.step("solving", "adding preference rows") as done:
                 self.backend.add_rows(deferred)
+                self.active_rows.extend(deferred)
                 self.values = _repair(self.program, self.values, deferred)
                 done(f"{len(deferred):,} rows")
 
@@ -183,6 +228,26 @@ class _StagedSolve:
             )
             for component in objectives.preference_components()
         )
+
+
+def _satisfied(row: Row, lhs: float) -> bool:
+    if row.sense is Sense.LE:
+        return lhs <= row.rhs + 1e-6
+    if row.sense is Sense.GE:
+        return lhs >= row.rhs - 1e-6
+    return abs(lhs - row.rhs) <= 1e-6
+
+
+def _feasible(program: Program, rows: Sequence[Row], values: list[float]) -> bool:
+    """Whether a point meets every bound, integrality requirement and row."""
+    for variable, value in zip(program.variables, values, strict=True):
+        if not variable.lower - 1e-6 <= value <= variable.upper + 1e-6:
+            return False
+        if variable.kind is not VarKind.CONTINUOUS and abs(value - round(value)) > 1e-6:
+            return False
+    return all(
+        _satisfied(row, sum(c * values[i] for i, c in row.terms.items())) for row in rows
+    )
 
 
 def _repair(
@@ -397,16 +462,6 @@ def solve_instance(
     finally:
         backend.close()
 
-    checks: tuple[tuple[str, Callable[[Assignment], bool]], ...] = (
-        ("without a named professor", lambda a: a.professor_id is None),
-        ("without a timeslot", lambda a: a.timeslot_id is None),
-        ("off campus", lambda a: a.classroom_id is None),
-    )
-    for label, is_fallback in checks:
-        count = sum(1 for a in assignments if is_fallback(a))
-        if count:
-            reporter(f"warning: {count} assignments {label}")
-
     return Result(
         status="optimal" if all(stage.proven for stage in staged.stages) else "feasible",
         objective=objective,
@@ -427,7 +482,7 @@ def solve(
 ) -> Result:
     """Solve one workload-allocation instance.
 
-    :param payload: one key per ``/OPTIM_data/`` endpoint. See
+    :param payload: normalized data returned by the YAML loader. See
         :data:`scheduler.config.instance.PAYLOAD_KEYS`.
     :param progress: called as ``(stage, message)`` while the solve runs.
         Defaults to writing to stderr; pass :func:`scheduler.progress.silent`

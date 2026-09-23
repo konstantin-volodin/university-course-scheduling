@@ -1,0 +1,191 @@
+morning:
+  time_of_day: Morning
+  custom:
+    A01:
+    - day: Mon
+      start: 08:30
+      minutes: 90
+    - day: Thu
+      start: '10:00'
+      minutes: 90
+    A02:
+    - day: Mon
+      start: '10:00'
+      minutes: 90
+    - day: Wed
+      start: 08:30
+      minutes: 90
+    A03:
+    - day: Wed
+      start: '10:00'
+      minutes: 90
+    - day: Fri
+      start: 08:30
+      minutes: 90
+    A04:
+    - day: Tue
+      start: 08:30
+      minutes: 90
+    - day: Fri
+      start: '10:00'
+      minutes: 90
+    A05:
+    - day: Tue
+      start: '10:00'
+      minutes: 90
+    - day: Thu
+      start: 08:30
+      minutes: 90
+    D01:
+    - day: Mon
+      start: 08:30
+      minutes: 180
+    D02:
+    - day: Tue
+      start: 08:30
+      minutes: 180
+    D03:
+    - day: Wed
+      start: 08:30
+      minutes: 180
+    D04:
+    - day: Thu
+      start: 08:30
+      minutes: 180
+    D05:
+    - day: Fri
+      start: 08:30
+      minutes: 180
+afternoon:
+  time_of_day: Afternoon
+  custom:
+    B01:
+    - day: Mon
+      start: '11:30'
+      minutes: 90
+    - day: Thu
+      start: '13:00'
+      minutes: 90
+    B02:
+    - day: Mon
+      start: '13:00'
+      minutes: 90
+    - day: Wed
+      start: '11:30'
+      minutes: 90
+    B03:
+    - day: Wed
+      start: '13:00'
+      minutes: 90
+    - day: Fri
+      start: '11:30'
+      minutes: 90
+    B04:
+    - day: Tue
+      start: '11:30'
+      minutes: 90
+    - day: Fri
+      start: '13:00'
+      minutes: 90
+    B05:
+    - day: Tue
+      start: '13:00'
+      minutes: 90
+    - day: Thu
+      start: '11:30'
+      minutes: 90
+evening:
+  time_of_day: Evening
+  custom:
+    C01:
+    - day: Mon
+      start: '14:30'
+      minutes: 90
+    - day: Thu
+      start: '16:00'
+      minutes: 90
+    C02:
+    - day: Mon
+      start: '16:00'
+      minutes: 90
+    - day: Wed
+      start: '14:30'
+      minutes: 90
+    C03:
+    - day: Wed
+      start: '16:00'
+      minutes: 90
+    - day: Fri
+      start: '14:30'
+      minutes: 90
+    C04:
+    - day: Tue
+      start: '14:30'
+      minutes: 90
+    - day: Fri
+      start: '16:00'
+      minutes: 90
+    C05:
+    - day: Tue
+      start: '16:00'
+      minutes: 90
+    - day: Thu
+      start: '14:30'
+      minutes: 90
+    E01:
+    - day: Mon
+      start: '14:30'
+      minutes: 180
+    E02:
+    - day: Tue
+      start: '14:30'
+      minutes: 180
+    E03:
+    - day: Wed
+      start: '14:30'
+      minutes: 180
+    E04:
+    - day: Thu
+      start: '14:30'
+      minutes: 180
+    E05:
+    - day: Fri
+      start: '14:30'
+      minutes: 180
+night:
+  time_of_day: Night
+  custom:
+    F01:
+    - day: Mon
+      start: '17:30'
+      minutes: 90
+    - day: Wed
+      start: '17:30'
+      minutes: 90
+    F02:
+    - day: Tue
+      start: '17:30'
+      minutes: 90
+    - day: Thu
+      start: '17:30'
+      minutes: 90
+    F03:
+    - day: Fri
+      start: '17:30'
+      minutes: 180
+    G01:
+    - day: Mon
+      start: '19:00'
+      minutes: 180
+    G02:
+    - day: Tue
+      start: '19:00'
+      minutes: 180
+    G03:
+    - day: Wed
+      start: '19:00'
+      minutes: 180
+    G04:
+    - day: Thu
+      start: '19:00'
+      minutes: 180

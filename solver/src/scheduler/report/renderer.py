@@ -79,17 +79,52 @@ def _slot_days(payload: Any) -> dict[str, list[str]]:
     days: dict[str, list[str]] = defaultdict(list)
     for slot, day in _pairs(payload.get("timeslot_dow_subset")):
         days[slot].append(day)
+    for pattern in payload.get("meeting_pattern_data") or []:
+        days[pattern["id"]] = list(dict.fromkeys(m["day"] for m in pattern["meetings"]))
     return dict(days)
 
 
 def _slot_len(payload: Any) -> dict[str, str]:
-    # block type is the meeting length in hours; "3.0" is the double block.
-    return {s: ("double" if str(b) == "3.0" else "single")
-            for s, b in _pairs(payload.get("timeslot_block_subset"))}
+    lengths = {s: ("double" if str(b) == "3.0" else "single")
+               for s, b in _pairs(payload.get("timeslot_block_subset"))}
+    for pattern in payload.get("meeting_pattern_data") or []:
+        durations = [m["duration_minutes"] for m in pattern["meetings"]]
+        lengths[pattern["id"]] = " + ".join(f"{minutes} min" for minutes in durations)
+    return lengths
+
+
+def _slot_meetings(payload: Any) -> dict[str, list[dict[str, str]]]:
+    def clock(minutes: int) -> str:
+        return f"{minutes // 60:02d}:{minutes % 60:02d}"
+
+    return {
+        pattern["id"]: [
+            {
+                "day": meeting["day"],
+                "time": (
+                    f"{clock(meeting['start_minutes'])}\u2013"
+                    f"{clock(meeting['start_minutes'] + meeting['duration_minutes'])}"
+                ),
+            }
+            for meeting in pattern["meetings"]
+        ]
+        for pattern in payload.get("meeting_pattern_data") or []
+    }
 
 
 def _slot_tod(payload: Any) -> dict[str, str]:
-    return dict(_pairs(payload.get("timeslot_tod_subset")))
+    categories = dict(_pairs(payload.get("timeslot_tod_subset")))
+    categories.update({p["id"]: p["time_of_day"]
+                       for p in payload.get("meeting_pattern_data") or []})
+    return categories
+
+
+def _grid_periods(payload: Any) -> list[str]:
+    periods = list(dict.fromkeys([
+        *(str(t) for t in payload.get("time_of_day_set") or [] if t != "Any"),
+        *(t for t in _slot_tod(payload).values() if t != "Any"),
+    ]))
+    return _order({"periods": periods}, "periods", _TODS)
 
 
 def _order(payload: Any, key: str, fallback: list[str]) -> list[str]:
@@ -142,12 +177,28 @@ def objective_markdown(result: Any, *, title: str = "Objective Audit") -> str:
         f"- Solver: `{result.get('solver', 'n/a')}`",
         f"- Objective: `{float(result.get('objective', 0)):.2f}`", "",
         "## Solve stages", "",
-        "| Stage | Value | Time (s) | Proven |", "|---|---:|---:|:---:|",
+        "Backend optimality is evaluated under configured gap and numerical tolerances;",
+        "it does not necessarily certify an exact mathematical optimum.", "",
+        "A lower-bound certificate means the feasible incumbent attained a nonnegative",
+        "objective's zero lower bound, so that stage needed no backend search.", "",
+        "Bounds apply to the full stage model with earlier objective caps.",
+        "Unavailable bounds/gaps show an em dash.",
+        "",
+        "| Stage | Value | Time (s) | Backend optimality / bound certificate | Best bound | Gap |",
+        "|---|---:|---:|:---:|---:|---:|",
     ]
     for stage in result.get("stages") or []:
+        optimality = (
+            "lower bound attained" if stage.get("optimality_source") == "lower_bound"
+            else "yes" if stage["proven"] else "no"
+        )
+        bound = stage.get("best_bound")
+        relative_gap = stage.get("relative_gap")
+        bound_text = "—" if bound is None else f"{float(bound):.2f}"
+        gap_text = "—" if relative_gap is None else f"{100 * float(relative_gap):.1f}%"
         lines.append(
             f"| {stage['name']} | {float(stage['value']):.2f} | "
-            f"{float(stage['seconds']):.2f} | {'yes' if stage['proven'] else 'no'} |"
+            f"{float(stage['seconds']):.2f} | {optimality} | {bound_text} | {gap_text} |"
         )
     lines += ["", "## Preference components", "",
               "| Component | Meaning | Raw value | Weight | Contribution |",
@@ -206,6 +257,8 @@ def schedule_page(payload: Any, result: Any, *, title: str = "Solved Schedule") 
     """The solved schedule as a week grid, one per semester."""
     days_of = _slot_days(payload)
     len_of = _slot_len(payload)
+    meetings_of = _slot_meetings(payload)
+    tod_of = _slot_tod(payload)
     students = {
         tuple(str(part) for part in key): value
         for key, value in _pairs(payload.get("section_attendance"))
@@ -231,9 +284,10 @@ def schedule_page(payload: Any, result: Any, *, title: str = "Solved Schedule") 
                 "semester": semester,
                 "slot": slot,
                 "room": None if room in (None, OFF_CAMPUS) else room,
-                "timeOfDay": time_of_day,
+                "timeOfDay": tod_of.get(slot, time_of_day),
                 "days": days_of.get(slot, []),
                 "length": len_of.get(slot, "single"),
+                "meetings": meetings_of.get(slot, []),
                 "students": students.get((course, section, semester, time_of_day)),
                 "label": _section_label(course, section),
             }
@@ -261,16 +315,15 @@ def schedule_page(payload: Any, result: Any, *, title: str = "Solved Schedule") 
         "assignments": rows,
         "rooms": rooms,
         "days": _order(payload, "day_of_week_set", _DAYS),
-        "timesOfDay": _order(payload, "time_of_day_set", _TODS),
+        "timesOfDay": _grid_periods(payload),
         "semesters": [str(s) for s in payload.get("semester_set") or []],
         "summary": {
             "unscheduled": summary.get("unscheduled", 0),
             "total": total,
-            "named": named,
             "namedPct": 100 * named / total if total else 0,
-            "onCampus": on_campus,
             "onCampusPct": 100 * on_campus / total if total else 0,
             "roomUtilizationPct": 100 * len(occupied) / capacity if capacity else 0,
+            "patternCount": len(real_slots) if payload.get("meeting_pattern_data") else None,
             "bySemester": by_semester,
         },
         "stages": result.get("stages") or [],
@@ -306,6 +359,7 @@ def instance_page(payload: Any, *, title: str = "Scheduling Instance") -> str:
     """The inputs: the week on offer, who can teach, what must be covered."""
     days_of = _slot_days(payload)
     len_of = _slot_len(payload)
+    meetings_of = _slot_meetings(payload)
     tod_of = _slot_tod(payload)
     loads = {str(k): int(v) for k, v in _pairs(payload.get("professor_teaching"))}
     rooms = sorted(((str(k), int(v)) for k, v in _pairs(payload.get("classroom_cap"))),
@@ -347,7 +401,10 @@ def instance_page(payload: Any, *, title: str = "Scheduling Instance") -> str:
             [[s, by_sem.get(s, 0)] for s in sem_order]
             or [[s, n] for s, n in sorted(by_sem.items())]
         ),
-        "bytod": [[t, by_tod.get(t, 0)] for t in _order(payload, "time_of_day_set", _TODS)],
+        "bytod": [
+            ["Choice across periods" if t == "Any" else t, by_tod.get(t, 0)]
+            for t in _order(payload, "time_of_day_set", _TODS)
+        ],
         "perms": [
             ["Can teach night", night],
             ["Can go off campus", offc],
@@ -357,9 +414,10 @@ def instance_page(payload: Any, *, title: str = "Scheduling Instance") -> str:
         "loadhist": [[str(k), load_hist[k]] for k in sorted(load_hist)],
         "sizehist": size_hist,
         "days": _order(payload, "day_of_week_set", _DAYS),
-        "tods": _order(payload, "time_of_day_set", _TODS),
+        "tods": _grid_periods(payload),
         "slots": sorted(
-            ([s, tod_of.get(s, ""), days_of.get(s, []), len_of.get(s, "single")]
+            ([s, tod_of.get(s, ""), days_of.get(s, []), len_of.get(s, "single"),
+              meetings_of.get(s, [])]
              for s in days_of),
             key=lambda r: str(r[0]),
         ),

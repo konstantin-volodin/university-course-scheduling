@@ -55,7 +55,7 @@
       return '<td class="cell"><div class="cellinner">'+here.map(function(s){
         return '<span class="slot'+(s[3]==="double"?" dbl":"")+'">'+
           '<span class="id">'+esc(s[0])+'</span>'+
-          '<span class="meta">'+esc(s[2].join("+")+' \u00b7 '+s[3])+'</span></span>';
+          '<span class="meta">'+esc((s[4]||[]).length?s[4].filter(function(m){return m.day===d}).map(function(m){return m.time}).join(', '):s[2].join("+")+' \u00b7 '+s[3])+'</span></span>';
       }).join("")+'</div></td>';
     }).join("")+'</tr>';
   }).join("");

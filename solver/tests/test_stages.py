@@ -4,18 +4,20 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import fields, replace
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
 from scheduler import silent
-from scheduler.backends.base import Outcome
+from scheduler.backends import highs
+from scheduler.backends.base import Outcome, finite_or_none
 from scheduler.backends.highs import HighsBackend
 from scheduler.config import Instance
 from scheduler.model import Objectives, build
 from scheduler.model.program import LinearExpr, Program, Row, Sense, VarKind
 from scheduler.progress import Progress
-from scheduler.solve import solver as solver_module
+from scheduler.solve import solver
 from scheduler.solve.solver import EXACT, GOOD_ENOUGH, _repair, _StagedSolve
 
 
@@ -40,7 +42,7 @@ def test_repaired_room_hint_cannot_make_the_model_infeasible(
             return [0.0]
         return _repair(program, values, rows)
 
-    monkeypatch.setattr(solver_module, "_repair", bad_room_hint)
+    monkeypatch.setattr(solver, "_repair", bad_room_hint)
     backend = HighsBackend()
     try:
         backend.load(program)
@@ -66,6 +68,82 @@ def assert_feasible(program: Program, rows: Sequence[Row], values: list[float]) 
             assert lhs >= row.rhs - 1e-6, row.name
         else:
             assert lhs == pytest.approx(row.rhs, abs=1e-6), row.name
+
+
+@pytest.mark.parametrize(
+    ("limit", "warm", "threshold", "presolve"),
+    [(30.0, True, 1, "off"), (31.0, True, 1, "choose"),
+     (None, True, 1, "choose"), (30.0, False, 1, "choose"),
+     (30.0, True, 2, "choose")],
+)
+def test_short_search_presolve_policy_preserves_solution(
+    monkeypatch: pytest.MonkeyPatch, limit: float | None, warm: bool,
+    threshold: int, presolve: str,
+) -> None:
+    monkeypatch.setattr(highs, "_SHORT_SEARCH_COLUMNS", threshold)
+    program = Program()
+    variable = program.add_variable("required", upper=1, kind=VarKind.BINARY)
+    program.add_row("cover", {variable: 1}, Sense.EQ, 1)
+    backend = HighsBackend()
+    try:
+        backend.load(program)
+        if warm:
+            backend.warm_start([1])
+        outcome = backend.optimise(
+            LinearExpr({variable: 1}), maximise=False, gap=0, time_limit=limit,
+        )
+        assert outcome.usable and outcome.objective == 1
+        assert_feasible(program, program.rows, outcome.values)
+        assert backend._highs.getOptionValue("presolve")[1] == presolve
+        # A later long search must restore normal preprocessing.
+        backend.optimise(LinearExpr({variable: 1}), maximise=False, gap=0, time_limit=60)
+        assert backend._highs.getOptionValue("presolve")[1] == "choose"
+    finally:
+        backend.close()
+
+
+@pytest.mark.parametrize("setup_seconds", [2.0, 35.0])
+def test_short_search_charges_setup_and_reserves_completion_time(
+    monkeypatch: pytest.MonkeyPatch, setup_seconds: float,
+) -> None:
+    monkeypatch.setattr(highs, "_SHORT_SEARCH_COLUMNS", 1)
+    clock = iter([100.0, 100.0 + setup_seconds, 101.0 + setup_seconds])
+    monkeypatch.setattr(highs, "time", SimpleNamespace(perf_counter=lambda: next(clock)))
+    program = Program()
+    variable = program.add_variable("required", lower=1, upper=1, kind=VarKind.BINARY)
+    backend = HighsBackend()
+    try:
+        backend.load(program)
+        backend.warm_start([1])
+        outcome = backend.optimise(
+            LinearExpr({variable: 1}), maximise=False, gap=0, time_limit=30,
+        )
+        assert backend._highs.getOptionValue("time_limit")[1] == max(0, 24 - setup_seconds)
+        assert outcome.seconds == setup_seconds + 1
+        assert outcome.usable and outcome.objective == 1
+    finally:
+        backend.close()
+
+
+@pytest.mark.parametrize("maximise", [False, True])
+def test_highs_reports_full_model_bound_and_gap(maximise: bool) -> None:
+    program = Program()
+    x = program.add_variable("x", upper=4, kind=VarKind.INTEGER)
+    program.add_row("required", {x: 1}, Sense.GE, 1)
+    backend = HighsBackend()
+    try:
+        backend.load(program)
+        outcome = backend.optimise(LinearExpr({x: 1}), maximise=maximise, gap=0, time_limit=5)
+        assert outcome.objective == (4 if maximise else 1)
+        assert outcome.best_bound == outcome.objective
+        assert outcome.relative_gap == 0
+    finally:
+        backend.close()
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf"), 1e100, -1e100])
+def test_unavailable_bounds_are_not_exported_as_numbers(value: float) -> None:
+    assert finite_or_none(value, 1e100) is None
 
 
 class CheckedHighs(HighsBackend):
@@ -124,13 +202,44 @@ def test_stages_preserve_priorities_and_pass_feasible_warm_starts(payload: dict[
         assert backend.calls == [
             (expression.terms, index == 9, gap, 5.0)
             for index, (expression, gap) in enumerate(expected)
+            if staged.stages[index].optimality_source == "backend"
         ]
-        assert backend.starts == 9
-        assert backend.deferred_after == [4]
+        assert backend.starts == len(backend.calls) - 1
+        assert backend.deferred_after == [
+            sum(stage.optimality_source == "backend" for stage in staged.stages[:4])
+        ]
         assert len(staged.stages) == 10
         for stage, (expression, _) in zip(staged.stages[:-1], expected, strict=False):
             final_value = sum(c * staged.values[i] for i, c in expression.terms.items())
             assert final_value <= stage.value + 1e-6, stage.name
+    finally:
+        backend.close()
+
+
+@pytest.mark.parametrize(
+    ("lower", "coefficient", "initial", "skipped"),
+    [(0.0, 1.0, 0.0, True), (0.0, 1.0, 1.0, False),
+     (0.0, 1.0, 1e-8, False), (-1.0, 1.0, 0.0, False),
+     (0.0, -1.0, 0.0, False)],
+)
+def test_lower_bound_shortcut_requires_an_attained_global_bound(
+    lower: float, coefficient: float, initial: float, skipped: bool,
+) -> None:
+    program = Program()
+    variable = program.add_variable("decision", lower=lower, upper=1.0)
+    backend = CheckedHighs(program)
+    try:
+        staged = _StagedSolve(backend, Progress(silent), 5.0, program)
+        staged.values = [initial]
+        staged._minimise_then_cap("first", LinearExpr({variable: coefficient}), EXACT)
+        first = staged.stages[0]
+        assert (first.optimality_source == "lower_bound") is skipped
+        assert len(backend.calls) == (0 if skipped else 1)
+        assert first.proven
+        # Even a skipped stage must constrain a later competing objective.
+        staged._optimise("competing", LinearExpr({variable: -coefficient}), False, EXACT)
+        assert coefficient * staged.values[variable] <= first.value + 1e-6
+        assert_feasible(program, backend.rows, staged.values)
     finally:
         backend.close()
 

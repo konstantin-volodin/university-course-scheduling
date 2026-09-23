@@ -1,0 +1,112 @@
+# A coordinating professor can maintain this small faculty in one file.
+# All meetings recur weekly; the solver selects whole bundles jointly with rooms/staff.
+semesters: [Fall]
+preset: general
+strict: true
+
+meeting_patterns:
+  twice_weekly:
+    generate:
+      formats:
+        - meetings: 2
+          minutes_each: 75
+          day_combinations:
+            - [Mon, Thu]
+            - [Tue, Fri]
+      start_times: ["09:00", "10:30", "13:00"]
+      finish_by: "17:00"
+    custom:
+      ecology-fieldwork:
+        - day: Mon
+          start: "08:30"
+          minutes: 75
+        - day: Thu
+          start: "14:30"
+          minutes: 75
+  three_times_weekly:
+    generate:
+      formats:
+        - meetings: 3
+          minutes_each: 50
+          day_combinations:
+            - [Mon, Wed, Fri]
+      start_times:
+        start: "09:00"
+        end: "11:00"
+        every_minutes: 60
+      same_start: true
+      finish_by: "12:00"
+
+course_defaults:
+  semester: Fall
+  meeting_patterns: [twice_weekly, three_times_weekly]
+
+classrooms:
+  SCI-101: 40
+  SCI-202: 60
+  LIB-100: 80
+
+professors:
+  jordan-smith:
+    teaching_load: 1
+    qualified_for: [BIO101, BIO205]
+    unavailable:
+      - days: [Fri]
+        start: "13:00"
+        end: "17:00"
+  alex-chen:
+    teaching_load: 1
+    qualified_for: [BIO101, BIO205]
+    time_preferences:
+      - days: [Mon, Tue, Wed, Thu, Fri]
+        start: "08:00"
+        end: "10:00"
+        score: -2
+  sam-patel:
+    teaching_load: 1
+    qualified_for: [MAT101, STA201]
+  robin-nguyen:
+    teaching_load: 1
+    qualified_for: [MAT101, STA201]
+  morgan-roy:
+    teaching_load: 1
+    qualified_for: [ENV101, SCI301]
+  taylor-brown:
+    teaching_load: 1
+    qualified_for: [ENV101, SCI301]
+    time_preferences:
+      - days: [Mon, Tue, Wed, Thu, Fri]
+        start: "09:00"
+        end: "12:00"
+        score: 2
+
+courses:
+  BIO101:
+    sections:
+      - {id: BIO101-1, students: 55}
+  BIO205:
+    formats:
+      - {meetings: 2, minutes_each: 75}
+    sections:
+      - {id: BIO205-1, students: 35}
+  MAT101:
+    meeting_patterns: [three_times_weekly]
+    sections:
+      - {id: MAT101-1, students: 70}
+  STA201:
+    sections:
+      - {id: STA201-1, students: 45}
+  ENV101:
+    meeting_patterns: [twice_weekly]
+    sections:
+      - {id: ENV101-1, students: 30}
+  SCI301:
+    sections:
+      - id: SCI301-1
+        students: 25
+        formats:
+          - {meetings: 2, minutes_each: 75}
+
+programs:
+  science-first-year:
+    Fall: [BIO101, MAT101, ENV101]
