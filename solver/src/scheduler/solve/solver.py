@@ -3,7 +3,8 @@
 The program is solved in ten stages. Each stage optimises one objective,
 then freezes the result as a row before the next stage runs. That keeps the
 ordering honest: a later stage can improve preferences only within the
-compromises the earlier stages already proved were necessary.
+objective ceilings reached by earlier stages. A time-limited stage may leave
+an unproven ceiling; later stages do not establish that it was necessary.
 
 Solving straight for a weighted sum of everything would let the solver buy a
 better preference score by breaking a teaching load, at whatever exchange rate
@@ -307,7 +308,7 @@ def _preference_breakdown(
 
 
 def _placeholder_seed(built: BuiltModel) -> list[float]:
-    """Build an integral, always-scheduled incumbent for the first stage.
+    """Build an integral, all-placeholder incumbent for the first stage.
 
     A warm start needs an integral assignment across declared qualifications; otherwise
     HiGHS may spend the whole first stage searching for its first incumbent.

@@ -64,6 +64,31 @@ def _solve_output_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Pat
     schedule = Path(args.html) if args.html else result.with_name("schedule.html")
     instance = result.with_name("instance.html")
     objective = result.with_name("objective.md")
+    targets = [result, schedule, instance, objective, result.with_name("solve.log")]
+    resolved = [target.resolve() for target in targets]
+    if len(set(resolved)) != len(resolved) or any(
+        target.exists() and previous.exists() and target.samefile(previous)
+        for index, target in enumerate(targets) for previous in targets[:index]
+    ):
+        raise SchedulerError("solve output paths must be distinct, including solve.log")
+    if args.instance != "-":
+        source = Path(args.instance)
+        if source.is_dir():
+            source = source / "instance.yaml"
+        inputs = {source.resolve()}
+        if source.suffix.lower() in {".yaml", ".yml"}:
+            import yaml
+
+            manifest = yaml.safe_load(source.read_text(encoding="utf-8"))
+            if isinstance(manifest, dict) and isinstance(manifest.get("files"), dict):
+                for paths in manifest["files"].values():
+                    for path in [paths] if isinstance(paths, str) else paths:
+                        inputs.add((source.parent / path).resolve())
+        if inputs.intersection(resolved) or any(
+            target.exists() and source.exists() and target.samefile(source)
+            for target in targets for source in inputs
+        ):
+            raise SchedulerError("solve outputs must not overwrite the input instance")
     try:
         result.parent.mkdir(parents=True, exist_ok=True)
         schedule.parent.mkdir(parents=True, exist_ok=True)
@@ -132,6 +157,13 @@ def _cmd_solve(args: argparse.Namespace) -> int:
         _write(instance_page(payload), instance_path)
         _write(objective_markdown(payload_result), objective_path)
 
+    if result.unscheduled:
+        print(
+            f"warning: incomplete timetable: {len(result.unscheduled)} of "
+            f"{len(result.assignments)} sections have no timeslot. Solver feasibility "
+            "allows unscheduled placeholders; it does not mean the timetable is ready to use.",
+            file=sys.stderr,
+        )
     if not args.quiet:
         print(
             f"\n{result.status} via {result.solver}: {len(result.assignments)} assignments "

@@ -20,6 +20,11 @@ See [../instances/README.md](../instances/README.md) for the YAML fields.
 
 ## Commands
 
+Solve output paths must be distinct and cannot refer to the input file, split
+manifest or declared fragments. Checks include existing symlink and hardlink aliases
+and run before the solver or log writer starts. Existing result files may still be
+replaced on a successful solve; use a fresh output directory to preserve earlier runs.
+
 ```bash
 scheduler solve ../instances/tiny --time-limit 30
 scheduler solve ../instances/tiny --check
